@@ -2,6 +2,9 @@
 
 一款基於 **React (Vite) + Tailwind CSS + Firebase + Cloudflare R2** 開發的 2D 像素風多人即時在線同島網頁遊戲。完美適配電腦端（WASD / 方向鍵）與手機/平板（虛擬十字鍵 D-Pad 與觸控），並支援多人在線走動、動態商城穿搭、小屋佈置與 8-Bit 街機對戰！
 
+- 🌐 **正式遊戲網址**：[https://game.terry0215.com](https://game.terry0215.com)
+- 🚀 **Vercel 預備網址**：[https://pixel-island-eight.vercel.app](https://pixel-island-eight.vercel.app)
+
 ![Pixel Island Preview](https://github.com/terry5333/pixel-island/raw/main/public/preview.png)
 
 ---
