@@ -569,7 +569,10 @@ export const App: React.FC = () => {
             description: '由 PixelLab AI 即時生成的專屬像素服飾',
           };
           setItems((prev) => [customItem, ...prev.filter((i) => i.id !== customId)]);
-          handleEquipChange(cat, customId);
+          handleEquipChange({
+            ...(currentUser?.equipped || {}),
+            [cat]: customId,
+          });
         }}
       />
 

@@ -6,6 +6,7 @@ export interface Item {
   category: ItemCategory;
   price: number;
   r2Url?: string;
+  pixelData?: string;
   zIndex?: number;
   walkable?: boolean;
   createdAt?: number | string;
