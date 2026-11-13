@@ -30,6 +30,7 @@ interface ArcadeModalProps {
   onClose: () => void;
   currentUser: UserProfile;
   initialGameType?: GameType;
+  initialSoloSlots?: boolean;
   challengedPlayer?: IslandPresence | null;
   onClearChallenge?: () => void;
 }
@@ -46,6 +47,8 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
   isOpen,
   onClose,
   currentUser,
+  initialGameType,
+  initialSoloSlots,
   challengedPlayer,
   onClearChallenge,
 }) => {
@@ -56,6 +59,16 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
   const [isSoloSlots, setIsSoloSlots] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialSoloSlots || initialGameType === 'slots') {
+        setIsSoloSlots(true);
+      } else {
+        setIsSoloSlots(false);
+      }
+    }
+  }, [isOpen, initialSoloSlots, initialGameType]);
 
   // Subscribe to active room changes
   useEffect(() => {

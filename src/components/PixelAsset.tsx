@@ -34,8 +34,8 @@ export const PixelAsset: React.FC<PixelAssetProps> = ({
 }) => {
   const [imgFailed, setImgFailed] = useState(false);
 
-  // If R2 URL is provided and has not failed, attempt to render the image
-  const resolvedUrl = r2Url || item?.r2Url;
+  // If Image URL or data URL is provided and has not failed, attempt to render the image
+  const resolvedUrl = r2Url || item?.r2Url || (item?.pixelData?.startsWith('data:') || item?.pixelData?.startsWith('http') ? item?.pixelData : undefined);
   if (resolvedUrl && !imgFailed) {
     return (
       <img

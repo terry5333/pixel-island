@@ -25,6 +25,7 @@ interface NavbarProps {
   onOpenAuthModal: () => void;
   onOpenHouseUpgrade: () => void;
   onOpenTutorial: () => void;
+  onOpenPixelLab?: () => void;
   onSignOut: () => void;
   onToggleFriends: () => void;
   currentUid: string;
@@ -38,6 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuthModal,
   onOpenHouseUpgrade,
   onOpenTutorial,
+  onOpenPixelLab,
   onSignOut,
   onToggleFriends,
   currentUid,
@@ -110,6 +112,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="text-[10px] px-1 bg-cyan-950 text-cyan-300 border border-cyan-800 rounded-full font-mono">
                   {onlineCount}
                 </span>
+              </button>
+
+              {/* PixelLab AI Studio Quick Capsule */}
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  onOpenPixelLab?.();
+                }}
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-indigo-900/90 to-purple-900/90 hover:from-indigo-800 hover:to-purple-800 text-indigo-200 text-[11px] font-bold rounded-full border border-indigo-500/60 shadow-md active:scale-95 transition-all cursor-pointer"
+                title="開啟 PixelLab AI 創作者工坊"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-spin-slow" />
+                <span className="hidden sm:inline">PixelLab AI</span>
               </button>
             </>
           )}
@@ -233,6 +248,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <Users className="w-4 h-4 text-cyan-400" />
                       <span>島民好友名冊</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        onOpenPixelLab?.();
+                      }}
+                      className="w-full p-2.5 bg-gradient-to-r from-indigo-950 to-purple-950 hover:from-indigo-900 hover:to-purple-900 text-indigo-200 text-xs font-bold rounded-xl flex items-center gap-2.5 border border-indigo-700/60 transition-colors cursor-pointer"
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-300 animate-spin-slow" />
+                      <span>PixelLab AI 創作者工坊</span>
+                      <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-300 font-bold">
+                        NEW
+                      </span>
                     </button>
                   </>
                 )}

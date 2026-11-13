@@ -28,6 +28,7 @@ import { PlayerActionModal } from './components/PlayerActionModal';
 import { FriendPanel } from './components/FriendPanel';
 import { HouseUpgradeModal } from './components/HouseUpgradeModal';
 import { TutorialModal } from './components/TutorialModal';
+import { PixelLabStudioModal } from './components/PixelLabStudioModal';
 
 export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
@@ -37,11 +38,14 @@ export const App: React.FC = () => {
   // Navigation & Location
   const [currentPlace, setCurrentPlace] = useState<'island' | 'home'>('island');
   const [visitingUser, setVisitingUser] = useState<UserProfile | null>(null);
+  const [currentMapBg, setCurrentMapBg] = useState<string>('/island_map_bg.jpg');
 
   // Modals state
   const [isBoutiqueOpen, setIsBoutiqueOpen] = useState(false);
   const [boutiqueInitialTab, setBoutiqueInitialTab] = useState<'shop' | 'wardrobe'>('shop');
   const [isArcadeOpen, setIsArcadeOpen] = useState(false);
+  const [arcadeInitialSoloSlots, setArcadeInitialSoloSlots] = useState(false);
+  const [isPixelLabOpen, setIsPixelLabOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isFriendPanelOpen, setIsFriendPanelOpen] = useState(false);
@@ -85,8 +89,8 @@ export const App: React.FC = () => {
 
   // High-performance continuous local position state (sub-pixel float coordinates)
   const [localPos, setLocalPos] = useState({
-    x: 19.0,
-    y: 13.0,
+    x: 30.0,
+    y: 27.0,
     facing: 'right' as 'left' | 'right',
     isMoving: false,
   });
@@ -161,8 +165,10 @@ export const App: React.FC = () => {
     if (contextEntrance) {
       if (contextEntrance.type === 'commercial') {
         const b = contextEntrance.building;
-        if (b.type === 'boutique') return '進入精品服飾店 👗';
-        if (b.type === 'arcade') return '進入「銭屋」街機遊樂場 🕹️';
+        if (b.type === 'boutique') return '進入「FASHION」精品服飾店 👗';
+        if (b.type === 'arcade') return '進入「ARCADE」街機遊樂中心 🕹️';
+        if (b.type === 'casino') return '進入「CASINO」777 復古拉霸娛樂城 🎰';
+        if (b.type === 'pixellab') return '進入「PixelLab AI」創作者工坊 ✨';
       } else if (contextEntrance.type === 'house') {
         const h = contextEntrance.house;
         return h.isSelf ? '進入個人溫馨小屋 🏡' : `拜訪 ${h.ownerName} 的家 🏡`;
@@ -289,7 +295,13 @@ export const App: React.FC = () => {
           setBoutiqueInitialTab('shop');
           setIsBoutiqueOpen(true);
         } else if (b.type === 'arcade') {
+          setArcadeInitialSoloSlots(false);
           setIsArcadeOpen(true);
+        } else if (b.type === 'casino') {
+          setArcadeInitialSoloSlots(true);
+          setIsArcadeOpen(true);
+        } else if (b.type === 'pixellab') {
+          setIsPixelLabOpen(true);
         }
       } else if (contextEntrance.type === 'house') {
         handleEnterHouse(contextEntrance.house);
@@ -439,6 +451,7 @@ export const App: React.FC = () => {
         onOpenAuthModal={() => setIsAuthOpen(true)}
         onOpenHouseUpgrade={() => setIsHouseUpgradeOpen(true)}
         onOpenTutorial={() => setIsTutorialOpen(true)}
+        onOpenPixelLab={() => setIsPixelLabOpen(true)}
         onSignOut={handleSignOut}
         onToggleFriends={() => setIsFriendPanelOpen((prev) => !prev)}
       />
@@ -453,10 +466,25 @@ export const App: React.FC = () => {
             presences={presences}
             itemsMap={itemsMap}
             activeHouses={activeHouses}
+            mapBgUrl={currentMapBg}
             onTileClick={handleTileClick}
             onPlayerClick={(player) => setSelectedPlayer(player)}
             onEnterHouse={handleEnterHouse}
             onOpenUpgrade={() => setIsHouseUpgradeOpen(true)}
+            onBuildingClick={(type) => {
+              if (type === 'boutique') {
+                setBoutiqueInitialTab('shop');
+                setIsBoutiqueOpen(true);
+              } else if (type === 'arcade') {
+                setArcadeInitialSoloSlots(false);
+                setIsArcadeOpen(true);
+              } else if (type === 'casino') {
+                setArcadeInitialSoloSlots(true);
+                setIsArcadeOpen(true);
+              } else if (type === 'pixellab') {
+                setIsPixelLabOpen(true);
+              }
+            }}
           />
         ) : (
           <HomeMap
@@ -512,6 +540,7 @@ export const App: React.FC = () => {
       {currentUser && (
         <ArcadeModal
           isOpen={isArcadeOpen}
+          initialSoloSlots={arcadeInitialSoloSlots}
           onClose={() => {
             setIsArcadeOpen(false);
             setChallengedPlayer(null);
@@ -521,6 +550,28 @@ export const App: React.FC = () => {
           onClearChallenge={() => setChallengedPlayer(null)}
         />
       )}
+
+      {/* PixelLab AI Studio Modal */}
+      <PixelLabStudioModal
+        isOpen={isPixelLabOpen}
+        onClose={() => setIsPixelLabOpen(false)}
+        onApplyMapBackground={(imageUrl) => {
+          setCurrentMapBg(imageUrl);
+        }}
+        onEquipCustomClothing={(cat, dataUrl) => {
+          const customId = `custom_${cat}_${Date.now()}`;
+          const customItem: Item = {
+            id: customId,
+            name: 'PixelLab AI 專屬服飾',
+            category: cat,
+            price: 0,
+            pixelData: dataUrl,
+            description: '由 PixelLab AI 即時生成的專屬像素服飾',
+          };
+          setItems((prev) => [customItem, ...prev.filter((i) => i.id !== customId)]);
+          handleEquipChange(cat, customId);
+        }}
+      />
 
       {/* Admin Dashboard Modal */}
       {currentUser?.role === 'admin' && (

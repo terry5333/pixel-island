@@ -1,6 +1,9 @@
-export const ISLAND_WIDTH = 38;
-export const ISLAND_HEIGHT = 38;
-export const TILE_SIZE = 48; // 48px per grid cell
+export const ISLAND_WIDTH = 64; // 64 * 32px = 2048px (Exact 2x match of 1024x682 bg)
+export const ISLAND_HEIGHT = 42.625; // 42.625 * 32px = 1364px
+export const TILE_SIZE = 32; // 32px coordinate unit
+
+export const WORLD_WIDTH = 2048;
+export const WORLD_HEIGHT = 1364;
 
 export const HOME_WIDTH = 12;
 export const HOME_HEIGHT = 12;
@@ -19,7 +22,7 @@ export type TileType =
 export interface InteractiveBuilding {
   id: string;
   name: string;
-  type: 'boutique' | 'arcade' | 'home';
+  type: 'boutique' | 'arcade' | 'casino' | 'pixellab' | 'home';
   x: number;
   y: number;
   width: number;
@@ -31,28 +34,52 @@ export interface InteractiveBuilding {
 
 export const BUILDINGS: InteractiveBuilding[] = [
   {
+    id: 'casino_palace',
+    name: 'CASINO 777 復古拉霸娛樂城',
+    type: 'casino',
+    x: 14,
+    y: 3,
+    width: 12.5,
+    height: 11.5,
+    doorX: 20,
+    doorY: 15.5,
+    prompt: '進入「CASINO」777 復古拉霸娛樂城 🎰 (按 Space / 點我)',
+  },
+  {
     id: 'arcade_qianwu',
-    name: '銭屋 (Qian-Wu) 8-Bit 街機遊樂場',
+    name: 'ARCADE 街機遊樂中心 (1A2B/海戰棋/點線棋)',
     type: 'arcade',
-    x: 13,
-    y: 4,
-    width: 12,
-    height: 8,
-    doorX: 19,
-    doorY: 12,
-    prompt: '進入「銭屋」街機遊樂場 (按 Space / A 鍵)',
+    x: 31,
+    y: 6,
+    width: 12.5,
+    height: 8.5,
+    doorX: 37,
+    doorY: 15.2,
+    prompt: '進入「ARCADE」街機遊樂中心 🕹️ (按 Space / 點我)',
   },
   {
     id: 'boutique_pavilion',
-    name: '島嶼精品服飾店 (BOUTIQUE)',
+    name: 'FASHION 島嶼精品服飾店',
     type: 'boutique',
-    x: 5,
-    y: 6,
-    width: 5,
+    x: 4.5,
+    y: 20.5,
+    width: 9.5,
+    height: 7,
+    doorX: 9.2,
+    doorY: 28,
+    prompt: '進入「FASHION」精品服飾店 👗 (按 Space / 點我)',
+  },
+  {
+    id: 'pixellab_studio',
+    name: 'PixelLab AI 創作者工坊 (生成地圖/UI/服飾)',
+    type: 'pixellab',
+    x: 48,
+    y: 20,
+    width: 6,
     height: 5,
-    doorX: 7,
-    doorY: 11,
-    prompt: '進入精品服飾店 (按 Space / A 鍵)',
+    doorX: 49.5,
+    doorY: 25.5,
+    prompt: '開啟「PixelLab AI」創作者工坊 ✨ (按 Space / 點我)',
   },
 ];
 
@@ -66,14 +93,14 @@ export interface ResidentialPlot {
   doorY: number;
 }
 
+// 6 Residential plots calibrated to the grassy lawns of the background art
 export const RESIDENTIAL_PLOTS: ResidentialPlot[] = [
-  { plotId: 'plot_0', x: 27, y: 6, width: 5, height: 5, doorX: 29, doorY: 11 }, // North-East prime estate (Local player default)
-  { plotId: 'plot_1', x: 5, y: 25, width: 4, height: 4, doorX: 7, doorY: 29 }, // South-West residential
-  { plotId: 'plot_2', x: 12, y: 25, width: 4, height: 4, doorX: 14, doorY: 29 }, // South mid-west
-  { plotId: 'plot_3', x: 21, y: 25, width: 4, height: 4, doorX: 23, doorY: 29 }, // South mid-east
-  { plotId: 'plot_4', x: 28, y: 25, width: 4, height: 4, doorX: 30, doorY: 29 }, // South-East residential
-  { plotId: 'plot_5', x: 3, y: 17, width: 4, height: 4, doorX: 5, doorY: 21 }, // West park estate
-  { plotId: 'plot_6', x: 30, y: 17, width: 4, height: 4, doorX: 32, doorY: 21 }, // East park estate
+  { plotId: 'plot_0', x: 7.5, y: 6, width: 4.5, height: 4.5, doorX: 9.8, doorY: 10.8 }, // North-West hillside plateau (Local player default)
+  { plotId: 'plot_1', x: 46, y: 16.5, width: 4.5, height: 4.5, doorX: 48.2, doorY: 21.2 }, // East coastal lawn (Terry's Manor)
+  { plotId: 'plot_2', x: 34, y: 32.5, width: 4, height: 4, doorX: 36, doorY: 36.8 }, // South park lawn right
+  { plotId: 'plot_3', x: 40, y: 32.5, width: 4, height: 4, doorX: 42, doorY: 36.8 }, // South park lawn far right
+  { plotId: 'plot_4', x: 18, y: 32.5, width: 4, height: 4, doorX: 20, doorY: 36.8 }, // South park lawn left
+  { plotId: 'plot_5', x: 4.5, y: 32.5, width: 4, height: 4, doorX: 6.5, doorY: 36.8 }, // South lawn near pond
 ];
 
 export const DEFAULT_ISLAND_RESIDENTS = [
@@ -116,10 +143,10 @@ export function getActiveHouses(
     ownerName: currentDisplayName || '冒險家',
     level: currentUserLevel || 1,
     isSelf: true,
-    prompt: '進入自己的溫馨小屋 🏡 (按 Space / A 鍵)',
+    prompt: '進入自己的溫馨小屋 🏡 (按 Space / 點我)',
   });
 
-  // 2. All other plots 1..6 are ALWAYS populated (showing other online players or persistent residents)
+  // 2. All other plots 1..5 are ALWAYS populated
   const otherOnlineUids = Object.keys(presences).filter((uid) => uid !== currentUid);
 
   for (let i = 1; i < RESIDENTIAL_PLOTS.length; i++) {
@@ -135,10 +162,9 @@ export function getActiveHouses(
         ownerName,
         level: presence?.houseLevel || 1,
         isSelf: false,
-        prompt: `拜訪 ${ownerName} 的家 🏡 (按 Space / A 鍵)`,
+        prompt: `拜訪 ${ownerName} 的家 🏡 (按 Space / 點我)`,
       });
     } else {
-      // Fallback persistent community resident so the village is NEVER empty
       const defaultRes = DEFAULT_ISLAND_RESIDENTS[(i - 1) % DEFAULT_ISLAND_RESIDENTS.length];
       houses.push({
         ...plot,
@@ -146,7 +172,7 @@ export function getActiveHouses(
         ownerName: defaultRes.name,
         level: defaultRes.level,
         isSelf: false,
-        prompt: `拜訪 ${defaultRes.name} 的家 🏡 (按 Space / A 鍵)`,
+        prompt: `拜訪 ${defaultRes.name} 的家 🏡 (按 Space / 點我)`,
       });
     }
   }
@@ -154,156 +180,38 @@ export function getActiveHouses(
   return houses;
 }
 
-export interface SceneryItem {
-  id: string;
-  type: 
-    | 'utility_pole' 
-    | 'billboard' 
-    | 'car' 
-    | 'vending' 
-    | 'street_lamp' 
-    | 'hedge' 
-    | 'manhole' 
-    | 'road_slow' 
-    | 'tree_pine' 
-    | 'tree_palm' 
-    | 'fountain';
-  x: number;
-  y: number;
-  widthTiles: number;
-  heightTiles: number;
-  walkable?: boolean;
-}
-
-// Scenery items positioned on borders and sidewalks, leaving central avenue COMPLETELY OPEN
-export const TOWN_SCENERY: SceneryItem[] = [
-  // Utility Poles with overhead cables (flanking the arcade facade)
-  { id: 'pole_1', type: 'utility_pole', x: 11, y: 7, widthTiles: 2, heightTiles: 4, walkable: false },
-  { id: 'pole_2', type: 'utility_pole', x: 25, y: 7, widthTiles: 2, heightTiles: 4, walkable: false },
-
-  // Vending Machine
-  { id: 'vending_1', type: 'vending', x: 10, y: 10, widthTiles: 1, heightTiles: 2, walkable: false },
-
-  // Parked Cars along the curb (off-center)
-  { id: 'car_1', type: 'car', x: 8, y: 15, widthTiles: 2, heightTiles: 2, walkable: false },
-  { id: 'car_2', type: 'car', x: 24, y: 15, widthTiles: 2, heightTiles: 2, walkable: false },
-
-  // Retro Billboard & Bench in front (on the right curb)
-  { id: 'billboard_1', type: 'billboard', x: 23, y: 14, widthTiles: 4, heightTiles: 3, walkable: false },
-
-  // Road Markings ("慢" - Slow) on the asphalt (fully walkable)
-  { id: 'road_slow_1', type: 'road_slow', x: 15, y: 13, widthTiles: 1, heightTiles: 1, walkable: true },
-  { id: 'road_slow_2', type: 'road_slow', x: 21, y: 13, widthTiles: 1, heightTiles: 1, walkable: true },
-  { id: 'road_slow_3', type: 'road_slow', x: 18, y: 22, widthTiles: 1, heightTiles: 1, walkable: true },
-
-  // Sewer Manhole Covers (fully walkable)
-  { id: 'manhole_1', type: 'manhole', x: 13, y: 13, widthTiles: 1, heightTiles: 1, walkable: true },
-  { id: 'manhole_2', type: 'manhole', x: 23, y: 13, widthTiles: 1, heightTiles: 1, walkable: true },
-  { id: 'manhole_3', type: 'manhole', x: 18, y: 7, widthTiles: 1, heightTiles: 1, walkable: true },
-
-  // Streetlamps along sidewalks (spaced out to NEVER block the central thoroughfare)
-  { id: 'lamp_1', type: 'street_lamp', x: 7, y: 16, widthTiles: 1, heightTiles: 1, walkable: false },
-  { id: 'lamp_2', type: 'street_lamp', x: 27, y: 16, widthTiles: 1, heightTiles: 1, walkable: false },
-  { id: 'lamp_3', type: 'street_lamp', x: 5, y: 11, widthTiles: 1, heightTiles: 1, walkable: false },
-  { id: 'lamp_4', type: 'street_lamp', x: 31, y: 11, widthTiles: 1, heightTiles: 1, walkable: false },
-  { id: 'lamp_5', type: 'street_lamp', x: 4, y: 24, widthTiles: 1, heightTiles: 1, walkable: false },
-  { id: 'lamp_6', type: 'street_lamp', x: 32, y: 24, widthTiles: 1, heightTiles: 1, walkable: false },
-
-  // Planter Hedges only on the outer sidewalk curbs
-  { id: 'hedge_1', type: 'hedge', x: 9, y: 16, widthTiles: 1, heightTiles: 1, walkable: false },
-  { id: 'hedge_2', type: 'hedge', x: 10, y: 16, widthTiles: 1, heightTiles: 1, walkable: false },
-  { id: 'hedge_3', type: 'hedge', x: 25, y: 16, widthTiles: 1, heightTiles: 1, walkable: false },
-  { id: 'hedge_4', type: 'hedge', x: 26, y: 16, widthTiles: 1, heightTiles: 1, walkable: false },
-
-  // Decorative Trees on the island edges (spacious)
-  { id: 'pine_1', type: 'tree_pine', x: 4, y: 13, widthTiles: 2, heightTiles: 2, walkable: false },
-  { id: 'pine_2', type: 'tree_pine', x: 32, y: 13, widthTiles: 2, heightTiles: 2, walkable: false },
-  { id: 'palm_1', type: 'tree_palm', x: 3, y: 31, widthTiles: 2, heightTiles: 3, walkable: false },
-  { id: 'palm_2', type: 'tree_palm', x: 33, y: 31, widthTiles: 2, heightTiles: 3, walkable: false },
-];
-
-// Determine tile type for spacious island
-export function getIslandTile(x: number, y: number): TileType {
-  // Border Ocean Water on all 4 sides
-  if (x <= 1 || x >= ISLAND_WIDTH - 2 || y <= 1 || y >= ISLAND_HEIGHT - 2) {
-    return 'water';
-  }
-
-  // Inner Sandy Beach Ring on all 4 sides
-  if (x === 2 || x === ISLAND_WIDTH - 3 || y === 2 || y === ISLAND_HEIGHT - 3) {
-    return 'sand';
-  }
-
-  // South Coastal Boardwalk Pier
-  if (y === 30 || y === 31) {
-    return 'boardwalk';
-  }
-
-  // South Beach area
-  if (y >= 32 && y <= ISLAND_HEIGHT - 3) {
-    return 'sand';
-  }
-
-  // South Park Road (y=22..23) — asphalt, full width
-  if (y >= 22 && y <= 23 && x >= 3 && x <= ISLAND_WIDTH - 4) {
-    return 'asphalt';
-  }
-
-  // South park road sidewalks
-  if ((y === 21 || y === 24) && x >= 3 && x <= ISLAND_WIDTH - 4) {
-    return 'sidewalk';
-  }
-
-  // Main Boulevard Asphalt Street (y=12..15)
-  if (y >= 12 && y <= 15 && x >= 3 && x <= ISLAND_WIDTH - 4) {
-    return 'asphalt';
-  }
-
-  // Sidewalks flanking the main boulevard
-  if ((y === 11 || y === 16) && x >= 3 && x <= ISLAND_WIDTH - 4) {
-    return 'sidewalk';
-  }
-
-  // Central North-South Grand Promenade (x=17..20, from arcade to beach)
-  if (x >= 17 && x <= 20) {
-    return 'plaza';
-  }
-
-  // Park District (x=7..31, y=17..21)
-  if (x >= 7 && x <= 31 && y >= 17 && y <= 21) {
-    return 'plaza';
-  }
-
-  // Default is lush town lawn
-  return 'grass';
-}
-
-// Check walkability for smooth continuous movement
+// Highly accurate, frictionless continuous walkability for the pixel-art world map
 export function isIslandWalkable(x: number, y: number, activeHouses: ActiveHouse[] = []): boolean {
-  if (x < 2 || x > ISLAND_WIDTH - 3 || y < 2 || y > ISLAND_HEIGHT - 3) {
+  // 1. World outer boundary limits
+  if (x < 1.5 || x > 62.5 || y < 1.5 || y > 41.5) {
     return false;
   }
 
-  // Ocean is non-walkable
-  const tileX = Math.floor(x);
-  const tileY = Math.floor(y);
-  if (getIslandTile(tileX, tileY) === 'water') {
+  // 2. Northern cliff wall (except the open tunnel road at x: 6..9.5)
+  if (y < 4 && !(x >= 5.5 && x <= 9.5)) {
     return false;
   }
 
-  // Commercial Building footprints (doors are accessible)
+  // 3. Left mountain boundary
+  if (x < 2 && y > 15) {
+    return false;
+  }
+
+  // 4. Building Footprints & Doorways
   for (const b of BUILDINGS) {
-    if (Math.abs(x - b.doorX) <= 0.6 && Math.abs(y - b.doorY) <= 0.6) {
+    // Doorway entrance is always accessible!
+    if (Math.abs(x - b.doorX) <= 1.0 && Math.abs(y - b.doorY) <= 1.0) {
       return true;
     }
+    // Solid building body
     if (x >= b.x - 0.2 && x <= b.x + b.width + 0.2 && y >= b.y - 0.2 && y <= b.y + b.height) {
       return false;
     }
   }
 
-  // Active Player Houses footprints (doors are accessible)
+  // 5. Active Player Houses Footprints & Doorways
   for (const h of activeHouses) {
-    if (Math.abs(x - h.doorX) <= 0.6 && Math.abs(y - h.doorY) <= 0.6) {
+    if (Math.abs(x - h.doorX) <= 1.0 && Math.abs(y - h.doorY) <= 1.0) {
       return true;
     }
     if (x >= h.x - 0.2 && x <= h.x + h.width + 0.2 && y >= h.y - 0.2 && y <= h.y + h.height) {
@@ -311,18 +219,35 @@ export function isIslandWalkable(x: number, y: number, activeHouses: ActiveHouse
     }
   }
 
-  // Non-walkable Scenery Items
-  for (const s of TOWN_SCENERY) {
-    if (s.walkable === false) {
-      if (
-        x >= s.x - 0.3 &&
-        x <= s.x + s.widthTiles + 0.3 &&
-        y >= s.y - 0.3 &&
-        y <= s.y + s.heightTiles + 0.3
-      ) {
-        return false;
-      }
+  // 6. Central Roundabout Water Fountain (radius 2.2 tiles around center x: 30, y: 22)
+  if (Math.hypot(x - 30, y - 22) < 2.4) {
+    return false;
+  }
+
+  // 7. Bottom-Left Duck Pond (Except the wooden crossing bridge at x: 8..11)
+  if (x >= 2 && x <= 13.5 && y >= 34.5 && y <= 39) {
+    const isOnBridge = x >= 8.2 && x <= 11.2 && y >= 34 && y <= 39.5;
+    if (!isOnBridge) {
+      return false;
     }
+  }
+
+  // 8. Ocean & Coastal Water on the right side
+  // Wooden Piers are fully walkable!
+  const isNorthPier = x >= 47 && x <= 58 && y >= 8 && y <= 11.5;
+  const isMidPier = x >= 54 && x <= 61.5 && y >= 19 && y <= 22.5;
+  const isSouthPier = x >= 53 && x <= 61.5 && y >= 35 && y <= 38.5;
+
+  if (isNorthPier || isMidPier || isSouthPier) {
+    return true;
+  }
+
+  // Deep ocean water
+  if (x > 56 && y < 35) {
+    return false;
+  }
+  if (x > 43 && y > 38.5) {
+    return false;
   }
 
   return true;
@@ -339,13 +264,13 @@ export function checkBuildingOrHouseEntrance(
   activeHouses: ActiveHouse[] = []
 ): BuildingOrHouseEntrance | null {
   for (const b of BUILDINGS) {
-    if (Math.abs(x - b.doorX) <= 1.2 && Math.abs(y - b.doorY) <= 1.2) {
+    if (Math.abs(x - b.doorX) <= 1.4 && Math.abs(y - b.doorY) <= 1.4) {
       return { type: 'commercial', building: b };
     }
   }
 
   for (const h of activeHouses) {
-    if (Math.abs(x - h.doorX) <= 1.2 && Math.abs(y - h.doorY) <= 1.2) {
+    if (Math.abs(x - h.doorX) <= 1.4 && Math.abs(y - h.doorY) <= 1.4) {
       return { type: 'house', house: h };
     }
   }
@@ -355,7 +280,7 @@ export function checkBuildingOrHouseEntrance(
 
 export function checkBuildingEntrance(x: number, y: number): InteractiveBuilding | null {
   for (const b of BUILDINGS) {
-    if (Math.abs(x - b.doorX) <= 1.2 && Math.abs(y - b.doorY) <= 1.2) {
+    if (Math.abs(x - b.doorX) <= 1.4 && Math.abs(y - b.doorY) <= 1.4) {
       return b;
     }
   }
