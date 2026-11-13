@@ -85,39 +85,68 @@ function renderSvgFallback(
     case 'body':
       return (
         <svg viewBox="0 0 64 64" className="w-full h-full" shapeRendering="crispEdges">
-          {/* Shadow beneath character */}
-          <ellipse cx="32" cy="60" rx="14" ry="3" fill="rgba(0,0,0,0.25)" />
+          {/* Soft Drop Shadow beneath character */}
+          <ellipse cx="32" cy="61" rx="13" ry="2.8" fill="rgba(0,0,0,0.3)" />
+
+          {/* Natural Anime Skin Tone */}
           {/* Base Head */}
-          <rect x="22" y="14" width="20" height="18" fill="#fde047" />
-          <rect x="24" y="12" width="16" height="2" fill="#fde047" />
-          <rect x="24" y="32" width="16" height="2" fill="#facc15" />
-          {/* Cute Eyes */}
-          <rect x="26" y="22" width="3" height="4" fill="#181425" />
-          <rect x="35" y="22" width="3" height="4" fill="#181425" />
-          {/* Eye sparkle highlights */}
-          <rect x="26" y="22" width="1" height="2" fill="#ffffff" />
-          <rect x="35" y="22" width="1" height="2" fill="#ffffff" />
-          {/* Cheerful Blush */}
-          <rect x="24" y="26" width="3" height="2" fill="#fb7185" opacity="0.8" />
-          <rect x="37" y="26" width="3" height="2" fill="#fb7185" opacity="0.8" />
-          {/* Tiny Smile */}
-          <rect x="30" y="27" width="4" height="1" fill="#92400e" />
-          {/* Neck */}
-          <rect x="29" y="34" width="6" height="3" fill="#eab308" />
+          <rect x="23" y="13" width="18" height="18" fill="#ffdcb4" />
+          <rect x="25" y="11" width="14" height="2" fill="#ffdcb4" />
+          <rect x="25" y="31" width="14" height="2" fill="#f6b88f" />
+          {/* Head Cheek Width */}
+          <rect x="22" y="16" width="1" height="13" fill="#ffdcb4" />
+          <rect x="41" y="16" width="1" height="13" fill="#ffdcb4" />
+
+          {/* Chin Shading */}
+          <rect x="27" y="32" width="10" height="2" fill="#f0a57b" />
+
+          {/* Big Expressive Anime Pixel Eyes */}
+          {/* Left Eye */}
+          <rect x="26" y="20" width="4" height="6" fill="#1e1b4b" rx="1" />
+          <rect x="26" y="21" width="3" height="3" fill="#312e81" />
+          <rect x="26" y="20" width="2" height="2" fill="#ffffff" />
+          <rect x="28" y="24" width="1" height="1" fill="#a5b4fc" />
+
+          {/* Right Eye */}
+          <rect x="34" y="20" width="4" height="6" fill="#1e1b4b" rx="1" />
+          <rect x="34" y="21" width="3" height="3" fill="#312e81" />
+          <rect x="34" y="20" width="2" height="2" fill="#ffffff" />
+          <rect x="36" y="24" width="1" height="1" fill="#a5b4fc" />
+
+          {/* Cute Rosy Cheeks Blush */}
+          <rect x="24" y="26" width="3" height="2" fill="#f43f5e" opacity="0.6" />
+          <rect x="37" y="26" width="3" height="2" fill="#f43f5e" opacity="0.6" />
+
+          {/* Tiny Cute Mouth */}
+          <rect x="31" y="27" width="2" height="1" fill="#e11d48" />
+
+          {/* Delicate Neck */}
+          <rect x="29" y="33" width="6" height="4" fill="#f0a57b" />
+
           {/* Torso Base */}
-          <rect x="24" y="37" width="16" height="12" fill="#fde047" />
-          {/* Arms */}
-          <rect x="20" y="38" width="4" height="10" fill="#fde047" />
-          <rect x="40" y="38" width="4" height="10" fill="#fde047" />
-          {/* Hands */}
-          <rect x="20" y="48" width="4" height="3" fill="#eab308" />
-          <rect x="40" y="48" width="4" height="3" fill="#eab308" />
-          {/* Legs */}
-          <rect x="25" y="49" width="5" height="9" fill="#fde047" />
-          <rect x="34" y="49" width="5" height="9" fill="#fde047" />
-          {/* Shoes/Feet */}
-          <rect x="24" y="58" width="6" height="3" fill="#475569" />
-          <rect x="34" y="58" width="6" height="3" fill="#475569" />
+          <rect x="24" y="37" width="16" height="12" fill="#ffdcb4" />
+
+          {/* Arms with skin tone */}
+          <rect x="20" y="38" width="4" height="10" fill="#ffdcb4" />
+          <rect x="40" y="38" width="4" height="10" fill="#ffdcb4" />
+          {/* Cute Hands */}
+          <rect x="20" y="48" width="4" height="3" fill="#f6b88f" />
+          <rect x="40" y="48" width="4" height="3" fill="#f6b88f" />
+
+          {/* Legs Base */}
+          <rect x="25" y="49" width="5" height="9" fill="#ffdcb4" />
+          <rect x="34" y="49" width="5" height="9" fill="#ffdcb4" />
+
+          {/* Stylish Retro Sneakers */}
+          {/* Left Shoe */}
+          <rect x="23" y="57" width="7" height="3" fill="#ffffff" />
+          <rect x="23" y="56" width="6" height="2" fill="#3b82f6" />
+          <rect x="22" y="59" width="8" height="2" fill="#1e293b" />
+
+          {/* Right Shoe */}
+          <rect x="34" y="57" width="7" height="3" fill="#ffffff" />
+          <rect x="35" y="56" width="6" height="2" fill="#3b82f6" />
+          <rect x="34" y="59" width="8" height="2" fill="#1e293b" />
         </svg>
       );
 
@@ -126,60 +155,77 @@ function renderSvgFallback(
         <svg viewBox="0 0 64 64" className="w-full h-full" shapeRendering="crispEdges">
           {variant === 'twintail' ? (
             <>
-              {/* Twin tails base */}
-              <rect x="22" y="10" width="20" height="12" fill={color} />
-              <rect x="20" y="12" width="24" height="8" fill={color} />
-              <rect x="24" y="8" width="16" height="2" fill={color} />
-              {/* Front Bangs */}
-              <rect x="24" y="16" width="4" height="4" fill={secondaryColor} />
-              <rect x="30" y="16" width="4" height="3" fill={color} />
-              <rect x="36" y="16" width="4" height="4" fill={secondaryColor} />
+              {/* Twin tails base crown */}
+              <rect x="21" y="9" width="22" height="13" fill={color} />
+              <rect x="19" y="11" width="26" height="9" fill={color} />
+              <rect x="23" y="7" width="18" height="2" fill={color} />
+              {/* Glossy Anime Highlight Ring */}
+              <rect x="24" y="11" width="16" height="2" fill="#ffffff" opacity="0.35" />
+              {/* Front Bangs with gentle tips */}
+              <rect x="23" y="14" width="4" height="6" fill={secondaryColor} />
+              <rect x="28" y="14" width="8" height="5" fill={color} />
+              <rect x="37" y="14" width="4" height="6" fill={secondaryColor} />
+              <rect x="30" y="18" width="4" height="2" fill={secondaryColor} />
+              {/* Side Locks */}
+              <rect x="21" y="18" width="2" height="7" fill={color} />
+              <rect x="41" y="18" width="2" height="7" fill={color} />
               {/* Pigtails */}
-              <rect x="14" y="16" width="6" height="16" fill={color} />
-              <rect x="12" y="24" width="4" height="12" fill={secondaryColor} />
-              <rect x="44" y="16" width="6" height="16" fill={color} />
-              <rect x="48" y="24" width="4" height="12" fill={secondaryColor} />
-              {/* Hair ties */}
-              <rect x="17" y="18" width="3" height="3" fill="#f43f5e" />
-              <rect x="44" y="18" width="3" height="3" fill="#f43f5e" />
+              <rect x="13" y="16" width="7" height="18" fill={color} />
+              <rect x="11" y="22" width="5" height="14" fill={secondaryColor} />
+              <rect x="44" y="16" width="7" height="18" fill={color} />
+              <rect x="48" y="22" width="5" height="14" fill={secondaryColor} />
+              {/* Cute Ribbons / Hair ties */}
+              <rect x="17" y="17" width="4" height="4" fill="#fb7185" />
+              <rect x="43" y="17" width="4" height="4" fill="#fb7185" />
             </>
           ) : variant === 'spiky' ? (
             <>
-              {/* Spiky Tuft */}
-              <rect x="28" y="4" width="8" height="6" fill={color} />
-              <rect x="22" y="8" width="20" height="10" fill={color} />
-              <rect x="18" y="10" width="6" height="6" fill={secondaryColor} />
-              <rect x="40" y="10" width="6" height="6" fill={secondaryColor} />
-              <rect x="30" y="6" width="4" height="4" fill="#ffffff" opacity="0.3" />
-              {/* Bangs */}
-              <rect x="24" y="16" width="5" height="4" fill={color} />
-              <rect x="31" y="16" width="4" height="3" fill={secondaryColor} />
-              <rect x="37" y="16" width="4" height="4" fill={color} />
+              {/* Spiky Anime Tuft */}
+              <rect x="27" y="3" width="10" height="6" fill={color} />
+              <rect x="20" y="7" width="24" height="12" fill={color} />
+              <rect x="16" y="9" width="8" height="8" fill={secondaryColor} />
+              <rect x="40" y="9" width="8" height="8" fill={secondaryColor} />
+              <rect x="29" y="5" width="6" height="3" fill="#ffffff" opacity="0.4" />
+              {/* Jagged Bangs */}
+              <polygon points="24,19 27,15 30,19 33,14 36,19 39,15 41,19" fill={color} />
+              <rect x="22" y="17" width="2" height="5" fill={secondaryColor} />
+              <rect x="40" y="17" width="2" height="5" fill={secondaryColor} />
             </>
           ) : variant === 'beanie' ? (
             <>
               {/* Beanie Hat */}
-              <rect x="22" y="8" width="20" height="10" fill={color} />
-              <rect x="20" y="12" width="24" height="6" fill={color} />
-              <rect x="18" y="16" width="28" height="4" fill={secondaryColor} />
-              {/* Pom-pom */}
-              <rect x="30" y="4" width="4" height="4" fill="#ffffff" />
-              {/* Visible hair tufts */}
-              <rect x="23" y="20" width="4" height="3" fill="#451a03" />
-              <rect x="37" y="20" width="4" height="3" fill="#451a03" />
+              <rect x="21" y="7" width="22" height="11" fill={color} />
+              <rect x="19" y="11" width="26" height="7" fill={color} />
+              <rect x="17" y="15" width="30" height="5" fill={secondaryColor} />
+              {/* Ribbed texture & Pom-pom */}
+              <rect x="30" y="3" width="4" height="4" fill="#ffffff" rx="1" />
+              <rect x="22" y="16" width="2" height="3" fill="#000000" opacity="0.2" />
+              <rect x="28" y="16" width="2" height="3" fill="#000000" opacity="0.2" />
+              <rect x="34" y="16" width="2" height="3" fill="#000000" opacity="0.2" />
+              <rect x="40" y="16" width="2" height="3" fill="#000000" opacity="0.2" />
+              {/* Soft Side Strands */}
+              <rect x="22" y="19" width="3" height="6" fill="#3e2723" />
+              <rect x="39" y="19" width="3" height="6" fill="#3e2723" />
             </>
           ) : (
             <>
-              {/* Classic Short / Side Part */}
-              <rect x="22" y="10" width="20" height="12" fill={color} />
-              <rect x="20" y="12" width="24" height="8" fill={color} />
-              <rect x="24" y="8" width="16" height="2" fill={color} />
-              {/* Highlights */}
-              <rect x="26" y="12" width="6" height="2" fill="#ffffff" opacity="0.4" />
-              {/* Bangs */}
-              <rect x="23" y="16" width="6" height="5" fill={color} />
-              <rect x="31" y="16" width="5" height="4" fill={secondaryColor} />
-              <rect x="37" y="16" width="5" height="5" fill={color} />
+              {/* Modern Layered Anime Short Hair */}
+              <rect x="21" y="9" width="22" height="13" fill={color} />
+              <rect x="19" y="11" width="26" height="9" fill={color} />
+              <rect x="23" y="7" width="18" height="2" fill={color} />
+              {/* Angel Ring Anime Sheen */}
+              <rect x="24" y="11" width="16" height="2" fill="#ffffff" opacity="0.4" />
+              {/* Side Burns framing face */}
+              <rect x="21" y="18" width="3" height="8" fill={color} />
+              <rect x="40" y="18" width="3" height="8" fill={color} />
+              {/* Beautiful Layered Bangs */}
+              <rect x="23" y="15" width="5" height="5" fill={color} />
+              <rect x="29" y="15" width="6" height="4" fill={secondaryColor} />
+              <rect x="36" y="15" width="5" height="5" fill={color} />
+              {/* Tip strands */}
+              <rect x="25" y="19" width="2" height="2" fill={secondaryColor} />
+              <rect x="32" y="18" width="2" height="2" fill={secondaryColor} />
+              <rect x="37" y="19" width="2" height="2" fill={secondaryColor} />
             </>
           )}
         </svg>
@@ -190,35 +236,47 @@ function renderSvgFallback(
         <svg viewBox="0 0 64 64" className="w-full h-full" shapeRendering="crispEdges">
           {/* Main Shirt Body */}
           <rect x="24" y="37" width="16" height="13" fill={color} />
+          {/* Bottom Hem Band */}
+          <rect x="24" y="49" width="16" height="1.5" fill={secondaryColor} />
           {/* Sleeves */}
-          <rect x="20" y="37" width="4" height="7" fill={color} />
-          <rect x="40" y="37" width="4" height="7" fill={color} />
+          <rect x="20" y="37" width="4" height="8" fill={color} />
+          <rect x="40" y="37" width="4" height="8" fill={color} />
+          {/* Sleeve Cuffs */}
+          <rect x="20" y="44" width="4" height="1" fill={secondaryColor} />
+          <rect x="40" y="44" width="4" height="1" fill={secondaryColor} />
+
           {/* Collar / Pattern */}
           {variant === 'striped' ? (
             <>
-              <rect x="24" y="40" width="16" height="2" fill={secondaryColor} />
-              <rect x="24" y="44" width="16" height="2" fill={secondaryColor} />
-              <rect x="24" y="48" width="16" height="2" fill={secondaryColor} />
+              {/* Sailor Collar with Stripes */}
+              <rect x="28" y="37" width="8" height="3" fill="#ffffff" />
+              <rect x="24" y="41" width="16" height="2" fill={secondaryColor} />
+              <rect x="24" y="45" width="16" height="2" fill={secondaryColor} />
             </>
           ) : variant === 'hoodie' ? (
             <>
-              {/* Hood Neckline & Pocket */}
-              <rect x="28" y="37" width="8" height="3" fill={secondaryColor} />
-              <rect x="27" y="44" width="10" height="4" fill={secondaryColor} />
+              {/* Streetwear Hoodie with Pocket & Cords */}
+              <rect x="28" y="36" width="8" height="4" fill={secondaryColor} />
+              {/* White drawstrings */}
+              <rect x="29" y="39" width="1" height="4" fill="#ffffff" />
+              <rect x="34" y="39" width="1" height="4" fill="#ffffff" />
+              {/* Kangaroo Pocket */}
+              <rect x="27" y="44" width="10" height="4" fill={secondaryColor} rx="1" />
             </>
           ) : variant === 'coat' ? (
             <>
-              {/* Trenchcoat Lapels & Buttons */}
-              <polygon points="28,37 36,37 32,45" fill={secondaryColor} />
-              <rect x="30" y="42" width="1" height="2" fill="#facc15" />
-              <rect x="33" y="42" width="1" height="2" fill="#facc15" />
-              <rect x="30" y="46" width="1" height="2" fill="#facc15" />
-              <rect x="33" y="46" width="1" height="2" fill="#facc15" />
+              {/* Stylish Bomber Jacket with Center Zipper */}
+              <rect x="31" y="37" width="2" height="13" fill="#e2e8f0" />
+              <rect x="24" y="37" width="3" height="13" fill={secondaryColor} />
+              <rect x="37" y="37" width="3" height="13" fill={secondaryColor} />
+              {/* Gold Pins */}
+              <rect x="28" y="41" width="2" height="2" fill="#facc15" />
             </>
           ) : (
             <>
-              {/* Standard Collar */}
-              <rect x="29" y="37" width="6" height="2" fill={secondaryColor} />
+              {/* Classic V-Neck with Inner Tee */}
+              <polygon points="30,37 34,37 32,41" fill="#ffffff" />
+              <rect x="27" y="37" width="10" height="1.5" fill={secondaryColor} />
             </>
           )}
         </svg>
@@ -229,38 +287,34 @@ function renderSvgFallback(
         <svg viewBox="0 0 64 64" className="w-full h-full" shapeRendering="crispEdges">
           {variant === 'skirt' ? (
             <>
-              {/* Pleated Skirt */}
-              <rect x="23" y="48" width="18" height="3" fill={color} />
-              <rect x="21" y="51" width="22" height="5" fill={color} />
-              <rect x="25" y="51" width="2" height="5" fill={secondaryColor} />
-              <rect x="31" y="51" width="2" height="5" fill={secondaryColor} />
-              <rect x="37" y="51" width="2" height="5" fill={secondaryColor} />
+              {/* Cute Pleated Anime Skirt */}
+              <rect x="23" y="48" width="18" height="2.5" fill={color} />
+              <rect x="21" y="50" width="22" height="6" fill={color} />
+              {/* Pleat Shading Lines */}
+              <rect x="24" y="50" width="1.5" height="6" fill={secondaryColor} />
+              <rect x="28" y="50" width="1.5" height="6" fill={secondaryColor} />
+              <rect x="34" y="50" width="1.5" height="6" fill={secondaryColor} />
+              <rect x="38" y="50" width="1.5" height="6" fill={secondaryColor} />
             </>
           ) : variant === 'shorts' ? (
             <>
-              {/* Casual Shorts */}
+              {/* Trendy Denim Shorts */}
               <rect x="24" y="48" width="16" height="3" fill={color} />
-              <rect x="24" y="51" width="7" height="4" fill={color} />
-              <rect x="33" y="51" width="7" height="4" fill={color} />
-            </>
-          ) : variant === 'dungarees' ? (
-            <>
-              {/* Dungaree Bib and Straps */}
-              <rect x="26" y="40" width="12" height="8" fill={color} />
-              <rect x="25" y="37" width="3" height="4" fill={color} />
-              <rect x="36" y="37" width="3" height="4" fill={color} />
-              <rect x="26" y="48" width="12" height="3" fill={color} />
-              <rect x="24" y="51" width="7" height="7" fill={color} />
-              <rect x="33" y="51" width="7" height="7" fill={color} />
+              <rect x="23" y="51" width="8" height="4" fill={color} />
+              <rect x="33" y="51" width="8" height="4" fill={color} />
+              <rect x="27" y="49" width="10" height="1" fill={secondaryColor} />
             </>
           ) : (
             <>
-              {/* Classic Jeans */}
+              {/* Cool Cuffed Slim Jeans */}
               <rect x="24" y="48" width="16" height="3" fill={color} />
-              <rect x="24" y="51" width="7" height="8" fill={color} />
-              <rect x="33" y="51" width="7" height="8" fill={color} />
-              <rect x="24" y="51" width="2" height="8" fill={secondaryColor} />
-              <rect x="38" y="51" width="2" height="8" fill={secondaryColor} />
+              <rect x="25" y="50" width="6" height="7" fill={color} />
+              <rect x="33" y="50" width="6" height="7" fill={color} />
+              {/* Pocket stitches & Belt line */}
+              <rect x="25" y="49" width="14" height="1" fill="#facc15" opacity="0.6" />
+              {/* Cuffed Ankles */}
+              <rect x="25" y="56" width="6" height="1.5" fill={secondaryColor} />
+              <rect x="33" y="56" width="6" height="1.5" fill={secondaryColor} />
             </>
           )}
         </svg>

@@ -238,6 +238,15 @@ export class DatabaseService {
     return null;
   }
 
+  public async rewardCoins(uid: string, amount: number): Promise<void> {
+    const profile = await this.getUserProfile(uid);
+    if (profile) {
+      await this.updateUserProfile(uid, {
+        coins: (profile.coins || 0) + amount,
+      });
+    }
+  }
+
   // --- REALTIME PRESENCE (RTDB) ---
 
   public updatePresence(presence: IslandPresence): void {

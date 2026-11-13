@@ -11,7 +11,9 @@ import {
 import { 
   isIslandWalkable, 
   isHomeWalkable, 
-  checkBuildingEntrance, 
+  checkBuildingOrHouseEntrance, 
+  getActiveHouses,
+  ActiveHouse,
   HOME_HEIGHT 
 } from './config/mapData';
 import { IslandMap } from './components/IslandMap';
@@ -124,11 +126,17 @@ export const App: React.FC = () => {
     }
   }, [currentUser, presences, syncSelfPresence]);
 
-  // Detect interaction at current position
-  const contextBuilding = useMemo(() => {
+  // Active houses mapped for all online players (plot 0 for self, plots 1..6 for others)
+  const activeHouses = useMemo(() => {
+    if (!currentUser) return [];
+    return getActiveHouses(currentUser.uid, currentUser.displayName, presences);
+  }, [currentUser, presences]);
+
+  // Detect interaction at current position (Commercial buildings or any Player's House!)
+  const contextEntrance = useMemo(() => {
     if (currentPlace !== 'island') return null;
-    return checkBuildingEntrance(localPos.x, localPos.y);
-  }, [currentPlace, localPos.x, localPos.y]);
+    return checkBuildingOrHouseEntrance(localPos.x, localPos.y, activeHouses);
+  }, [currentPlace, localPos.x, localPos.y, activeHouses]);
 
   const isHomeExitMat = useMemo(() => {
     if (currentPlace !== 'home') return false;
@@ -137,16 +145,47 @@ export const App: React.FC = () => {
 
   // Determine floating contextual prompt text
   const contextPrompt = useMemo(() => {
-    if (contextBuilding) {
-      if (contextBuilding.type === 'boutique') return '進入精品服飾店 👗';
-      if (contextBuilding.type === 'arcade') return '進入「銭屋」街機遊樂場 🕹️';
-      if (contextBuilding.type === 'home') return '進入個人溫馨小屋 🏡';
+    if (contextEntrance) {
+      if (contextEntrance.type === 'commercial') {
+        const b = contextEntrance.building;
+        if (b.type === 'boutique') return '進入精品服飾店 👗';
+        if (b.type === 'arcade') return '進入「銭屋」街機遊樂場 🕹️';
+      } else if (contextEntrance.type === 'house') {
+        const h = contextEntrance.house;
+        return h.isSelf ? '進入個人溫馨小屋 🏡' : `拜訪 ${h.ownerName} 的家 🏡`;
+      }
     }
     if (isHomeExitMat) {
       return '離開小屋 (回到島嶼) 🚪';
     }
     return null;
-  }, [contextBuilding, isHomeExitMat]);
+  }, [contextEntrance, isHomeExitMat]);
+
+  // Enter house helper (for self or visiting another player's house)
+  const handleEnterHouse = useCallback((targetHouse: ActiveHouse) => {
+    sound.playDoor();
+    const isSelf = targetHouse.ownerUid === currentUser?.uid;
+    const targetUser = isSelf
+      ? currentUser
+      : {
+          uid: targetHouse.ownerUid,
+          displayName: targetHouse.ownerName,
+          coins: 100,
+          equipped: { hair: 'hair_brown', top: 'top_casual', bottom: 'bottom_denim', accessory: null },
+          inventory: [],
+          roomLayout: [],
+          friends: [],
+          friendRequests: [],
+        };
+    setVisitingUser(targetUser as UserProfile);
+    setCurrentPlace('home');
+    syncSelfPresence({
+      currentPlace: 'home',
+      x: 4,
+      y: 5,
+      visitingHomeUid: targetHouse.ownerUid,
+    }, true);
+  }, [currentUser, syncSelfPresence]);
 
   // Handle Player Movement (Instant local responsiveness, buttery smooth continuous walking)
   const handleMove = useCallback(
@@ -174,7 +213,7 @@ export const App: React.FC = () => {
 
       let canWalk = false;
       if (currentPlace === 'island') {
-        canWalk = isIslandWalkable(nextX, nextY);
+        canWalk = isIslandWalkable(nextX, nextY, activeHouses);
       } else {
         canWalk = isHomeWalkable(nextX, nextY);
       }
@@ -209,27 +248,23 @@ export const App: React.FC = () => {
         sound.playBump();
       }
     },
-    [currentUser, currentPlace, syncSelfPresence]
+    [currentUser, currentPlace, activeHouses, syncSelfPresence]
   );
 
   // Handle Interaction (Space / Enter / A Button / Click Prompt)
   const handleInteract = useCallback(() => {
-    if (contextBuilding) {
+    if (contextEntrance) {
       sound.playDoor();
-      if (contextBuilding.type === 'boutique') {
-        setBoutiqueInitialTab('shop');
-        setIsBoutiqueOpen(true);
-      } else if (contextBuilding.type === 'arcade') {
-        setIsArcadeOpen(true);
-      } else if (contextBuilding.type === 'home') {
-        setVisitingUser(currentUser);
-        setCurrentPlace('home');
-        syncSelfPresence({
-          currentPlace: 'home',
-          x: 5,
-          y: 7,
-          visitingHomeUid: currentUser?.uid,
-        }, true);
+      if (contextEntrance.type === 'commercial') {
+        const b = contextEntrance.building;
+        if (b.type === 'boutique') {
+          setBoutiqueInitialTab('shop');
+          setIsBoutiqueOpen(true);
+        } else if (b.type === 'arcade') {
+          setIsArcadeOpen(true);
+        }
+      } else if (contextEntrance.type === 'house') {
+        handleEnterHouse(contextEntrance.house);
       }
       return;
     }
@@ -237,15 +272,19 @@ export const App: React.FC = () => {
     if (isHomeExitMat) {
       sound.playDoor();
       setCurrentPlace('island');
+      const targetHouse = activeHouses.find((h) => h.ownerUid === visitingUser?.uid) || activeHouses[0];
+      const exitX = targetHouse ? targetHouse.doorX : 28;
+      const exitY = targetHouse ? targetHouse.doorY + 1 : 12;
+      setLocalPos({ x: exitX, y: exitY, facing: 'right', isMoving: false });
       setVisitingUser(null);
       syncSelfPresence({
         currentPlace: 'island',
-        x: 28,
-        y: 12,
+        x: exitX,
+        y: exitY,
         visitingHomeUid: undefined,
       }, true);
     }
-  }, [contextBuilding, isHomeExitMat, currentUser, syncSelfPresence]);
+  }, [contextEntrance, isHomeExitMat, activeHouses, visitingUser, handleEnterHouse, syncSelfPresence]);
 
   // Handle Sending Emoji Bubble
   const handleSendEmoji = useCallback(
@@ -364,8 +403,10 @@ export const App: React.FC = () => {
             currentUser={currentUser}
             presences={presences}
             itemsMap={itemsMap}
+            activeHouses={activeHouses}
             onTileClick={handleTileClick}
             onPlayerClick={(player) => setSelectedPlayer(player)}
+            onEnterHouse={handleEnterHouse}
           />
         ) : (
           <HomeMap
@@ -376,13 +417,17 @@ export const App: React.FC = () => {
             onSaveLayout={handleSaveRoomLayout}
             onExitHome={() => {
               setCurrentPlace('island');
+              const targetHouse = activeHouses.find((h) => h.ownerUid === visitingUser?.uid) || activeHouses[0];
+              const exitX = targetHouse ? targetHouse.doorX : 28;
+              const exitY = targetHouse ? targetHouse.doorY + 1 : 12;
+              setLocalPos({ x: exitX, y: exitY, facing: 'right', isMoving: false });
               setVisitingUser(null);
               syncSelfPresence({
                 currentPlace: 'island',
-                x: 36,
-                y: 11,
+                x: exitX,
+                y: exitY,
                 visitingHomeUid: undefined,
-              });
+              }, true);
               sound.playDoor();
             }}
             onTileClick={handleTileClick}

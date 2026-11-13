@@ -54,43 +54,96 @@ export const BUILDINGS: InteractiveBuilding[] = [
     doorY: 11,
     prompt: '進入精品服飾店 (按 Space / A 鍵)',
   },
-  {
-    id: 'cozy_home',
-    name: '溫馨個人小屋 (MY HOME)',
-    type: 'home',
-    x: 26,
-    y: 6,
-    width: 5,
-    height: 5,
-    doorX: 28,
-    doorY: 11,
-    prompt: '進入個人小屋 (按 Space / A 鍵)',
-  },
-  {
-    id: 'cafe',
-    name: '☕ 島嶼咖啡廳',
-    type: 'boutique',
-    x: 7,
-    y: 24,
-    width: 4,
-    height: 4,
-    doorX: 9,
-    doorY: 27,
-    prompt: '進入咖啡廳',
-  },
-  {
-    id: 'library',
-    name: '📚 像素圖書館',
-    type: 'boutique',
-    x: 25,
-    y: 24,
-    width: 4,
-    height: 4,
-    doorX: 27,
-    doorY: 27,
-    prompt: '進入圖書館',
-  },
 ];
+
+export interface ResidentialPlot {
+  plotId: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  doorX: number;
+  doorY: number;
+}
+
+export const RESIDENTIAL_PLOTS: ResidentialPlot[] = [
+  { plotId: 'plot_0', x: 26, y: 6, width: 5, height: 5, doorX: 28, doorY: 11 }, // North-East prime estate (Local player default)
+  { plotId: 'plot_1', x: 6, y: 24, width: 4, height: 4, doorX: 8, doorY: 28 }, // South-West residential
+  { plotId: 'plot_2', x: 12, y: 24, width: 4, height: 4, doorX: 14, doorY: 28 }, // South mid-west
+  { plotId: 'plot_3', x: 18, y: 24, width: 4, height: 4, doorX: 20, doorY: 28 }, // South mid-east
+  { plotId: 'plot_4', x: 24, y: 24, width: 4, height: 4, doorX: 26, doorY: 28 }, // South-East residential
+  { plotId: 'plot_5', x: 3, y: 17, width: 4, height: 4, doorX: 5, doorY: 21 }, // West park estate
+  { plotId: 'plot_6', x: 29, y: 17, width: 4, height: 4, doorX: 31, doorY: 21 }, // East park estate
+];
+
+export const ROOF_PALETTES = [
+  { color: '#d97706', shadow: '#b45309' }, // Amber / Terracotta
+  { color: '#2563eb', shadow: '#1d4ed8' }, // Sapphire Ocean Blue
+  { color: '#16a34a', shadow: '#15803d' }, // Forest Emerald
+  { color: '#e11d48', shadow: '#be123c' }, // Sweet Berry Red
+  { color: '#9333ea', shadow: '#7e22ce' }, // Royal Lilac
+  { color: '#0d9488', shadow: '#0f766e' }, // Tropical Teal
+  { color: '#ea580c', shadow: '#c2410c' }, // Sunset Orange
+];
+
+export interface ActiveHouse {
+  plotId: string;
+  ownerUid: string;
+  ownerName: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  doorX: number;
+  doorY: number;
+  roofColor: string;
+  roofShadow: string;
+  isSelf: boolean;
+  prompt: string;
+}
+
+// Compute active houses for all players online
+export function getActiveHouses(
+  currentUid: string,
+  currentDisplayName: string,
+  presences: Record<string, any>
+): ActiveHouse[] {
+  const houses: ActiveHouse[] = [];
+
+  // Local player always owns Plot 0
+  const selfPalette = ROOF_PALETTES[0];
+  houses.push({
+    ...RESIDENTIAL_PLOTS[0],
+    ownerUid: currentUid,
+    ownerName: currentDisplayName || '冒險家',
+    roofColor: selfPalette.color,
+    roofShadow: selfPalette.shadow,
+    isSelf: true,
+    prompt: '進入自己的溫馨小屋 🏡 (按 Space / A 鍵)',
+  });
+
+  // Assign other active players to subsequent plots
+  const otherUids = Object.keys(presences).filter((uid) => uid !== currentUid).sort();
+  otherUids.forEach((uid, index) => {
+    const plotIndex = (index % (RESIDENTIAL_PLOTS.length - 1)) + 1;
+    const plot = RESIDENTIAL_PLOTS[plotIndex];
+    const palette = ROOF_PALETTES[(index + 1) % ROOF_PALETTES.length];
+    const presence = presences[uid];
+    const ownerName = presence?.displayName || `玩家 #${uid.slice(-4)}`;
+
+    houses.push({
+      ...plot,
+      ownerUid: uid,
+      ownerName,
+      roofColor: palette.color,
+      roofShadow: palette.shadow,
+      isSelf: false,
+      prompt: `拜訪 ${ownerName} 的家 🏡 (按 Space / A 鍵)`,
+    });
+  });
+
+  return houses;
+}
 
 export interface SceneryItem {
   id: string;
@@ -262,7 +315,7 @@ export function getIslandTile(x: number, y: number): TileType {
 }
 
 // Check walkability on the square island
-export function isIslandWalkable(x: number, y: number): boolean {
+export function isIslandWalkable(x: number, y: number, activeHouses: ActiveHouse[] = []): boolean {
   if (x < 0 || x >= ISLAND_WIDTH || y < 0 || y >= ISLAND_HEIGHT) {
     return false;
   }
@@ -272,12 +325,22 @@ export function isIslandWalkable(x: number, y: number): boolean {
     return false;
   }
 
-  // Building footprints (doors are accessible)
+  // Commercial Building footprints (doors are accessible)
   for (const b of BUILDINGS) {
     if (x === b.doorX && y === b.doorY) {
       return true;
     }
     if (x >= b.x && x < b.x + b.width && y >= b.y && y < b.y + b.height) {
+      return false;
+    }
+  }
+
+  // Active Player Houses footprints (doors are accessible)
+  for (const h of activeHouses) {
+    if (x === h.doorX && y === h.doorY) {
+      return true;
+    }
+    if (x >= h.x && x < h.x + h.width && y >= h.y && y < h.y + h.height) {
       return false;
     }
   }
@@ -294,14 +357,35 @@ export function isIslandWalkable(x: number, y: number): boolean {
   return true;
 }
 
+export type BuildingOrHouseEntrance = 
+  | { type: 'commercial'; building: InteractiveBuilding }
+  | { type: 'house'; house: ActiveHouse };
+
 // Check if player is standing on or directly adjacent to entrance
+export function checkBuildingOrHouseEntrance(
+  x: number,
+  y: number,
+  activeHouses: ActiveHouse[] = []
+): BuildingOrHouseEntrance | null {
+  for (const b of BUILDINGS) {
+    if (x === b.doorX && (y === b.doorY || y === b.doorY - 1 || y === b.doorY + 1)) {
+      return { type: 'commercial', building: b };
+    }
+  }
+
+  for (const h of activeHouses) {
+    if (x === h.doorX && (y === h.doorY || y === h.doorY - 1 || y === h.doorY + 1)) {
+      return { type: 'house', house: h };
+    }
+  }
+
+  return null;
+}
+
+// Legacy helper for backwards compatibility
 export function checkBuildingEntrance(x: number, y: number): InteractiveBuilding | null {
   for (const b of BUILDINGS) {
-    if (x === b.doorX && y === b.doorY) {
-      return b;
-    }
-    // Also trigger if 1 step directly in front
-    if (x === b.doorX && (y === b.doorY - 1 || y === b.doorY + 1)) {
+    if (x === b.doorX && (y === b.doorY || y === b.doorY - 1 || y === b.doorY + 1)) {
       return b;
     }
   }

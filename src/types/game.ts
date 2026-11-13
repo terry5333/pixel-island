@@ -90,6 +90,36 @@ export interface GameOOXXState {
   winningLine?: number[];
 }
 
+export interface BattleshipCoordinate {
+  x: number;
+  y: number;
+}
+
+export interface BattleshipShip {
+  id: string;
+  name: string;
+  length: number;
+  coords: BattleshipCoordinate[];
+  hits: number;
+  sunk: boolean;
+}
+
+export interface GameBattleshipState {
+  hostShips: BattleshipShip[];
+  guestShips: BattleshipShip[];
+  hostReady: boolean;
+  guestReady: boolean;
+  hostShots: { x: number; y: number; hit: boolean }[];
+  guestShots: { x: number; y: number; hit: boolean }[];
+}
+
+export interface GameDotsBoxesState {
+  horizontalEdges: boolean[]; // 20 edges (4 cols x 5 rows)
+  verticalEdges: boolean[];   // 20 edges (5 cols x 4 rows)
+  boxes: (string | null)[];   // 16 boxes (4x4)
+  scores: Record<string, number>;
+}
+
 export interface ArcadeRoom {
   roomId: string;
   gameType: GameType;
@@ -104,6 +134,8 @@ export interface ArcadeRoom {
   isPublic: boolean;
   state1a2b?: Game1A2BState;
   stateOoxx?: GameOOXXState;
+  stateBattleship?: GameBattleshipState;
+  stateDotsBoxes?: GameDotsBoxesState;
   createdAt: number;
   updatedAt: number;
 }
