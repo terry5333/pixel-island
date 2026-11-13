@@ -23,7 +23,7 @@ import {
 } from 'firebase/database';
 import { auth, db, rtdb, googleProvider, isFirebaseConfigured } from '../config/firebase';
 import { mockNetwork, getStoredItems, saveStoredItems, getStoredRooms, saveStoredRoom, deleteStoredRoom } from './mockDb';
-import { Item, UserProfile, IslandPresence, ArcadeRoom } from '../types/game';
+import { Item, UserProfile, IslandPresence, ArcadeRoom, FriendEntry, FriendRequest } from '../types/game';
 
 const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || '')
   .split(',')
@@ -442,6 +442,144 @@ export class DatabaseService {
       reader.onload = () => resolve(reader.result as string);
       reader.readAsDataURL(file);
     });
+  }
+
+  // --- FRIEND SYSTEM ---
+
+  // In-memory mock store for friends in mock mode
+  private _mockFriends: Record<string, FriendEntry[]> = {};
+  private _mockFriendRequests: Record<string, FriendRequest[]> = {};
+
+  public async sendFriendRequest(fromUid: string, fromName: string, toUid: string, toName: string): Promise<void> {
+    const requestId = `${fromUid}_${toUid}`;
+    const request: FriendRequest = {
+      fromUid,
+      fromName,
+      toUid,
+      toName,
+      status: 'pending',
+      createdAt: Date.now(),
+    };
+
+    if (isFirebaseConfigured && db) {
+      await setDoc(doc(db, 'friend_requests', requestId), request);
+    } else {
+      // Mock: store for target user
+      if (!this._mockFriendRequests[toUid]) this._mockFriendRequests[toUid] = [];
+      const existing = this._mockFriendRequests[toUid].findIndex(r => r.fromUid === fromUid);
+      if (existing === -1) {
+        this._mockFriendRequests[toUid].push(request);
+      }
+    }
+  }
+
+  public async acceptFriendRequest(currentUid: string, fromUid: string): Promise<void> {
+    const requestId = `${fromUid}_${currentUid}`;
+
+    if (isFirebaseConfigured && db) {
+      // Update request status
+      await updateDoc(doc(db, 'friend_requests', requestId), { status: 'accepted' });
+
+      // Add each other as friends in user docs
+      const now = Date.now();
+      const currentRef = doc(db, 'users', currentUid);
+      const fromRef = doc(db, 'users', fromUid);
+
+      const [currentSnap, fromSnap] = await Promise.all([getDoc(currentRef), getDoc(fromRef)]);
+      const currentData = currentSnap.data() as UserProfile | undefined;
+      const fromData = fromSnap.data() as UserProfile | undefined;
+
+      const currentFriends: FriendEntry[] = currentData?.friends ?? [];
+      const fromFriends: FriendEntry[] = fromData?.friends ?? [];
+
+      if (!currentFriends.find(f => f.uid === fromUid)) {
+        currentFriends.push({ uid: fromUid, displayName: fromData?.displayName ?? fromUid, addedAt: now });
+      }
+      if (!fromFriends.find(f => f.uid === currentUid)) {
+        fromFriends.push({ uid: currentUid, displayName: currentData?.displayName ?? currentUid, addedAt: now });
+      }
+
+      await Promise.all([
+        updateDoc(currentRef, { friends: currentFriends }),
+        updateDoc(fromRef, { friends: fromFriends }),
+      ]);
+    } else {
+      // Mock
+      const now = Date.now();
+      if (!this._mockFriends[currentUid]) this._mockFriends[currentUid] = [];
+      if (!this._mockFriends[fromUid]) this._mockFriends[fromUid] = [];
+      this._mockFriends[currentUid].push({ uid: fromUid, displayName: fromUid, addedAt: now });
+      this._mockFriends[fromUid].push({ uid: currentUid, displayName: currentUid, addedAt: now });
+
+      if (this._mockFriendRequests[currentUid]) {
+        this._mockFriendRequests[currentUid] = this._mockFriendRequests[currentUid].filter(r => r.fromUid !== fromUid);
+      }
+    }
+  }
+
+  public async rejectFriendRequest(currentUid: string, fromUid: string): Promise<void> {
+    const requestId = `${fromUid}_${currentUid}`;
+
+    if (isFirebaseConfigured && db) {
+      await updateDoc(doc(db, 'friend_requests', requestId), { status: 'rejected' });
+    } else {
+      if (this._mockFriendRequests[currentUid]) {
+        this._mockFriendRequests[currentUid] = this._mockFriendRequests[currentUid].filter(r => r.fromUid !== fromUid);
+      }
+    }
+  }
+
+  public async removeFriend(currentUid: string, friendUid: string): Promise<void> {
+    if (isFirebaseConfigured && db) {
+      const currentRef = doc(db, 'users', currentUid);
+      const friendRef = doc(db, 'users', friendUid);
+
+      const [currentSnap, friendSnap] = await Promise.all([getDoc(currentRef), getDoc(friendRef)]);
+      const currentData = currentSnap.data() as UserProfile | undefined;
+      const friendData = friendSnap.data() as UserProfile | undefined;
+
+      const currentFriends = (currentData?.friends ?? []).filter(f => f.uid !== friendUid);
+      const friendFriends = (friendData?.friends ?? []).filter(f => f.uid !== currentUid);
+
+      await Promise.all([
+        updateDoc(currentRef, { friends: currentFriends }),
+        updateDoc(friendRef, { friends: friendFriends }),
+      ]);
+    } else {
+      if (this._mockFriends[currentUid]) {
+        this._mockFriends[currentUid] = this._mockFriends[currentUid].filter(f => f.uid !== friendUid);
+      }
+      if (this._mockFriends[friendUid]) {
+        this._mockFriends[friendUid] = this._mockFriends[friendUid].filter(f => f.uid !== currentUid);
+      }
+    }
+  }
+
+  public subscribeToFriends(uid: string, callback: (friends: FriendEntry[]) => void): () => void {
+    if (isFirebaseConfigured && db) {
+      return onSnapshot(doc(db, 'users', uid), (snap) => {
+        const data = snap.data() as UserProfile | undefined;
+        callback(data?.friends ?? []);
+      });
+    } else {
+      callback(this._mockFriends[uid] ?? []);
+      return () => {};
+    }
+  }
+
+  public subscribeToFriendRequests(uid: string, callback: (requests: FriendRequest[]) => void): () => void {
+    if (isFirebaseConfigured && db) {
+      const q = collection(db, 'friend_requests');
+      return onSnapshot(q, (snap) => {
+        const requests = snap.docs
+          .map(d => d.data() as FriendRequest)
+          .filter(r => r.toUid === uid && r.status === 'pending');
+        callback(requests);
+      });
+    } else {
+      callback(this._mockFriendRequests[uid] ?? []);
+      return () => {};
+    }
   }
 }
 

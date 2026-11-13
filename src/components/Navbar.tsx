@@ -21,6 +21,8 @@ interface NavbarProps {
   onOpenWardrobe: () => void;
   onOpenAuthModal: () => void;
   onSignOut: () => void;
+  onToggleFriends: () => void;
+  currentUid: string;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -30,6 +32,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenWardrobe,
   onOpenAuthModal,
   onSignOut,
+  onToggleFriends,
+  currentUid,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [muted, setMuted] = useState(sound.isMuted);

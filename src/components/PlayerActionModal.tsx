@@ -2,10 +2,13 @@ import React from 'react';
 import { IslandPresence, Item } from '../types/game';
 import { CharacterSprite } from './CharacterSprite';
 import { sound } from '../services/audio';
-import { X, Gamepad2, Home, Hand } from 'lucide-react';
+import { X, Gamepad2, Home, Hand, UserPlus } from 'lucide-react';
+import { dbService } from '../services/dbService';
 
 interface PlayerActionModalProps {
   player: IslandPresence | null;
+  currentUid: string;
+  currentName: string;
   itemsMap: Record<string, Item>;
   onClose: () => void;
   onChallenge: (player: IslandPresence) => void;
@@ -15,6 +18,8 @@ interface PlayerActionModalProps {
 
 export const PlayerActionModal: React.FC<PlayerActionModalProps> = ({
   player,
+  currentUid,
+  currentName,
   itemsMap,
   onClose,
   onChallenge,
@@ -22,6 +27,12 @@ export const PlayerActionModal: React.FC<PlayerActionModalProps> = ({
   onSendWave,
 }) => {
   if (!player) return null;
+
+  const handleAddFriend = async () => {
+    sound.playClick();
+    await dbService.sendFriendRequest(currentUid, currentName, player.uid, player.displayName);
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/70 backdrop-blur-xs">
@@ -78,6 +89,14 @@ export const PlayerActionModal: React.FC<PlayerActionModalProps> = ({
             >
               <Home className="w-4 h-4" />
               拜訪他的個人小屋
+            </button>
+
+            <button
+              onClick={handleAddFriend}
+              className="pixel-btn w-full py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded flex items-center justify-center gap-2"
+            >
+              <UserPlus className="w-4 h-4" />
+              加為好友 ➕
             </button>
 
             <button

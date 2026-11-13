@@ -23,6 +23,7 @@ import { ArcadeModal } from './components/ArcadeModal';
 import { AdminDashboardModal } from './components/AdminDashboardModal';
 import { AuthModal } from './components/AuthModal';
 import { PlayerActionModal } from './components/PlayerActionModal';
+import { FriendPanel } from './components/FriendPanel';
 
 export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
@@ -39,6 +40,7 @@ export const App: React.FC = () => {
   const [isArcadeOpen, setIsArcadeOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isFriendPanelOpen, setIsFriendPanelOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<IslandPresence | null>(null);
   const [challengedPlayer, setChallengedPlayer] = useState<IslandPresence | null>(null);
 
@@ -342,6 +344,7 @@ export const App: React.FC = () => {
       <Navbar
         user={currentUser}
         onlineCount={onlineCount}
+        currentUid={currentUser?.uid || ''}
         onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenWardrobe={() => {
           setBoutiqueInitialTab('wardrobe');
@@ -349,6 +352,7 @@ export const App: React.FC = () => {
         }}
         onOpenAuthModal={() => setIsAuthOpen(true)}
         onSignOut={handleSignOut}
+        onToggleFriends={() => setIsFriendPanelOpen((prev) => !prev)}
       />
 
       {/* Main World View (Island or Home Interior) */}
@@ -441,12 +445,28 @@ export const App: React.FC = () => {
       {/* Player Interaction Action Modal */}
       <PlayerActionModal
         player={selectedPlayer}
+        currentUid={currentUser?.uid || ''}
+        currentName={currentUser?.displayName || '冒險家'}
         itemsMap={itemsMap}
         onClose={() => setSelectedPlayer(null)}
         onChallenge={handleChallengePlayer}
         onVisitHome={handleVisitPlayerHome}
         onSendWave={() => handleSendEmoji('👋')}
       />
+
+      {/* Friend System Side Panel */}
+      {isFriendPanelOpen && (
+        <FriendPanel
+          currentUid={currentUser?.uid || ''}
+          currentName={currentUser?.displayName || '冒險家'}
+          presences={presences}
+          onClose={() => setIsFriendPanelOpen(false)}
+          onVisitHome={(targetPresence) => {
+            setIsFriendPanelOpen(false);
+            handleVisitPlayerHome(targetPresence);
+          }}
+        />
+      )}
     </div>
   );
 };

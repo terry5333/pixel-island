@@ -39,6 +39,8 @@ export interface UserProfile {
   equipped: EquippedItems;
   roomLayout: RoomFurniture[];
   role: 'user' | 'admin';
+  friends?: FriendEntry[];
+  friendRequests?: FriendRequest[];
 }
 
 export interface EmojiBubble {
@@ -104,4 +106,19 @@ export interface ArcadeRoom {
   stateOoxx?: GameOOXXState;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface FriendRequest {
+  fromUid: string;
+  fromName: string;
+  toUid: string;
+  toName: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: number;
+}
+
+export interface FriendEntry {
+  uid: string;
+  displayName: string;
+  addedAt: number;
 }

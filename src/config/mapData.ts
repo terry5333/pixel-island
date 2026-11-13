@@ -66,6 +66,30 @@ export const BUILDINGS: InteractiveBuilding[] = [
     doorY: 11,
     prompt: '進入個人小屋 (按 Space / A 鍵)',
   },
+  {
+    id: 'cafe',
+    name: '☕ 島嶼咖啡廳',
+    type: 'boutique',
+    x: 7,
+    y: 24,
+    width: 4,
+    height: 4,
+    doorX: 9,
+    doorY: 27,
+    prompt: '進入咖啡廳',
+  },
+  {
+    id: 'library',
+    name: '📚 像素圖書館',
+    type: 'boutique',
+    x: 25,
+    y: 24,
+    width: 4,
+    height: 4,
+    doorX: 27,
+    doorY: 27,
+    prompt: '進入圖書館',
+  },
 ];
 
 export interface SceneryItem {
@@ -97,19 +121,26 @@ export const TOWN_SCENERY: SceneryItem[] = [
   // Vending Machine
   { id: 'vending_1', type: 'vending', x: 11, y: 10, widthTiles: 1, heightTiles: 2, walkable: false },
 
-  // Parked White Retro Mini Car
+  // Parked Cars
   { id: 'car_1', type: 'car', x: 9, y: 15, widthTiles: 2, heightTiles: 2, walkable: false },
+  { id: 'car_2', type: 'car', x: 22, y: 15, widthTiles: 2, heightTiles: 2, walkable: false },
+  { id: 'car_3', type: 'car', x: 5, y: 22, widthTiles: 2, heightTiles: 2, walkable: false },
 
   // Retro Billboard & Bench in front
   { id: 'billboard_1', type: 'billboard', x: 21, y: 14, widthTiles: 4, heightTiles: 3, walkable: false },
+  // Bench proxy in park
+  { id: 'bench_1', type: 'billboard', x: 8, y: 19, widthTiles: 1, heightTiles: 1, walkable: false },
+  { id: 'bench_2', type: 'billboard', x: 27, y: 19, widthTiles: 1, heightTiles: 1, walkable: false },
 
   // Road Markings ("慢" - Slow)
   { id: 'road_slow_1', type: 'road_slow', x: 15, y: 13, widthTiles: 1, heightTiles: 1, walkable: true },
   { id: 'road_slow_2', type: 'road_slow', x: 20, y: 13, widthTiles: 1, heightTiles: 1, walkable: true },
+  { id: 'road_slow_3', type: 'road_slow', x: 19, y: 22, widthTiles: 1, heightTiles: 1, walkable: true },
 
   // Sewer Manhole Covers
   { id: 'manhole_1', type: 'manhole', x: 12, y: 13, widthTiles: 1, heightTiles: 1, walkable: true },
   { id: 'manhole_2', type: 'manhole', x: 24, y: 13, widthTiles: 1, heightTiles: 1, walkable: true },
+  { id: 'manhole_3', type: 'manhole', x: 19, y: 7, widthTiles: 1, heightTiles: 1, walkable: true },
 
   // Foreground Streetlamps & Flower Hedges along the curb at y: 16
   { id: 'lamp_1', type: 'street_lamp', x: 8, y: 16, widthTiles: 1, heightTiles: 1, walkable: false },
@@ -120,14 +151,38 @@ export const TOWN_SCENERY: SceneryItem[] = [
   { id: 'hedge_4', type: 'hedge', x: 19, y: 16, widthTiles: 1, heightTiles: 1, walkable: false },
   { id: 'lamp_3', type: 'street_lamp', x: 25, y: 16, widthTiles: 1, heightTiles: 1, walkable: false },
 
-  // Central Fountain Plaza at y: 20..24
-  { id: 'fountain_center', type: 'fountain', x: 17, y: 21, widthTiles: 2, heightTiles: 2, walkable: false },
+  // South Park Road hedges (along y=21 sidewalk before south road)
+  { id: 'hedge_5', type: 'hedge', x: 7, y: 21, widthTiles: 1, heightTiles: 1, walkable: false },
+  { id: 'hedge_6', type: 'hedge', x: 29, y: 21, widthTiles: 1, heightTiles: 1, walkable: false },
+  { id: 'hedge_7', type: 'hedge', x: 13, y: 21, widthTiles: 1, heightTiles: 1, walkable: false },
+  { id: 'hedge_8', type: 'hedge', x: 22, y: 21, widthTiles: 1, heightTiles: 1, walkable: false },
 
-  // Trees & Palms
+  // Extra Street Lamps spread through the island
+  { id: 'lamp_4', type: 'street_lamp', x: 5, y: 11, widthTiles: 1, heightTiles: 1, walkable: false },
+  { id: 'lamp_5', type: 'street_lamp', x: 30, y: 11, widthTiles: 1, heightTiles: 1, walkable: false },
+  { id: 'lamp_6', type: 'street_lamp', x: 19, y: 16, widthTiles: 1, heightTiles: 1, walkable: false },
+  { id: 'lamp_7', type: 'street_lamp', x: 5, y: 24, widthTiles: 1, heightTiles: 1, walkable: false },
+  { id: 'lamp_8', type: 'street_lamp', x: 30, y: 24, widthTiles: 1, heightTiles: 1, walkable: false },
+
+  // Central Fountain Plaza
+  { id: 'fountain_center', type: 'fountain', x: 17, y: 18, widthTiles: 2, heightTiles: 2, walkable: false },
+  // Second smaller fountain in south park
+  { id: 'fountain_south', type: 'fountain', x: 15, y: 25, widthTiles: 2, heightTiles: 2, walkable: false },
+
+  // Trees & Palms - original
   { id: 'pine_1', type: 'tree_pine', x: 4, y: 13, widthTiles: 2, heightTiles: 2, walkable: false },
   { id: 'pine_2', type: 'tree_pine', x: 30, y: 13, widthTiles: 2, heightTiles: 2, walkable: false },
   { id: 'palm_1', type: 'tree_palm', x: 3, y: 29, widthTiles: 2, heightTiles: 3, walkable: false },
   { id: 'palm_2', type: 'tree_palm', x: 31, y: 29, widthTiles: 2, heightTiles: 3, walkable: false },
+
+  // Extra park trees
+  { id: 'pine_3', type: 'tree_pine', x: 8, y: 17, widthTiles: 2, heightTiles: 2, walkable: false },
+  { id: 'pine_4', type: 'tree_pine', x: 26, y: 17, widthTiles: 2, heightTiles: 2, walkable: false },
+  { id: 'pine_5', type: 'tree_pine', x: 11, y: 20, widthTiles: 2, heightTiles: 2, walkable: false },
+  { id: 'pine_6', type: 'tree_pine', x: 23, y: 20, widthTiles: 2, heightTiles: 2, walkable: false },
+  { id: 'palm_3', type: 'tree_palm', x: 7, y: 25, widthTiles: 2, heightTiles: 3, walkable: false },
+  { id: 'palm_4', type: 'tree_palm', x: 29, y: 25, widthTiles: 2, heightTiles: 3, walkable: false },
+  { id: 'palm_5', type: 'tree_palm', x: 20, y: 25, widthTiles: 2, heightTiles: 3, walkable: false },
 ];
 
 // Determine tile type for perfect 36x36 Square Island
@@ -152,18 +207,53 @@ export function getIslandTile(x: number, y: number): TileType {
     return 'sand';
   }
 
-  // Main Boulevard Asphalt Street
+  // South Sand Beach (y=30..33)
+  // already covered above
+
+  // South boardwalk y=28..29 already set
+
+  // South Park Road (y=22..23) — asphalt, full width
+  if (y >= 22 && y <= 23 && x >= 3 && x <= 33) {
+    return 'asphalt';
+  }
+
+  // South park road sidewalks
+  if ((y === 21 || y === 24) && x >= 3 && x <= 33) {
+    return 'sidewalk';
+  }
+
+  // Residential Area (y=25..27)
+  if (y >= 25 && y <= 27) {
+    return 'grass';
+  }
+
+  // West Side Lane (x=4..6, y=17..27)
+  if (x >= 4 && x <= 6 && y >= 17 && y <= 27) {
+    return 'asphalt';
+  }
+
+  // East Side Lane (x=30..32, y=17..27)
+  if (x >= 30 && x <= 32 && y >= 17 && y <= 27) {
+    return 'asphalt';
+  }
+
+  // North-South Avenue (x=18..20, y=3..11)
+  if (x >= 18 && x <= 20 && y >= 3 && y <= 11) {
+    return 'asphalt';
+  }
+
+  // Main Boulevard Asphalt Street (y=12..15)
   if (y >= 12 && y <= 15) {
     return 'asphalt';
   }
 
-  // Sidewalks
+  // Sidewalks flanking the main boulevard
   if (y === 11 || y === 16) {
     return 'sidewalk';
   }
 
-  // Central Fountain Plaza
-  if (x >= 14 && x <= 22 && y >= 19 && y <= 24) {
+  // Park District (x=7..29, y=17..21)
+  if (x >= 7 && x <= 29 && y >= 17 && y <= 21) {
     return 'plaza';
   }
 
