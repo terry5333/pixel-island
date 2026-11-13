@@ -82,6 +82,14 @@ class RetroAudioEngine {
     this.playTone(1200, 'sine', 0.1, 0.05, 0.1);
   }
 
+  public playSuccess() {
+    this.playWin();
+  }
+
+  public playCloth() {
+    this.playTone(320, 'triangle', 0.06, 0, 0.06);
+  }
+
   public playClick() {
     this.playTone(400, 'triangle', 0.04, 0, 0.05);
   }

@@ -23,7 +23,7 @@ import {
 } from 'firebase/database';
 import { auth, db, rtdb, googleProvider, isFirebaseConfigured } from '../config/firebase';
 import { mockNetwork, getStoredItems, saveStoredItems, getStoredRooms, saveStoredRoom, deleteStoredRoom } from './mockDb';
-import { Item, UserProfile, IslandPresence, ArcadeRoom, FriendEntry, FriendRequest } from '../types/game';
+import { Item, UserProfile, IslandPresence, ArcadeRoom, FriendEntry, FriendRequest, EquippedItems, RoomFurniture } from '../types/game';
 
 const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || '')
   .split(',')
@@ -93,7 +93,7 @@ export class DatabaseService {
           this.activeUser = profile;
           this.notifyAuth(profile);
         } else {
-          // Provide instant guest profile so game is 100% playable right away
+          // Check for previously saved local resident session
           const guestRaw = localStorage.getItem('pixel_island_firebase_guest');
           if (guestRaw) {
             try {
@@ -103,30 +103,25 @@ export class DatabaseService {
               return;
             } catch {}
           }
-          const guestId = 'guest_' + Math.floor(1000 + Math.random() * 9000);
-          const guestProfile: UserProfile = {
-            uid: guestId,
-            displayName: '島民新手',
-            email: '',
-            ...DEFAULT_PROFILE,
-            role: 'user',
-          };
-          this.activeUser = guestProfile;
-          localStorage.setItem('pixel_island_firebase_guest', JSON.stringify(guestProfile));
-          this.notifyAuth(guestProfile);
+          // Mandatory login: User must authenticate or choose a nickname
+          this.activeUser = null;
+          this.notifyAuth(null);
         }
       });
     } else {
-      // Mock mode default user
+      // Mock mode: Check for saved user
       const saved = localStorage.getItem('pixel_island_mock_user');
       if (saved) {
         try {
           this.activeUser = JSON.parse(saved);
+          this.notifyAuth(this.activeUser);
         } catch {
-          this.initMockDefaultUser('player_1', '冒險家小藍', 'user');
+          this.activeUser = null;
+          this.notifyAuth(null);
         }
       } else {
-        this.initMockDefaultUser('player_1', '冒險家小藍', 'user');
+        this.activeUser = null;
+        this.notifyAuth(null);
       }
     }
   }
@@ -171,6 +166,7 @@ export class DatabaseService {
     }
     this.activeUser = null;
     localStorage.removeItem('pixel_island_mock_user');
+    localStorage.removeItem('pixel_island_firebase_guest');
     this.notifyAuth(null);
   }
 
@@ -229,6 +225,27 @@ export class DatabaseService {
     }
   }
 
+  public async updateEquipped(uid: string, equipped: EquippedItems): Promise<void> {
+    await this.updateUserProfile(uid, { equipped });
+  }
+
+  public async buyItem(uid: string, item: Item): Promise<void> {
+    const profile = await this.getUserProfile(uid);
+    if (!profile) return;
+    if (profile.coins < item.price) {
+      throw new Error('金幣不足！');
+    }
+    const newInventory = [...profile.inventory, item.id];
+    await this.updateUserProfile(uid, {
+      coins: profile.coins - item.price,
+      inventory: newInventory,
+    });
+  }
+
+  public async updateRoomLayout(uid: string, roomLayout: RoomFurniture[]): Promise<void> {
+    await this.updateUserProfile(uid, { roomLayout });
+  }
+
   public async getUserProfile(uid: string): Promise<UserProfile | null> {
     if (isFirebaseConfigured && db) {
       const snap = await getDoc(doc(db, 'users', uid));
@@ -242,7 +259,30 @@ export class DatabaseService {
     const profile = await this.getUserProfile(uid);
     if (profile) {
       await this.updateUserProfile(uid, {
-        coins: (profile.coins || 0) + amount,
+        coins: Math.max((profile.coins || 0) + amount, 0),
+      });
+    }
+  }
+
+  public async upgradeHouse(uid: string, nextLevel: number, cost: number): Promise<void> {
+    const profile = await this.getUserProfile(uid);
+    if (profile) {
+      if (profile.coins < cost) {
+        throw new Error('金幣不足，無法升級房屋！');
+      }
+      await this.updateUserProfile(uid, {
+        coins: profile.coins - cost,
+        houseLevel: nextLevel,
+      });
+    }
+  }
+
+  public async completeTutorial(uid: string, bonusCoins = 1000): Promise<void> {
+    const profile = await this.getUserProfile(uid);
+    if (profile) {
+      await this.updateUserProfile(uid, {
+        coins: (profile.coins || 0) + bonusCoins,
+        hasCompletedTutorial: true,
       });
     }
   }

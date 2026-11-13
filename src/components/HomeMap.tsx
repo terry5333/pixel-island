@@ -24,7 +24,6 @@ interface HomeMapProps {
 // Isometric Projection Math (Classic 2:1 Dimetric Diamond Grid)
 const ISO_TILE_W = 54;
 const ISO_TILE_H = 27;
-const ROOM_SIZE = 8; // 8x8 usable interior area for optimal 3D isometric view
 
 function toIso(x: number, y: number, originX: number, originY: number) {
   const isoX = originX + (x - y) * (ISO_TILE_W / 2);
@@ -43,6 +42,8 @@ export const HomeMap: React.FC<HomeMapProps> = ({
   onTileClick,
 }) => {
   const isOwner = hostUser.uid === currentUid;
+  const houseLvl = hostUser.houseLevel || 1;
+  const ROOM_SIZE = houseLvl === 1 ? 6 : houseLvl === 2 ? 8 : houseLvl === 3 ? 10 : 12;
   const [is3DMode, setIs3DMode] = useState(true);
   const [isDecorating, setIsDecorating] = useState(false);
   const [layout, setLayout] = useState<RoomFurniture[]>(hostUser.roomLayout || []);
@@ -143,7 +144,16 @@ export const HomeMap: React.FC<HomeMapProps> = ({
           </div>
           <div>
             <h1 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
-              <span>{hostUser.displayName} 的 3D 小屋</span>
+              <span>
+                {hostUser.displayName} 的{' '}
+                {houseLvl === 4
+                  ? '豪華雙層大莊園 (Lv.4) 👑'
+                  : houseLvl === 3
+                  ? '歐風石木宅邸 (Lv.3)'
+                  : houseLvl === 2
+                  ? '溫馨原木小屋 (Lv.2)'
+                  : '溫馨紅頂小屋 (Lv.1)'}
+              </span>
               {isOwner && (
                 <span className="text-[10px] px-1.5 py-0.2 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-full">
                   房主

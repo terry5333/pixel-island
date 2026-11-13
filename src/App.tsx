@@ -26,6 +26,8 @@ import { AdminDashboardModal } from './components/AdminDashboardModal';
 import { AuthModal } from './components/AuthModal';
 import { PlayerActionModal } from './components/PlayerActionModal';
 import { FriendPanel } from './components/FriendPanel';
+import { HouseUpgradeModal } from './components/HouseUpgradeModal';
+import { TutorialModal } from './components/TutorialModal';
 
 export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
@@ -43,6 +45,8 @@ export const App: React.FC = () => {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isFriendPanelOpen, setIsFriendPanelOpen] = useState(false);
+  const [isHouseUpgradeOpen, setIsHouseUpgradeOpen] = useState(false);
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<IslandPresence | null>(null);
   const [challengedPlayer, setChallengedPlayer] = useState<IslandPresence | null>(null);
 
@@ -59,6 +63,9 @@ export const App: React.FC = () => {
   useEffect(() => {
     const unsubAuth = dbService.onAuthChange((user) => {
       setCurrentUser(user);
+      if (user && user.hasCompletedTutorial === false) {
+        setIsTutorialOpen(true);
+      }
     });
 
     const unsubItems = dbService.subscribeItems((newItems) => {
@@ -76,10 +83,10 @@ export const App: React.FC = () => {
     };
   }, []);
 
-  // High-performance local position state (0ms latency, zero stutter)
+  // High-performance continuous local position state (sub-pixel float coordinates)
   const [localPos, setLocalPos] = useState({
-    x: 18,
-    y: 13,
+    x: 19.0,
+    y: 13.0,
     facing: 'right' as 'left' | 'right',
     isMoving: false,
   });
@@ -95,7 +102,7 @@ export const App: React.FC = () => {
     (updates: Partial<IslandPresence>, forceSync = false) => {
       if (!currentUser) return;
       const now = Date.now();
-      if (!forceSync && updates.isMoving && now - lastSyncTimeRef.current < 180) {
+      if (!forceSync && updates.isMoving && now - lastSyncTimeRef.current < 160) {
         return; // Throttled to keep local 60fps buttery smooth
       }
       lastSyncTimeRef.current = now;
@@ -110,6 +117,7 @@ export const App: React.FC = () => {
         equipped: currentUser.equipped,
         currentPlace,
         visitingHomeUid: visitingUser?.uid ?? undefined,
+        houseLevel: currentUser.houseLevel || 1,
         emojiBubble: updates.emojiBubble !== undefined ? updates.emojiBubble : (selfPresence?.emojiBubble ?? null),
         updatedAt: now,
         ...updates,
@@ -122,14 +130,19 @@ export const App: React.FC = () => {
   // Initialize self presence on first load at the center boulevard
   useEffect(() => {
     if (currentUser && !presences[currentUser.uid]) {
-      syncSelfPresence({ x: 18, y: 13, facing: 'right' });
+      syncSelfPresence({ x: 19, y: 13, facing: 'right' }, true);
     }
   }, [currentUser, presences, syncSelfPresence]);
 
-  // Active houses mapped for all online players (plot 0 for self, plots 1..6 for others)
+  // Active houses mapped for all online players + persistent island residents
   const activeHouses = useMemo(() => {
     if (!currentUser) return [];
-    return getActiveHouses(currentUser.uid, currentUser.displayName, presences);
+    return getActiveHouses(
+      currentUser.uid,
+      currentUser.displayName,
+      currentUser.houseLevel || 1,
+      presences
+    );
   }, [currentUser, presences]);
 
   // Detect interaction at current position (Commercial buildings or any Player's House!)
@@ -140,7 +153,7 @@ export const App: React.FC = () => {
 
   const isHomeExitMat = useMemo(() => {
     if (currentPlace !== 'home') return false;
-    return localPos.y === HOME_HEIGHT - 1 && (localPos.x === 5 || localPos.x === 6);
+    return localPos.y >= HOME_HEIGHT - 1.5 && (localPos.x >= 4.5 && localPos.x <= 6.5);
   }, [currentPlace, localPos.x, localPos.y]);
 
   // Determine floating contextual prompt text
@@ -171,7 +184,8 @@ export const App: React.FC = () => {
           uid: targetHouse.ownerUid,
           displayName: targetHouse.ownerName,
           coins: 100,
-          equipped: { hair: 'hair_brown', top: 'top_casual', bottom: 'bottom_denim', accessory: null },
+          houseLevel: targetHouse.level || 1,
+          equipped: { hair: 'hair_01', top: 'top_01', bottom: 'bottom_01', accessory: null },
           inventory: [],
           roomLayout: [],
           friends: [],
@@ -179,50 +193,51 @@ export const App: React.FC = () => {
         };
     setVisitingUser(targetUser as UserProfile);
     setCurrentPlace('home');
+    setLocalPos({ x: 5, y: 7, facing: 'right', isMoving: false });
     syncSelfPresence({
       currentPlace: 'home',
-      x: 4,
-      y: 5,
+      x: 5,
+      y: 7,
       visitingHomeUid: targetHouse.ownerUid,
     }, true);
   }, [currentUser, syncSelfPresence]);
 
-  // Handle Player Movement (Instant local responsiveness, buttery smooth continuous walking)
-  const handleMove = useCallback(
-    (dir: 'up' | 'down' | 'left' | 'right') => {
+  // 60 FPS Sub-pixel continuous free walking movement engine
+  const handleMoveDelta = useCallback(
+    (vx: number, vy: number, dt: number) => {
       if (!currentUser) return;
 
       const current = localPosRef.current;
-      let dx = 0;
-      let dy = 0;
-      let newFacing: 'left' | 'right' = current.facing;
+      const speed = 6.0; // tiles per second
+      const stepX = vx * speed * dt;
+      const stepY = vy * speed * dt;
 
-      if (dir === 'up') dy = -1;
-      if (dir === 'down') dy = 1;
-      if (dir === 'left') {
-        dx = -1;
-        newFacing = 'left';
-      }
-      if (dir === 'right') {
-        dx = 1;
-        newFacing = 'right';
-      }
+      let newX = current.x;
+      let newY = current.y;
+      let newFacing = current.facing;
+      if (vx < 0) newFacing = 'left';
+      else if (vx > 0) newFacing = 'right';
 
-      const nextX = current.x + dx;
-      const nextY = current.y + dy;
+      // Smooth X-axis movement with collision sliding
+      const targetX = current.x + stepX;
+      const canWalkX =
+        currentPlace === 'island'
+          ? isIslandWalkable(targetX, current.y, activeHouses)
+          : isHomeWalkable(targetX, current.y);
+      if (canWalkX) newX = targetX;
 
-      let canWalk = false;
-      if (currentPlace === 'island') {
-        canWalk = isIslandWalkable(nextX, nextY, activeHouses);
-      } else {
-        canWalk = isHomeWalkable(nextX, nextY);
-      }
+      // Smooth Y-axis movement with collision sliding
+      const targetY = current.y + stepY;
+      const canWalkY =
+        currentPlace === 'island'
+          ? isIslandWalkable(newX, targetY, activeHouses)
+          : isHomeWalkable(newX, targetY);
+      if (canWalkY) newY = targetY;
 
-      if (canWalk) {
-        sound.playStep();
+      if (newX !== current.x || newY !== current.y) {
         const nextState = {
-          x: nextX,
-          y: nextY,
+          x: newX,
+          y: newY,
           facing: newFacing,
           isMoving: true,
         };
@@ -231,8 +246,8 @@ export const App: React.FC = () => {
 
         syncSelfPresence(
           {
-            x: nextX,
-            y: nextY,
+            x: Math.round(newX * 100) / 100,
+            y: Math.round(newY * 100) / 100,
             facing: newFacing,
             isMoving: true,
           },
@@ -243,12 +258,25 @@ export const App: React.FC = () => {
         moveTimeoutRef.current = window.setTimeout(() => {
           setLocalPos((prev) => ({ ...prev, isMoving: false }));
           syncSelfPresence({ isMoving: false }, true);
-        }, 150);
-      } else {
-        sound.playBump();
+        }, 120);
       }
     },
     [currentUser, currentPlace, activeHouses, syncSelfPresence]
+  );
+
+  // Discrete single-step movement helper (for click or single taps)
+  const handleMove = useCallback(
+    (dir: 'up' | 'down' | 'left' | 'right') => {
+      let vx = 0;
+      let vy = 0;
+      if (dir === 'up') vy = -1;
+      if (dir === 'down') vy = 1;
+      if (dir === 'left') vx = -1;
+      if (dir === 'right') vx = 1;
+      handleMoveDelta(vx, vy, 0.16);
+      sound.playStep();
+    },
+    [handleMoveDelta]
   );
 
   // Handle Interaction (Space / Enter / A Button / Click Prompt)
@@ -273,7 +301,7 @@ export const App: React.FC = () => {
       sound.playDoor();
       setCurrentPlace('island');
       const targetHouse = activeHouses.find((h) => h.ownerUid === visitingUser?.uid) || activeHouses[0];
-      const exitX = targetHouse ? targetHouse.doorX : 28;
+      const exitX = targetHouse ? targetHouse.doorX : 29;
       const exitY = targetHouse ? targetHouse.doorY + 1 : 12;
       setLocalPos({ x: exitX, y: exitY, facing: 'right', isMoving: false });
       setVisitingUser(null);
@@ -308,59 +336,77 @@ export const App: React.FC = () => {
       const current = localPosRef.current;
       const dx = tx - current.x;
       const dy = ty - current.y;
-
-      // Single step toward target tile
-      if (Math.abs(dx) > Math.abs(dy)) {
-        handleMove(dx > 0 ? 'right' : 'left');
-      } else if (dy !== 0) {
-        handleMove(dy > 0 ? 'down' : 'up');
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > 0.1) {
+        handleMoveDelta(dx / dist, dy / dist, 0.25);
       }
     },
-    [currentUser, handleMove]
+    [currentUser, handleMoveDelta]
   );
 
-  // Handle Buying Item in Boutique
-  const handleBuyItem = async (item: Item) => {
-    if (!currentUser) return;
-    const newCoins = currentUser.coins - item.price;
-    const newInventory = [...currentUser.inventory, item.id];
-
-    await dbService.updateUserProfile(currentUser.uid, {
-      coins: newCoins,
-      inventory: newInventory,
-    });
-  };
-
-  // Handle Changing Equipped Items (Synchronized immediately to RTDB + Firestore)
+  // Handle Equip Change
   const handleEquipChange = async (newEquipped: EquippedItems) => {
     if (!currentUser) return;
-    await dbService.updateUserProfile(currentUser.uid, {
-      equipped: newEquipped,
-    });
-    // Immediately push to RTDB so other players see outfit right away
-    syncSelfPresence({ equipped: newEquipped });
+    await dbService.updateEquipped(currentUser.uid, newEquipped);
+    syncSelfPresence({ equipped: newEquipped }, true);
+    sound.playCloth();
   };
 
-  // Handle Saving Room Layout
+  // Handle Buy Item
+  const handleBuyItem = async (item: Item) => {
+    if (!currentUser) return;
+    await dbService.buyItem(currentUser.uid, item);
+    sound.playBuy();
+  };
+
+  // Handle Room Layout Save
   const handleSaveRoomLayout = async (newLayout: RoomFurniture[]) => {
     if (!currentUser) return;
-    await dbService.updateUserProfile(currentUser.uid, {
-      roomLayout: newLayout,
-    });
+    await dbService.updateRoomLayout(currentUser.uid, newLayout);
+    sound.playSuccess();
   };
 
-  // Visit another player's house
-  const handleVisitPlayerHome = async (targetPlayer: IslandPresence) => {
-    const profile = await dbService.getUserProfile(targetPlayer.uid);
-    if (profile) {
-      setVisitingUser(profile);
+  // Handle House Upgrade
+  const handleUpgradeHouse = async (newLevel: number, cost: number) => {
+    if (!currentUser) return;
+    await dbService.upgradeHouse(currentUser.uid, newLevel, cost);
+    setCurrentUser((prev) => prev ? { ...prev, coins: prev.coins - cost, houseLevel: newLevel } : null);
+    syncSelfPresence({ houseLevel: newLevel }, true);
+  };
+
+  // Handle Complete Tutorial
+  const handleCompleteTutorial = async () => {
+    if (!currentUser) return;
+    await dbService.completeTutorial(currentUser.uid, 1000);
+    setCurrentUser((prev) => prev ? { ...prev, coins: prev.coins + 1000, hasCompletedTutorial: true } : null);
+    setIsTutorialOpen(false);
+  };
+
+  const handleVisitPlayerHome = (targetPresence: IslandPresence) => {
+    const targetHouse = activeHouses.find((h) => h.ownerUid === targetPresence.uid);
+    if (targetHouse) {
+      handleEnterHouse(targetHouse);
+    } else {
+      setVisitingUser({
+        uid: targetPresence.uid,
+        displayName: targetPresence.displayName,
+        coins: 100,
+        role: 'user',
+        houseLevel: targetPresence.houseLevel || 1,
+        equipped: targetPresence.equipped,
+        inventory: [],
+        roomLayout: [],
+        friends: [],
+        friendRequests: [],
+      } as UserProfile);
       setCurrentPlace('home');
+      setLocalPos({ x: 5, y: 7, facing: 'right', isMoving: false });
       syncSelfPresence({
         currentPlace: 'home',
         x: 5,
         y: 7,
-        visitingHomeUid: profile.uid,
-      });
+        visitingHomeUid: targetPresence.uid,
+      }, true);
       sound.playDoor();
     }
   };
@@ -373,12 +419,13 @@ export const App: React.FC = () => {
   const handleSignOut = async () => {
     sound.playBump();
     await dbService.signOutUser();
+    setCurrentUser(null);
   };
 
   const onlineCount = Object.keys(presences).length;
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#181425] select-none">
+    <div className="relative w-screen h-screen overflow-hidden bg-[#071329] select-none">
       {/* Top Navigation Bar */}
       <Navbar
         user={currentUser}
@@ -390,6 +437,8 @@ export const App: React.FC = () => {
           setIsBoutiqueOpen(true);
         }}
         onOpenAuthModal={() => setIsAuthOpen(true)}
+        onOpenHouseUpgrade={() => setIsHouseUpgradeOpen(true)}
+        onOpenTutorial={() => setIsTutorialOpen(true)}
         onSignOut={handleSignOut}
         onToggleFriends={() => setIsFriendPanelOpen((prev) => !prev)}
       />
@@ -407,6 +456,7 @@ export const App: React.FC = () => {
             onTileClick={handleTileClick}
             onPlayerClick={(player) => setSelectedPlayer(player)}
             onEnterHouse={handleEnterHouse}
+            onOpenUpgrade={() => setIsHouseUpgradeOpen(true)}
           />
         ) : (
           <HomeMap
@@ -418,7 +468,7 @@ export const App: React.FC = () => {
             onExitHome={() => {
               setCurrentPlace('island');
               const targetHouse = activeHouses.find((h) => h.ownerUid === visitingUser?.uid) || activeHouses[0];
-              const exitX = targetHouse ? targetHouse.doorX : 28;
+              const exitX = targetHouse ? targetHouse.doorX : 29;
               const exitY = targetHouse ? targetHouse.doorY + 1 : 12;
               setLocalPos({ x: exitX, y: exitY, facing: 'right', isMoving: false });
               setVisitingUser(null);
@@ -438,6 +488,7 @@ export const App: React.FC = () => {
       {/* Cross-Platform Controller HUD (Desktop hotkeys + Mobile Virtual D-Pad / A button) */}
       <VirtualControls
         onMove={handleMove}
+        onMoveDelta={handleMoveDelta}
         onInteract={handleInteract}
         onSendEmoji={handleSendEmoji}
         contextPrompt={contextPrompt}
@@ -480,12 +531,32 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Auth & Character Switcher Modal */}
+      {/* Compulsory Mandatory Login Gate (when not logged in) or voluntary Switcher Modal */}
       <AuthModal
-        isOpen={isAuthOpen}
+        isOpen={!currentUser || isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
         currentUser={currentUser}
+        isMandatory={!currentUser}
       />
+
+      {/* First-Time Player Interactive Tutorial */}
+      {currentUser && (
+        <TutorialModal
+          isOpen={isTutorialOpen}
+          onComplete={handleCompleteTutorial}
+          playerName={currentUser.displayName}
+        />
+      )}
+
+      {/* House Upgrade Modal */}
+      {currentUser && (
+        <HouseUpgradeModal
+          isOpen={isHouseUpgradeOpen}
+          onClose={() => setIsHouseUpgradeOpen(false)}
+          currentUser={currentUser}
+          onUpgradeSuccess={handleUpgradeHouse}
+        />
+      )}
 
       {/* Player Interaction Action Modal */}
       <PlayerActionModal

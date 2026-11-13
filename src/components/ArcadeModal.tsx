@@ -6,6 +6,7 @@ import { Game1A2B } from './arcade/Game1A2B';
 import { GameOOXX } from './arcade/GameOOXX';
 import { GameBattleship } from './arcade/GameBattleship';
 import { GameDotsBoxes } from './arcade/GameDotsBoxes';
+import { GameSlotMachine } from './arcade/GameSlotMachine';
 import { 
   X, 
   Play, 
@@ -34,10 +35,11 @@ interface ArcadeModalProps {
 }
 
 const GAME_DEFINITIONS: { id: GameType; name: string; icon: string; desc: string }[] = [
-  { id: '1a2b', name: '雙人互猜 1A2B', icon: '🔢', desc: '4位不重複數字推理對決' },
-  { id: 'ooxx', name: '三子無限 OOXX', icon: '⭕❌', desc: '場上最多3子，下第4子消第1子' },
+  { id: '1a2b', name: '雙人 1A2B', icon: '🔢', desc: '4位不重複數字推理對決' },
+  { id: 'ooxx', name: '無限 OOXX', icon: '⭕❌', desc: '場上最多3子，下第4子消第1子' },
   { id: 'battleship', name: '海戰棋 (8×8)', icon: '🚢', desc: '佈署4艘艦隊，輪流砲擊擊沉敵軍' },
-  { id: 'dots_boxes', name: '點線棋 (Dots & Boxes)', icon: '📦', desc: '5×5點陣連線佔地，封閉格子多者勝' },
+  { id: 'dots_boxes', name: '點線棋', icon: '📦', desc: '5×5點陣連線佔地，封閉格子多者勝' },
+  { id: 'slots', name: '777 拉霸機', icon: '🎰', desc: '拉動機械搖桿，拚 50 倍 Jackpot 大獎！' },
 ];
 
 export const ArcadeModal: React.FC<ArcadeModalProps> = ({
@@ -53,6 +55,7 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
   const [publicRooms, setPublicRooms] = useState<ArcadeRoom[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [isSoloSlots, setIsSoloSlots] = useState(false);
 
   // Subscribe to active room changes
   useEffect(() => {
@@ -250,6 +253,14 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            {isSoloSlots && (
+              <button
+                onClick={() => setIsSoloSlots(false)}
+                className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg flex items-center gap-1 border border-slate-700 cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" /> 返回大廳
+              </button>
+            )}
             {activeRoomId && (
               <button
                 onClick={handleLeaveRoom}
@@ -260,15 +271,25 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
             )}
             <button
               onClick={onClose}
-              className="p-1 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white"
+              className="p-1 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* ================= VIEW 1: LOBBY (CREATE ROOM / JOIN) ================= */}
-        {!activeRoomId && (
+        {/* ================= VIEW 0: SOLO 777 SLOT MACHINE ================= */}
+        {isSoloSlots ? (
+          <div className="flex-1 p-3 overflow-y-auto flex items-center justify-center">
+            <GameSlotMachine
+              currentUid={currentUser.uid}
+              userCoins={currentUser.coins}
+              onRewardCoins={(amt) => dbService.rewardCoins(currentUser.uid, amt)}
+              onDeductCoins={(amt) => dbService.rewardCoins(currentUser.uid, -amt)}
+            />
+          </div>
+        ) : !activeRoomId ? (
+          /* ================= VIEW 1: LOBBY (CREATE ROOM / JOIN) ================= */
           <div className="flex-1 p-4 sm:p-6 flex flex-col items-center justify-between overflow-y-auto">
             <div className="w-full max-w-md flex flex-col items-center gap-4 my-auto">
               <div className="w-16 h-16 rounded-2xl bg-cyan-950/80 border-2 border-cyan-500/60 flex items-center justify-center text-cyan-400 shadow-pixel animate-bounce-gentle">
@@ -287,10 +308,23 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
               {/* Primary Action: CREATE ROOM FIRST */}
               <button
                 onClick={() => handleCreateRoom()}
-                className="pixel-btn w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-sm rounded-xl border-2 border-cyan-400 shadow-pixel-lg flex items-center justify-center gap-2"
+                className="pixel-btn w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-sm rounded-xl border-2 border-cyan-400 shadow-pixel-lg flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Plus className="w-5 h-5" />
                 <span>⚡ 建立對戰房間 (獲得4碼房號)</span>
+              </button>
+
+              {/* Solo 777 Slot Machine Quick Play */}
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setIsSoloSlots(true);
+                }}
+                className="w-full py-2.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm rounded-xl border-2 border-purple-400/80 shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-transform"
+              >
+                <span>🎰</span>
+                <span>777 復古拉霸機 (個人即刻暢玩)</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 font-extrabold">HOT</span>
               </button>
 
               {/* Join with 4-Digit Code */}
@@ -346,7 +380,7 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
               </div>
             )}
           </div>
-        )}
+        ) : null}
 
         {/* ================= VIEW 2: INSIDE ROOM (WAITING / PRE-GAME) ================= */}
         {room && room.status !== 'playing' && room.status !== 'finished' && (
@@ -512,6 +546,16 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
                 room={room}
                 currentUser={currentUser}
               />
+            )}
+            {room.gameType === 'slots' && (
+              <div className="h-full overflow-y-auto flex items-center justify-center p-2">
+                <GameSlotMachine
+                  currentUid={currentUser.uid}
+                  userCoins={currentUser.coins}
+                  onRewardCoins={(amt) => dbService.rewardCoins(currentUser.uid, amt)}
+                  onDeductCoins={(amt) => dbService.rewardCoins(currentUser.uid, -amt)}
+                />
+              </div>
             )}
           </div>
         )}

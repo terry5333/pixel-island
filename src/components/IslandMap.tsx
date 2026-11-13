@@ -34,6 +34,7 @@ interface IslandMapProps {
   onTileClick?: (x: number, y: number) => void;
   onPlayerClick?: (player: IslandPresence) => void;
   onEnterHouse?: (house: ActiveHouse) => void;
+  onOpenUpgrade?: () => void;
 }
 
 export const IslandMap: React.FC<IslandMapProps> = ({
@@ -46,26 +47,28 @@ export const IslandMap: React.FC<IslandMapProps> = ({
   onTileClick,
   onPlayerClick,
   onEnterHouse,
+  onOpenUpgrade,
 }) => {
   const selfPresence = presences[currentUid];
   const selfX = localPos.x;
   const selfY = localPos.y;
 
-  // Compute active houses for all players online if not passed as prop
+  // Compute active houses for all players online + persistent island residents
   const activeHouses = useMemo(() => {
     if (propHouses && propHouses.length > 0) return propHouses;
     return getActiveHouses(
       currentUid,
       currentUser?.displayName || selfPresence?.displayName || '冒險家',
+      currentUser?.houseLevel || 1,
       presences
     );
-  }, [propHouses, currentUid, currentUser?.displayName, selfPresence?.displayName, presences]);
+  }, [propHouses, currentUid, currentUser?.displayName, currentUser?.houseLevel, selfPresence?.displayName, presences]);
 
-  // Camera coordinates directly locked to local position
+  // Camera coordinates directly locked to smooth local position
   const cameraX = -(selfX * TILE_SIZE + TILE_SIZE / 2);
   const cameraY = -(selfY * TILE_SIZE + TILE_SIZE / 2);
 
-  // Memoized 36x36 Square Ground Tiles (Generated ONCE, 0ms overhead during movement)
+  // Memoized Square Ground Tiles (Generated ONCE, seamless, zero grid borders)
   const renderedTiles = useMemo(() => {
     const list: React.ReactNode[] = [];
     for (let y = 0; y < ISLAND_HEIGHT; y++) {
@@ -75,7 +78,7 @@ export const IslandMap: React.FC<IslandMapProps> = ({
           <div
             key={`${x}_${y}`}
             onClick={() => onTileClick?.(x, y)}
-            className="absolute cursor-pointer select-none"
+            className="absolute select-none pointer-events-auto"
             style={{
               left: x * TILE_SIZE,
               top: y * TILE_SIZE,
@@ -83,7 +86,7 @@ export const IslandMap: React.FC<IslandMapProps> = ({
               height: TILE_SIZE,
             }}
           >
-            {renderSquareTownTile(type, x, y)}
+            {renderSeamlessTownTile(type, x, y)}
           </div>
         );
       }
@@ -95,11 +98,11 @@ export const IslandMap: React.FC<IslandMapProps> = ({
   const renderedSceneryAndBuildings = useMemo(() => {
     return (
       <>
-        {/* 1. Grand Qian-Wu "銭屋" Main Arcade Complex (12x8 tiles at x: 12, y: 4) */}
+        {/* 1. Grand Qian-Wu "銭屋" Main Arcade Complex (12x8 tiles at x: 13, y: 4) */}
         <div
           className="absolute z-20 pointer-events-none"
           style={{
-            left: 12 * TILE_SIZE,
+            left: 13 * TILE_SIZE,
             top: 4 * TILE_SIZE,
             width: 12 * TILE_SIZE,
             height: 8 * TILE_SIZE,
@@ -107,7 +110,7 @@ export const IslandMap: React.FC<IslandMapProps> = ({
         >
           <GrandArcadeComplex width={12 * TILE_SIZE} height={8 * TILE_SIZE} />
           <div
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-4 bg-amber-400/60 rounded border border-amber-300 animate-pulse-glow"
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-4 bg-amber-400/60 rounded-full animate-pulse-glow shadow-lg"
           />
         </div>
 
@@ -123,11 +126,11 @@ export const IslandMap: React.FC<IslandMapProps> = ({
         >
           <BoutiqueBuilding width={5 * TILE_SIZE} height={5 * TILE_SIZE} />
           <div
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-4 bg-pink-400/60 rounded border border-pink-300 animate-pulse-glow"
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-4 bg-pink-400/60 rounded-full animate-pulse-glow shadow-lg"
           />
         </div>
 
-        {/* 3. Multiplayer Loaded Houses (Dynamic for local player + remote players) */}
+        {/* 3. Multiplayer Loaded Houses (Dynamic for all island residents) */}
         {activeHouses.map((house) => (
           <div
             key={house.plotId}
@@ -142,10 +145,10 @@ export const IslandMap: React.FC<IslandMapProps> = ({
             <CozyCottageBuilding
               width={house.width * TILE_SIZE}
               height={house.height * TILE_SIZE}
-              roofColor={house.roofColor}
-              roofShadow={house.roofShadow}
+              level={house.level || 1}
               ownerName={house.ownerName}
               isSelf={house.isSelf}
+              onUpgradeClick={onOpenUpgrade}
             />
             {/* Interactive Doorstep Mat with Pulse Portal */}
             <div
@@ -153,7 +156,7 @@ export const IslandMap: React.FC<IslandMapProps> = ({
                 e.stopPropagation();
                 onEnterHouse?.(house);
               }}
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-4 bg-emerald-400/60 hover:bg-emerald-300 rounded border border-emerald-300 animate-pulse cursor-pointer pointer-events-auto flex items-center justify-center group shadow-md"
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-4 bg-emerald-400/70 hover:bg-emerald-300 rounded-full animate-pulse cursor-pointer pointer-events-auto flex items-center justify-center group shadow-md"
               title={`點擊進入 ${house.ownerName} 的家`}
             >
               <span className="text-[9px] text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity">
@@ -167,9 +170,9 @@ export const IslandMap: React.FC<IslandMapProps> = ({
         <svg
           className="absolute pointer-events-none z-25"
           style={{
-            left: 10 * TILE_SIZE + 48,
+            left: 11 * TILE_SIZE + 48,
             top: 7 * TILE_SIZE + 24,
-            width: (24 - 10) * TILE_SIZE,
+            width: (25 - 11) * TILE_SIZE,
             height: 80,
           }}
           viewBox="0 0 672 80"
@@ -246,12 +249,6 @@ export const IslandMap: React.FC<IslandMapProps> = ({
                   </span>
                 </div>
               );
-            case 'fountain':
-              return (
-                <div key={item.id} style={style}>
-                  <PixelAsset category="fountain" width={item.widthTiles * TILE_SIZE} height={item.heightTiles * TILE_SIZE} />
-                </div>
-              );
             case 'tree_pine':
             case 'tree_palm':
               return (
@@ -265,7 +262,7 @@ export const IslandMap: React.FC<IslandMapProps> = ({
         })}
       </>
     );
-  }, [activeHouses, onEnterHouse]);
+  }, [activeHouses, onEnterHouse, onOpenUpgrade]);
 
   // Remote players on the island
   const remotePlayers = Object.values(presences).filter(
@@ -283,24 +280,24 @@ export const IslandMap: React.FC<IslandMapProps> = ({
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-[#071329]">
-      {/* Follow Camera World Container (130ms linear camera follow matching player velocity) */}
+      {/* Follow Camera World Container (Sub-pixel continuous camera follow matching player position) */}
       <div
-        className="absolute top-1/2 left-1/2 transition-transform duration-130 linear will-change-transform"
+        className="absolute top-1/2 left-1/2 will-change-transform"
         style={{
           transform: `translate3d(${cameraX}px, ${cameraY}px, 0)`,
           width: ISLAND_WIDTH * TILE_SIZE,
           height: ISLAND_HEIGHT * TILE_SIZE,
         }}
       >
-        {/* Base Ground Tiles */}
+        {/* Base Ground Tiles (Seamless without grid lines) */}
         <div className="relative w-full h-full">{renderedTiles}</div>
 
         {/* Buildings & Street Details Layer */}
         {renderedSceneryAndBuildings}
 
-        {/* ================= LOCAL PLAYER (BUTTERY SMOOTH 130ms LINEAR SYNC) ================= */}
+        {/* ================= LOCAL PLAYER (FREE SUB-PIXEL CONTINUOUS WALKING) ================= */}
         <div
-          className="absolute z-30 pointer-events-none transition-[left,top] duration-130 linear will-change-transform"
+          className="absolute z-30 pointer-events-none will-change-transform"
           style={{
             left: selfX * TILE_SIZE + (TILE_SIZE - 64) / 2,
             top: selfY * TILE_SIZE + (TILE_SIZE - 64) / 2 - 8,
@@ -318,7 +315,7 @@ export const IslandMap: React.FC<IslandMapProps> = ({
           />
         </div>
 
-        {/* ================= REMOTE PLAYERS & NPC (SMOOTH INTERPOLATION) ================= */}
+        {/* ================= REMOTE PLAYERS (INTERPOLATED POSITION) ================= */}
         {remotePlayers.map((player) => (
           <div
             key={player.uid}
@@ -326,7 +323,7 @@ export const IslandMap: React.FC<IslandMapProps> = ({
               e.stopPropagation();
               onPlayerClick?.(player);
             }}
-            className="absolute z-30 transition-[left,top] duration-130 linear will-change-transform cursor-pointer"
+            className="absolute z-30 transition-[left,top] duration-150 linear will-change-transform cursor-pointer"
             style={{
               left: player.x * TILE_SIZE + (TILE_SIZE - 64) / 2,
               top: player.y * TILE_SIZE + (TILE_SIZE - 64) / 2 - 8,
@@ -349,28 +346,28 @@ export const IslandMap: React.FC<IslandMapProps> = ({
   );
 };
 
-// ================= RICH RETRO PIXEL GROUND TILES (Eastward / 風來之國 Aesthetic) =================
-function renderSquareTownTile(type: string, x: number, y: number) {
+// ================= SEAMLESS RETRO PIXEL GROUND TILES (ZERO VISIBLE GRID BORDERS) =================
+function renderSeamlessTownTile(type: string, x: number, y: number) {
   switch (type) {
     case 'asphalt': {
       const isYellowLine = y === 13 && x % 2 === 0;
       const isTopCurb = y === 12;
       const isBottomCurb = y === 15;
       return (
-        <div className="w-full h-full bg-[#373b47] border border-[#262830]/40 relative overflow-hidden">
-          {/* Road micro texture specks */}
+        <div className="w-full h-full bg-[#373b47] relative overflow-hidden">
+          {/* Subtle natural asphalt texture */}
           {(x * 7 + y * 13) % 4 === 0 && (
             <div className="absolute top-1.5 left-2 w-1.5 h-1.5 bg-[#4c5263] rounded-xs opacity-60" />
           )}
           {(x * 11 + y * 5) % 5 === 0 && (
             <div className="absolute bottom-2 right-3 w-1 h-1 bg-[#23252e] rounded-xs opacity-75" />
           )}
-          {/* White Curb Edging */}
+          {/* Seamless White Curb Edging */}
           {isTopCurb && (
-            <div className="absolute top-0 left-0 right-0 h-1 bg-[#f1f5f9]/40 border-b border-[#94a3b8]/30" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-[#f1f5f9]/40" />
           )}
           {isBottomCurb && (
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#f1f5f9]/40 border-t border-[#94a3b8]/30" />
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#f1f5f9]/40" />
           )}
           {/* Yellow Road Center Divider Line */}
           {isYellowLine && (
@@ -382,41 +379,43 @@ function renderSquareTownTile(type: string, x: number, y: number) {
 
     case 'sidewalk':
       return (
-        <div className="w-full h-full bg-[#cbd5e1] border border-[#94a3b8] relative flex items-center justify-center overflow-hidden">
-          {/* Herringbone / Interlocking Stone Blocks */}
-          <div className="w-9 h-9 border border-[#94a3b8]/60 bg-[#e2e8f0]" />
+        <div className="w-full h-full bg-[#cbd5e1] relative flex items-center justify-center overflow-hidden">
+          {/* Natural Paving stone highlights */}
           {(x + y) % 2 === 0 ? (
-            <div className="absolute top-0 left-0 w-3 h-3 bg-[#f8fafc]/50" />
+            <div className="w-full h-full bg-[#d4d4d8]" />
           ) : (
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#64748b]/20" />
+            <div className="w-full h-full bg-[#cbd5e1]" />
+          )}
+          {(x * 3 + y * 7) % 3 === 0 && (
+            <div className="absolute w-2 h-2 bg-[#f8fafc]/40 rounded-full" />
           )}
         </div>
       );
 
     case 'boardwalk':
       return (
-        <div className="w-full h-full bg-[#854d0e] border-x border-[#5c330a] relative overflow-hidden flex flex-col justify-between">
-          <div className="w-full h-2.5 border-b border-[#5c330a] bg-[#a16207]" />
-          <div className="w-full h-3 border-b border-[#5c330a] bg-[#854d0e]" />
-          <div className="w-full h-2.5 border-b border-[#5c330a] bg-[#a16207]" />
+        <div className="w-full h-full bg-[#854d0e] relative overflow-hidden flex flex-col justify-between">
+          <div className="w-full h-2.5 bg-[#a16207]" />
+          <div className="w-full h-3 bg-[#854d0e]" />
+          <div className="w-full h-2.5 bg-[#a16207]" />
           <div className="w-full h-3 bg-[#713f12]" />
           {/* Brass Wood Planks Nails */}
-          <div className="absolute top-1 left-1.5 w-1 h-1 rounded-full bg-[#ca8a04]" />
-          <div className="absolute top-1 right-1.5 w-1 h-1 rounded-full bg-[#ca8a04]" />
-          <div className="absolute bottom-1 left-1.5 w-1 h-1 rounded-full bg-[#ca8a04]" />
-          <div className="absolute bottom-1 right-1.5 w-1 h-1 rounded-full bg-[#ca8a04]" />
+          <div className="absolute top-1 left-2 w-1 h-1 rounded-full bg-[#ca8a04]" />
+          <div className="absolute bottom-1 right-2 w-1 h-1 rounded-full bg-[#ca8a04]" />
         </div>
       );
 
     case 'plaza':
       return (
-        <div className="w-full h-full bg-[#f1f5f9] border border-[#cbd5e1] flex items-center justify-center relative overflow-hidden">
-          {/* Central Medallion Cobblestone */}
-          <div className="w-8 h-8 rounded-full border border-[#94a3b8] bg-[#e2e8f0] flex items-center justify-center">
-            <div className="w-3 h-3 rounded-full bg-[#cbd5e1]" />
-          </div>
+        <div className="w-full h-full bg-[#f1f5f9] flex items-center justify-center relative overflow-hidden">
+          {/* Cobblestone paving */}
+          {(x + y) % 2 === 0 ? (
+            <div className="w-full h-full bg-[#e2e8f0]" />
+          ) : (
+            <div className="w-full h-full bg-[#f1f5f9]" />
+          )}
           {(x + y) % 3 === 0 && (
-            <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-[#94a3b8]/40 rounded-full" />
+            <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#94a3b8]/40 rounded-full" />
           )}
         </div>
       );
@@ -425,16 +424,16 @@ function renderSquareTownTile(type: string, x: number, y: number) {
       const hasShell = (x * 7 + y * 13) % 9 === 0;
       const hasStarfish = (x * 11 + y * 7) % 17 === 0;
       return (
-        <div className="w-full h-full bg-[#fde047] border border-[#facc15]/50 relative overflow-hidden">
-          {/* Warm Sand Dunes / Ripples */}
+        <div className="w-full h-full bg-[#fde047] relative overflow-hidden">
+          {/* Warm Sand Ripples */}
           {(x + y) % 2 === 0 && (
             <div className="absolute top-2 left-1 right-2 h-1 bg-[#eab308]/25 rounded-full" />
           )}
           {hasShell && (
-            <div className="absolute bottom-2 right-2 w-2 h-2 rounded-full bg-[#fda4af] border border-[#f43f5e]/40" />
+            <div className="absolute bottom-2 right-2 w-2 h-2 rounded-full bg-[#fda4af]" />
           )}
           {hasStarfish && (
-            <div className="absolute top-2 left-2 w-2 h-2 rotate-45 bg-[#fb923c] border border-[#ea580c]/50" />
+            <div className="absolute top-2 left-2 w-2 h-2 rotate-45 bg-[#fb923c]" />
           )}
         </div>
       );
@@ -444,7 +443,7 @@ function renderSquareTownTile(type: string, x: number, y: number) {
       const hasWhiteFoam = (x + y) % 3 === 0;
       const hasLightSallows = (x + y) % 4 === 1;
       return (
-        <div className="w-full h-full bg-[#0284c7] border border-[#0369a1]/40 relative overflow-hidden">
+        <div className="w-full h-full bg-[#0284c7] relative overflow-hidden">
           {/* Sun glint waves */}
           {hasWhiteFoam && (
             <div className="absolute top-2 left-2 w-7 h-1.5 bg-[#e0f2fe]/70 rounded-full animate-water-flow shadow-xs" />
@@ -452,7 +451,6 @@ function renderSquareTownTile(type: string, x: number, y: number) {
           {hasLightSallows && (
             <div className="absolute bottom-2.5 right-2 w-6 h-1 bg-[#38bdf8]/60 rounded-full" />
           )}
-          {/* Deep shimmer */}
           {(x * 5 + y * 7) % 5 === 0 && (
             <div className="absolute top-6 left-3 w-4 h-1 bg-[#0284c7]/40 rounded-full" />
           )}
@@ -464,38 +462,40 @@ function renderSquareTownTile(type: string, x: number, y: number) {
     default: {
       const flowerHash = (x * 13 + y * 17) % 16;
       return (
-        <div className="w-full h-full bg-[#38b764] border border-[#2b9348]/40 relative overflow-hidden">
+        <div className="w-full h-full bg-[#38b764] relative overflow-hidden">
+          {/* Subtle tone variation (no grid borders) */}
+          {(x + y) % 2 === 0 ? (
+            <div className="w-full h-full bg-[#34914e]/30" />
+          ) : null}
+
           {/* Grass Tufts */}
           {(x * 3 + y * 5) % 4 === 0 && (
-            <div className="absolute top-2 left-2 w-1.5 h-2.5 bg-[#52c97a] rounded-xs shadow-xs" />
+            <div className="absolute top-2 left-2 w-1.5 h-2.5 bg-[#52c97a] rounded-xs" />
           )}
           {(x * 7 + y * 3) % 5 === 0 && (
             <div className="absolute bottom-2 right-2 w-1.5 h-2 bg-[#2d7f38] rounded-xs" />
           )}
-          {/* Multi-Colored Wild Flower Blossoms */}
+
+          {/* Wild Flower Blossoms */}
           {flowerHash === 1 && (
-            // Pink Sakura Flower
             <div className="absolute bottom-2 left-3 flex items-center justify-center">
               <div className="w-2.5 h-2.5 rounded-full bg-[#f472b6] shadow-xs" />
               <div className="absolute w-1 h-1 rounded-full bg-[#fef08a]" />
             </div>
           )}
           {flowerHash === 3 && (
-            // Golden Buttercup Flower
             <div className="absolute top-2.5 right-2.5 flex items-center justify-center">
               <div className="w-2.5 h-2.5 rounded-full bg-[#facc15] shadow-xs" />
               <div className="absolute w-1 h-1 rounded-full bg-[#ea580c]" />
             </div>
           )}
           {flowerHash === 7 && (
-            // Forget-Me-Not Blue Blossom
             <div className="absolute bottom-3 right-3 flex items-center justify-center">
               <div className="w-2 h-2 rounded-full bg-[#60a5fa] shadow-xs" />
               <div className="absolute w-0.5 h-0.5 rounded-full bg-white" />
             </div>
           )}
           {flowerHash === 11 && (
-            // White Daisy Blossom
             <div className="absolute top-3 left-3 flex items-center justify-center">
               <div className="w-2.5 h-2.5 rounded-full bg-[#f8fafc] shadow-xs" />
               <div className="absolute w-1 h-1 rounded-full bg-[#facc15]" />

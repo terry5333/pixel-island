@@ -39,6 +39,8 @@ export interface UserProfile {
   equipped: EquippedItems;
   roomLayout: RoomFurniture[];
   role: 'user' | 'admin';
+  houseLevel?: number;
+  hasCompletedTutorial?: boolean;
   friends?: FriendEntry[];
   friendRequests?: FriendRequest[];
 }
@@ -58,11 +60,12 @@ export interface IslandPresence {
   emojiBubble?: EmojiBubble | null;
   currentPlace?: 'island' | 'home' | 'boutique' | 'arcade';
   visitingHomeUid?: string;
+  houseLevel?: number;
   updatedAt: number;
   isMoving?: boolean;
 }
 
-export type GameType = '1a2b' | 'ooxx' | 'battleship' | 'dots_boxes';
+export type GameType = '1a2b' | 'ooxx' | 'battleship' | 'dots_boxes' | 'slots';
 
 export interface GuessRecord {
   guess: string;

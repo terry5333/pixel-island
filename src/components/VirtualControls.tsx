@@ -3,6 +3,7 @@ import { sound } from '../services/audio';
 
 interface VirtualControlsProps {
   onMove: (dir: 'up' | 'down' | 'left' | 'right') => void;
+  onMoveDelta?: (vx: number, vy: number, dt: number) => void;
   onInteract: () => void;
   onSendEmoji: (emoji: string) => void;
   contextPrompt?: string | null;
@@ -13,31 +14,68 @@ export const EMOJI_LIST = ['❤️', '😂', '🎉', '💬', '⚡'];
 
 export const VirtualControls: React.FC<VirtualControlsProps> = ({
   onMove,
+  onMoveDelta,
   onInteract,
   onSendEmoji,
   contextPrompt,
   onContextAction,
 }) => {
   const activeKeysRef = useRef<Set<string>>(new Set());
-  const loopTimerRef = useRef<number | null>(null);
-  const touchIntervalRef = useRef<number | null>(null);
+  const touchDirRef = useRef<{ vx: number; vy: number } | null>(null);
+  const animFrameRef = useRef<number | null>(null);
+  const lastTimeRef = useRef<number>(performance.now());
 
-  // High-performance continuous game loop for keyboard (0ms latency, zero stutter)
+  // 60 FPS Sub-pixel continuous game movement loop
   useEffect(() => {
-    const tick = () => {
+    let running = true;
+
+    const gameLoop = (currentTime: number) => {
+      if (!running) return;
+      const dt = Math.min((currentTime - lastTimeRef.current) / 1000, 0.05);
+      lastTimeRef.current = currentTime;
+
       const keys = activeKeysRef.current;
-      if (keys.has('KeyW') || keys.has('ArrowUp')) onMove('up');
-      else if (keys.has('KeyS') || keys.has('ArrowDown')) onMove('down');
-      else if (keys.has('KeyA') || keys.has('ArrowLeft')) onMove('left');
-      else if (keys.has('KeyD') || keys.has('ArrowRight')) onMove('right');
+      let vx = 0;
+      let vy = 0;
+
+      if (keys.has('KeyW') || keys.has('ArrowUp')) vy -= 1;
+      if (keys.has('KeyS') || keys.has('ArrowDown')) vy += 1;
+      if (keys.has('KeyA') || keys.has('ArrowLeft')) vx -= 1;
+      if (keys.has('KeyD') || keys.has('ArrowRight')) vx += 1;
+
+      // Also merge active mobile touch D-Pad
+      if (touchDirRef.current) {
+        vx += touchDirRef.current.vx;
+        vy += touchDirRef.current.vy;
+      }
+
+      if (vx !== 0 || vy !== 0) {
+        // Normalize diagonal speed
+        if (vx !== 0 && vy !== 0) {
+          vx *= 0.7071;
+          vy *= 0.7071;
+        }
+
+        if (onMoveDelta) {
+          onMoveDelta(vx, vy, dt);
+        } else {
+          if (vy < 0) onMove('up');
+          else if (vy > 0) onMove('down');
+          else if (vx < 0) onMove('left');
+          else if (vx > 0) onMove('right');
+        }
+      }
+
+      animFrameRef.current = requestAnimationFrame(gameLoop);
     };
+
+    lastTimeRef.current = performance.now();
+    animFrameRef.current = requestAnimationFrame(gameLoop);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
         return;
       }
-
-      // Ignore OS automatic repeat to maintain buttery smooth game loop
       if (e.repeat) return;
 
       // Hotkeys for Emojis
@@ -53,90 +91,67 @@ export const VirtualControls: React.FC<VirtualControlsProps> = ({
         return;
       }
 
-      // Movement Keys (WASD & Arrows)
+      // Movement Keys
       const isMoveKey = ['KeyW', 'KeyS', 'KeyA', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code);
       if (isMoveKey) {
         e.preventDefault();
-        const wasEmpty = activeKeysRef.current.size === 0;
         activeKeysRef.current.add(e.code);
-
-        // Instant step on first key press
-        if (wasEmpty) {
-          if (e.code === 'KeyW' || e.code === 'ArrowUp') onMove('up');
-          else if (e.code === 'KeyS' || e.code === 'ArrowDown') onMove('down');
-          else if (e.code === 'KeyA' || e.code === 'ArrowLeft') onMove('left');
-          else if (e.code === 'KeyD' || e.code === 'ArrowRight') onMove('right');
-        }
-
-        // Start continuous walking interval (130ms per tile for buttery smooth speed)
-        if (loopTimerRef.current === null) {
-          loopTimerRef.current = window.setInterval(tick, 130);
-        }
       }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
       activeKeysRef.current.delete(e.code);
-      if (activeKeysRef.current.size === 0 && loopTimerRef.current !== null) {
-        clearInterval(loopTimerRef.current);
-        loopTimerRef.current = null;
-      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+
     return () => {
+      running = false;
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      if (loopTimerRef.current !== null) clearInterval(loopTimerRef.current);
     };
-  }, [onMove, onInteract, onSendEmoji]);
+  }, [onMove, onMoveDelta, onInteract, onSendEmoji]);
 
-  // Touch / Mobile D-Pad Continuous loop
-  const startTouchMove = (dir: 'up' | 'down' | 'left' | 'right') => {
-    onMove(dir);
-    if (touchIntervalRef.current) clearInterval(touchIntervalRef.current);
-    touchIntervalRef.current = window.setInterval(() => {
-      onMove(dir);
-    }, 130);
+  // Touch / Mobile D-Pad controls
+  const handleTouchDir = (vx: number, vy: number) => {
+    touchDirRef.current = { vx, vy };
   };
 
-  const stopTouchMove = () => {
-    if (touchIntervalRef.current) {
-      clearInterval(touchIntervalRef.current);
-      touchIntervalRef.current = null;
-    }
+  const handleTouchStop = () => {
+    touchDirRef.current = null;
   };
 
   return (
     <>
-      {/* ================= ELEGANT FLOATING CONTEXT PROMPT ================= */}
+      {/* ================= FLOATING CONTEXT PROMPT ================= */}
       {contextPrompt && (
-        <div className="fixed bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 z-40 animate-bounce-gentle">
+        <div className="fixed bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 z-40 animate-bounce-gentle select-none">
           <button
             onClick={() => {
               sound.playDoor();
               if (onContextAction) onContextAction();
               else onInteract();
             }}
-            className="pixel-btn px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm rounded-full flex items-center gap-2 border-2 border-black shadow-pixel-lg"
+            className="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-bold text-xs sm:text-sm rounded-full flex items-center gap-2 border-2 border-slate-950 shadow-2xl cursor-pointer active:scale-95 transition-transform"
           >
             <span>✨</span>
             <span>{contextPrompt}</span>
-            <span className="text-[10px] bg-slate-900 text-amber-300 px-1.5 py-0.5 rounded-full ml-1">
+            <span className="text-[10px] bg-slate-950 text-amber-300 px-1.5 py-0.5 rounded-full ml-1 font-mono">
               [SPACE / 點我]
             </span>
           </button>
         </div>
       )}
 
-      {/* ================= MINIMALIST QUICK EMOJI CAPSULE ================= */}
-      <div className="fixed bottom-2.5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 bg-slate-950/60 backdrop-blur-xs px-2 py-1 rounded-full border border-slate-700/60 shadow-pixel-sm">
+      {/* ================= SLEEK QUICK EMOJI CAPSULE ================= */}
+      <div className="fixed bottom-2.5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 bg-slate-950/70 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-700/80 shadow-lg select-none">
         {EMOJI_LIST.map((emoji, idx) => (
           <button
             key={idx}
             onClick={() => onSendEmoji(emoji)}
-            className="w-7 h-7 rounded-full bg-slate-800/80 hover:bg-slate-700 flex items-center justify-center text-xs transition-transform active:scale-90"
+            className="w-7 h-7 rounded-full bg-slate-800/80 hover:bg-slate-700 active:bg-amber-500 flex items-center justify-center text-xs transition-transform active:scale-90 cursor-pointer"
             title={`快捷鍵 ${idx + 1}`}
           >
             {emoji}
@@ -146,49 +161,49 @@ export const VirtualControls: React.FC<VirtualControlsProps> = ({
 
       {/* ================= MOBILE TRANSLUCENT D-PAD (BOTTOM-LEFT) ================= */}
       <div className="fixed bottom-4 left-3 z-30 sm:hidden select-none touch-none opacity-85 hover:opacity-100 transition-opacity">
-        <div className="relative w-28 h-28 bg-slate-950/40 backdrop-blur-xs rounded-full border border-slate-600/60 p-1 flex items-center justify-center">
+        <div className="relative w-28 h-28 bg-slate-950/50 backdrop-blur-md rounded-full border border-slate-600/60 p-1 flex items-center justify-center shadow-xl">
           {/* UP */}
           <button
-            onTouchStart={(e) => { e.preventDefault(); startTouchMove('up'); }}
-            onTouchEnd={stopTouchMove}
-            onMouseDown={() => startTouchMove('up')}
-            onMouseUp={stopTouchMove}
-            className="absolute top-1 left-1/2 -translate-x-1/2 w-8 h-8 bg-slate-800/70 active:bg-amber-500 rounded-t border border-slate-600/80 flex items-center justify-center text-xs text-slate-200"
+            onTouchStart={(e) => { e.preventDefault(); handleTouchDir(0, -1); }}
+            onTouchEnd={handleTouchStop}
+            onMouseDown={() => handleTouchDir(0, -1)}
+            onMouseUp={handleTouchStop}
+            className="absolute top-1 left-1/2 -translate-x-1/2 w-8 h-8 bg-slate-800/80 active:bg-amber-500 rounded-t border border-slate-600/80 flex items-center justify-center text-xs text-slate-200 cursor-pointer"
           >
             ▲
           </button>
           {/* DOWN */}
           <button
-            onTouchStart={(e) => { e.preventDefault(); startTouchMove('down'); }}
-            onTouchEnd={stopTouchMove}
-            onMouseDown={() => startTouchMove('down')}
-            onMouseUp={stopTouchMove}
-            className="absolute bottom-1 left-1/2 -translate-x-1/2 w-8 h-8 bg-slate-800/70 active:bg-amber-500 rounded-b border border-slate-600/80 flex items-center justify-center text-xs text-slate-200"
+            onTouchStart={(e) => { e.preventDefault(); handleTouchDir(0, 1); }}
+            onTouchEnd={handleTouchStop}
+            onMouseDown={() => handleTouchDir(0, 1)}
+            onMouseUp={handleTouchStop}
+            className="absolute bottom-1 left-1/2 -translate-x-1/2 w-8 h-8 bg-slate-800/80 active:bg-amber-500 rounded-b border border-slate-600/80 flex items-center justify-center text-xs text-slate-200 cursor-pointer"
           >
             ▼
           </button>
           {/* LEFT */}
           <button
-            onTouchStart={(e) => { e.preventDefault(); startTouchMove('left'); }}
-            onTouchEnd={stopTouchMove}
-            onMouseDown={() => startTouchMove('left')}
-            onMouseUp={stopTouchMove}
-            className="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-slate-800/70 active:bg-amber-500 rounded-l border border-slate-600/80 flex items-center justify-center text-xs text-slate-200"
+            onTouchStart={(e) => { e.preventDefault(); handleTouchDir(-1, 0); }}
+            onTouchEnd={handleTouchStop}
+            onMouseDown={() => handleTouchDir(-1, 0)}
+            onMouseUp={handleTouchStop}
+            className="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-slate-800/80 active:bg-amber-500 rounded-l border border-slate-600/80 flex items-center justify-center text-xs text-slate-200 cursor-pointer"
           >
             ◀
           </button>
           {/* RIGHT */}
           <button
-            onTouchStart={(e) => { e.preventDefault(); startTouchMove('right'); }}
-            onTouchEnd={stopTouchMove}
-            onMouseDown={() => startTouchMove('right')}
-            onMouseUp={stopTouchMove}
-            className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-slate-800/70 active:bg-amber-500 rounded-r border border-slate-600/80 flex items-center justify-center text-xs text-slate-200"
+            onTouchStart={(e) => { e.preventDefault(); handleTouchDir(1, 0); }}
+            onTouchEnd={handleTouchStop}
+            onMouseDown={() => handleTouchDir(1, 0)}
+            onMouseUp={handleTouchStop}
+            className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-slate-800/80 active:bg-amber-500 rounded-r border border-slate-600/80 flex items-center justify-center text-xs text-slate-200 cursor-pointer"
           >
             ▶
           </button>
           {/* Center Hub */}
-          <div className="w-6 h-6 rounded-full bg-slate-900/60 border border-slate-700" />
+          <div className="w-6 h-6 rounded-full bg-slate-900/80 border border-slate-700" />
         </div>
       </div>
 
@@ -199,10 +214,10 @@ export const VirtualControls: React.FC<VirtualControlsProps> = ({
             sound.playClick();
             onInteract();
           }}
-          className="w-14 h-14 rounded-full bg-rose-600/80 active:bg-rose-500 border-2 border-rose-400 shadow-pixel flex flex-col items-center justify-center text-white font-bold"
+          className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 active:scale-95 border-2 border-slate-950 shadow-xl flex flex-col items-center justify-center text-slate-950 font-bold cursor-pointer"
         >
-          <span className="text-sm font-arcade">A</span>
-          <span className="text-[8px]">互動</span>
+          <span className="text-base font-arcade font-black">A</span>
+          <span className="text-[9px] font-extrabold -mt-1">互動</span>
         </button>
       </div>
     </>
