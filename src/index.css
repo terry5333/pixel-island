@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html, body, #root {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+}
+
+/* Retro Pixel UI Helper Classes */
+.pixel-border {
+  border: 3px solid #181425;
+  box-shadow: 
+    inset -3px -3px 0px 0px rgba(0, 0, 0, 0.45),
+    inset 3px 3px 0px 0px rgba(255, 255, 255, 0.25),
+    3px 3px 0px 0px rgba(0, 0, 0, 0.7);
+}
+
+.pixel-border-gold {
+  border: 3px solid #663931;
+  box-shadow: 
+    inset -3px -3px 0px 0px rgba(143, 86, 59, 0.8),
+    inset 3px 3px 0px 0px rgba(255, 245, 180, 0.6),
+    3px 3px 0px 0px rgba(0, 0, 0, 0.7);
+}
+
+.pixel-card {
+  background-color: #262b44;
+  border: 3px solid #181425;
+  box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.6);
+}
+
+.pixel-btn {
+  position: relative;
+  border: 2px solid #120e20;
+  box-shadow: 0 4px 0 #120e20, 0 6px 0 rgba(0, 0, 0, 0.25);
+  transition: transform 0.05s ease, box-shadow 0.05s ease;
+}
+
+.pixel-btn:hover {
+  filter: brightness(1.08);
+}
+
+.pixel-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #120e20;
+}
+
+/* Custom Pixel Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #181425;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3a4466;
+  border: 1px solid #120e20;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5a6988;
+}

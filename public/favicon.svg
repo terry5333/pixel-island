@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <rect width="32" height="32" fill="#3a80c9" />
+  <!-- Sandy Island -->
+  <rect x="4" y="6" width="24" height="20" fill="#eec39a" />
+  <rect x="6" y="8" width="20" height="16" fill="#5ea746" />
+  <rect x="10" y="10" width="12" height="12" fill="#78c356" />
+  <!-- Palm tree / coconut -->
+  <rect x="8" y="10" width="2" height="6" fill="#8f563b" />
+  <rect x="6" y="8" width="6" height="3" fill="#2d6824" />
+  <rect x="5" y="9" width="2" height="2" fill="#2d6824" />
+  <rect x="11" y="9" width="2" height="2" fill="#2d6824" />
+  <!-- House -->
+  <rect x="18" y="13" width="6" height="5" fill="#e43b44" />
+  <rect x="19" y="15" width="4" height="4" fill="#ffffff" />
+  <rect x="20" y="17" width="2" height="2" fill="#8f563b" />
+</svg>
