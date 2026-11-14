@@ -44,6 +44,7 @@ export const IslandMap: React.FC<IslandMapProps> = ({
   const selfPresence = presences[currentUid];
   const selfX = localPos.x;
   const selfY = localPos.y;
+  const isLocalBehind = isPlayerBehindObstacle(selfX, selfY);
 
   // Active houses populated for community and players
   const activeHouses = useMemo(() => {
@@ -200,33 +201,28 @@ export const IslandMap: React.FC<IslandMapProps> = ({
         })}
 
         {/* ================= 4. LOCAL PLAYER SPRITE (WITH OCCLUSION DEPTH) ================= */}
-        {(() => {
-          const isLocalBehind = isPlayerBehindObstacle(selfX, selfY);
-          return (
-            <div
-              className={`absolute z-30 pointer-events-none will-change-transform transition-all duration-150 ${
-                isLocalBehind
-                  ? 'opacity-70 contrast-125 brightness-110 drop-shadow-[0_0_12px_rgba(254,240,138,0.95)]'
-                  : ''
-              }`}
-              style={{
-                left: selfX * TILE_SIZE + (TILE_SIZE - 64) / 2,
-                top: selfY * TILE_SIZE + (TILE_SIZE - 64) / 2 - 8,
-              }}
-            >
-              <CharacterSprite
-                displayName={localDisplayName}
-                facing={localPos.facing}
-                equipped={localEquipped}
-                itemsMap={itemsMap}
-                isMoving={localPos.isMoving}
-                emojiBubble={localEmojiBubble}
-                isSelf={true}
-                size={56}
-              />
-            </div>
-          );
-        })()}
+        <div
+          className={`absolute z-30 pointer-events-none will-change-transform transition-all duration-150 ${
+            isLocalBehind
+              ? 'opacity-70 contrast-125 brightness-110 drop-shadow-[0_0_12px_rgba(254,240,138,0.95)]'
+              : ''
+          }`}
+          style={{
+            left: selfX * TILE_SIZE + (TILE_SIZE - 64) / 2,
+            top: selfY * TILE_SIZE + (TILE_SIZE - 64) / 2 - 8,
+          }}
+        >
+          <CharacterSprite
+            displayName={localDisplayName}
+            facing={localPos.facing}
+            equipped={localEquipped}
+            itemsMap={itemsMap}
+            isMoving={localPos.isMoving}
+            emojiBubble={localEmojiBubble}
+            isSelf={true}
+            size={56}
+          />
+        </div>
 
         {/* ================= 5. REMOTE PLAYERS (WITH OCCLUSION DEPTH) ================= */}
         {remotePlayers.map((player) => {
