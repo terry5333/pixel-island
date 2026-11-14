@@ -249,7 +249,7 @@ export const App: React.FC = () => {
     sound.playClick();
     setErrorMessage(null);
 
-    const room = await dbService.createArcadeRoom({
+    const roomId = await dbService.createArcadeRoom({
       gameType,
       mode: 'ai',
       status: 'playing',
@@ -261,7 +261,7 @@ export const App: React.FC = () => {
       isPublic: false,
     });
 
-    setActiveRoomId(room.roomId);
+    setActiveRoomId(roomId);
     setActiveGameType(gameType);
   };
 
@@ -274,7 +274,7 @@ export const App: React.FC = () => {
     sound.playClick();
     setErrorMessage(null);
 
-    const room = await dbService.createArcadeRoom({
+    const roomId = await dbService.createArcadeRoom({
       gameType,
       mode: 'pvp',
       status: 'waiting',
@@ -284,56 +284,55 @@ export const App: React.FC = () => {
       isPublic,
     });
 
-    setActiveRoomId(room.roomId);
+    setActiveRoomId(roomId);
     setActiveGameType(gameType);
   };
 
   // Join Room by 4-digit Code
-  const handleJoinByCode = async () => {
+  const handleJoinByCode = async (codeToJoin?: string) => {
     if (!currentUser) {
       setIsAuthOpen(true);
       return;
     }
-    const cleanCode = joinCodeInput.trim().toUpperCase();
-    if (cleanCode.length !== 4) {
+    const cleanCode = (codeToJoin || joinCodeInput).trim().toUpperCase();
+    if (!cleanCode) {
       sound.playBump();
-      setErrorMessage('請輸入標準 4 位大寫英文/數字代碼！');
+      setErrorMessage('請輸入標準 4 位代碼！');
       return;
     }
 
     sound.playClick();
     setErrorMessage(null);
 
-    const joined = await dbService.joinArcadeRoomByCode(cleanCode, currentUser.uid, currentUser.displayName);
-    if (!joined) {
+    const targetRoom = await dbService.getArcadeRoom(cleanCode);
+    if (!targetRoom) {
       sound.playBump();
       setErrorMessage('未查得此考局代碼，或考局已滿員/已結束！');
       return;
     }
 
-    setActiveRoomId(joined.roomId);
-    setActiveGameType(joined.gameType);
+    if (targetRoom.status === 'playing' && targetRoom.hostUid !== currentUser.uid && targetRoom.guestUid !== currentUser.uid) {
+      sound.playBump();
+      setErrorMessage('該考局已開始對戰或已滿員！');
+      return;
+    }
+
+    if (targetRoom.hostUid !== currentUser.uid) {
+      await dbService.updateArcadeRoom(cleanCode, {
+        guestUid: currentUser.uid,
+        guestName: currentUser.displayName,
+        status: 'playing',
+      });
+    }
+
+    setActiveRoomId(cleanCode);
+    setActiveGameType(targetRoom.gameType);
     setJoinCodeInput('');
   };
 
   // Join Existing Public Room
   const handleJoinPublicRoom = async (room: ArcadeRoom) => {
-    if (!currentUser) {
-      setIsAuthOpen(true);
-      return;
-    }
-    sound.playClick();
-    setErrorMessage(null);
-
-    const joined = await dbService.joinArcadeRoom(room.roomId, currentUser.uid, currentUser.displayName);
-    if (!joined) {
-      sound.playBump();
-      setErrorMessage('無法進入該考局，可能已滿員或已終結！');
-      return;
-    }
-
-    setActiveRoomId(joined.roomId);
-    setActiveGameType(joined.gameType);
+    await handleJoinByCode(room.roomId);
   };
 
   // Exit Current Game & Return to Lobby
@@ -483,8 +482,8 @@ export const App: React.FC = () => {
                   <span className="text-[10px] sm:text-xs text-[#8D6E63] font-bold">考局案號：</span>
                   <div
                     onClick={() => {
-                      if (activeRoom.roomCode) {
-                        navigator.clipboard.writeText(activeRoom.roomCode);
+                      if (activeRoom.roomId) {
+                        navigator.clipboard.writeText(activeRoom.roomId);
                         setCopiedCode(true);
                         setTimeout(() => setCopiedCode(false), 2000);
                         sound.playClick();
@@ -493,7 +492,7 @@ export const App: React.FC = () => {
                     className="px-3 py-1 bg-[#FFFDF9] border-2 border-[#5D4037] shadow-[2px_2px_0px_#5D4037] font-mono font-black text-sm text-[#C62828] tracking-widest flex items-center gap-1.5 cursor-pointer hover:bg-amber-50"
                     title="點擊複製 4 碼考局代碼"
                   >
-                    <span>{activeRoom.roomCode || activeRoom.roomId.slice(0, 4).toUpperCase()}</span>
+                    <span>{activeRoom.roomId}</span>
                     {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
                   </div>
                 </div>
@@ -676,7 +675,7 @@ export const App: React.FC = () => {
                 </div>
 
                 <button
-                  onClick={handleJoinByCode}
+                  onClick={() => handleJoinByCode()}
                   disabled={joinCodeInput.length !== 4}
                   className={`w-full mt-4 py-2.5 font-black text-xs sm:text-sm tracking-widest border-2 border-[#5D4037] shadow-[4px_4px_0px_#5D4037] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all cursor-pointer ${
                     joinCodeInput.length === 4
@@ -730,7 +729,7 @@ export const App: React.FC = () => {
                               </div>
                               <div className="text-[10px] text-[#8D6E63] flex items-center gap-2">
                                 <span>局主：<b>{r.hostName}</b></span>
-                                <span>案號：<b className="font-mono text-[#C62828]">{r.roomCode || r.roomId.slice(0, 4).toUpperCase()}</b></span>
+                                <span>案號：<b className="font-mono text-[#C62828]">{r.roomId}</b></span>
                               </div>
                             </div>
                           </div>
@@ -772,8 +771,7 @@ export const App: React.FC = () => {
               sound.playBump();
               return;
             }
-            await dbService.rewardCoins(currentUser.uid, -item.price);
-            await dbService.updateInventory(currentUser.uid, item.id);
+            await dbService.buyItem(currentUser.uid, item);
             sound.playBuy();
           }}
         />
