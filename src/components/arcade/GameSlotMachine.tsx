@@ -66,7 +66,7 @@ export const GameSlotMachine: React.FC<GameSlotMachineProps> = ({
       setReel1((prev) => (prev + 1) % SYMBOLS.length);
       setReel2((prev) => (prev + 2) % SYMBOLS.length);
       setReel3((prev) => (prev + 3) % SYMBOLS.length);
-      if (counter % 3 === 0) sound.playStep();
+      if (counter % 2 === 0) sound.playSlotSpin();
     }, 70);
 
     // Stop Reel 1 after 1.2s
@@ -104,7 +104,7 @@ export const GameSlotMachine: React.FC<GameSlotMachineProps> = ({
       if (sym1.id === sym2.id && sym2.id === sym3.id) {
         // JACKPOT!
         const win = betAmount * sym1.payout3;
-        sound.playSuccess();
+        sound.playSlotJackpot();
         setBeaconFlash(true);
         setWinMessage(`🎉 大獎 JACKPOT！三連【${sym1.label}】贏得 ${win} 金幣！`);
         await onRewardCoins(win);
@@ -112,7 +112,7 @@ export const GameSlotMachine: React.FC<GameSlotMachineProps> = ({
         // Pair match
         const matchedSym = sym1.id === sym2.id ? sym1 : sym3;
         const win = Math.floor(betAmount * matchedSym.payout2);
-        sound.playSuccess();
+        sound.playCoin();
         setBeaconFlash(true);
         setWinMessage(`✨ 恭喜中獎！雙連【${matchedSym.label}】贏得 ${win} 金幣！`);
         await onRewardCoins(win);
@@ -142,13 +142,13 @@ export const GameSlotMachine: React.FC<GameSlotMachineProps> = ({
           <div className="w-16 h-2 bg-slate-900 border-2 border-slate-950" />
         </div>
 
-        {/* Main Cabinet Housing */}
-        <div className="w-full bg-[#334155] border-4 border-slate-950 rounded-2xl shadow-2xl p-4 flex flex-col items-center relative overflow-hidden">
+        {/* Main Cabinet Housing (Showa Lacquer Wood & Brass Frame) */}
+        <div className="w-full bg-[#241108] border-4 border-[#8b4513] rounded-2xl shadow-2xl p-4 flex flex-col items-center relative overflow-hidden font-serif">
           {/* Header Marquee Sign */}
-          <div className="w-full py-2 bg-slate-950 rounded-xl border-2 border-amber-400/80 mb-3 flex items-center justify-center relative overflow-hidden">
+          <div className="w-full py-2 bg-[#150a04] rounded-xl border-2 border-amber-400/80 mb-3 flex items-center justify-center relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-amber-500/10 animate-pulse" />
-            <span className="font-arcade text-base sm:text-lg text-amber-400 tracking-wider flex items-center gap-2 drop-shadow-md">
-              <span>★</span> 777 LUCKY CASINO <span>★</span>
+            <span className="text-sm sm:text-base text-amber-400 font-bold tracking-wider flex items-center gap-2 drop-shadow-md">
+              <span>★</span> 銭屋特製 777 昭和スロット <span>★</span>
             </span>
           </div>
 
@@ -223,8 +223,8 @@ export const GameSlotMachine: React.FC<GameSlotMachineProps> = ({
           </div>
 
           {/* Bottom Coin Hopper Payout Tray */}
-          <div className="w-full mt-2 bg-slate-950 border-3 border-slate-900 rounded-xl p-2 flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs text-slate-300">
+          <div className="w-full mt-2 bg-[#150a04] border-2 border-[#8b4513] rounded-xl p-2 flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs text-[#fed7aa]">
               <span>錢包：</span>
               <span className="font-bold text-amber-400 font-mono flex items-center gap-1">
                 <Coins className="w-3.5 h-3.5 text-amber-400" />
@@ -241,10 +241,10 @@ export const GameSlotMachine: React.FC<GameSlotMachineProps> = ({
                     sound.playClick();
                     setBetAmount(amt);
                   }}
-                  className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-all ${
+                  className={`px-2 py-0.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
                     betAmount === amt
-                      ? 'bg-amber-500 text-slate-950 border-amber-300 shadow'
-                      : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+                      ? 'bg-[#991b1b] text-[#fef08a] border-[#f59e0b] shadow'
+                      : 'bg-[#2a140a] text-[#fed7aa] border-[#78350f] hover:bg-[#381a0d]'
                   }`}
                 >
                   {amt}
@@ -259,8 +259,8 @@ export const GameSlotMachine: React.FC<GameSlotMachineProps> = ({
             disabled={isSpinning}
             className={`w-full mt-3 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 border-2 shadow-lg transition-transform active:scale-95 cursor-pointer ${
               isSpinning
-                ? 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'
-                : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 border-amber-300 shadow-amber-500/20'
+                ? 'bg-[#2a140a] text-[#78350f] border-[#78350f] cursor-not-allowed'
+                : 'bg-gradient-to-r from-[#b45309] to-[#d97706] hover:from-[#d97706] hover:to-[#f59e0b] text-[#fef08a] border-[#fde047] shadow-amber-500/20'
             }`}
           >
             <Sparkles className="w-4 h-4" />
@@ -270,7 +270,7 @@ export const GameSlotMachine: React.FC<GameSlotMachineProps> = ({
       </div>
 
       {/* Paytable Guide Capsule */}
-      <div className="mt-4 w-full max-w-sm p-3 bg-slate-900/90 border border-slate-800 rounded-xl text-[11px] text-slate-400">
+      <div className="mt-4 w-full max-w-sm p-3 bg-[#1c0d06] border-2 border-[#8b4513] rounded-xl text-[11px] text-[#fed7aa] font-serif">
         <div className="font-bold text-amber-400 mb-1.5 flex items-center gap-1">
           <Trophy className="w-3.5 h-3.5 text-amber-400" />
           <span>中獎賠率表：</span>

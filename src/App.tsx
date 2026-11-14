@@ -53,6 +53,12 @@ export const App: React.FC = () => {
   const [selectedPlayer, setSelectedPlayer] = useState<IslandPresence | null>(null);
   const [challengedPlayer, setChallengedPlayer] = useState<IslandPresence | null>(null);
 
+  // Requirement 3: 3-Minute Idle Kick State
+  const [isAfkKicked, setIsAfkKicked] = useState(false);
+  const [afkWarningRemaining, setAfkWarningRemaining] = useState<number | null>(null);
+  const lastActivityRef = useRef<number>(Date.now());
+  const lastStepSoundRef = useRef<number>(0);
+
   // Items map for easy lookup
   const itemsMap = useMemo(() => {
     const map: Record<string, Item> = {};
@@ -90,6 +96,46 @@ export const App: React.FC = () => {
       unsubPresence();
     };
   }, []);
+
+  // Requirement 3: 3-Minute Idle Inactivity Kick Watchdog (3分鐘無動作踢出)
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // Reset activity timer on any user interaction
+    const handleUserActivity = () => {
+      lastActivityRef.current = Date.now();
+      if (afkWarningRemaining !== null) {
+        setAfkWarningRemaining(null);
+      }
+    };
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'pointerdown', 'click', 'wheel'];
+    events.forEach((ev) => window.addEventListener(ev, handleUserActivity, { passive: true }));
+
+    const interval = window.setInterval(() => {
+      if (!currentUser) return;
+      const idleMs = Date.now() - lastActivityRef.current;
+      const IDLE_LIMIT_MS = 180 * 1000; // 3 minutes = 180 seconds
+      const WARNING_THRESHOLD_MS = 150 * 1000; // 2.5 minutes (30 seconds before kick)
+
+      if (idleMs >= IDLE_LIMIT_MS) {
+        sound.playAlert();
+        setIsAfkKicked(true);
+        setAfkWarningRemaining(null);
+        dbService.signOut();
+      } else if (idleMs >= WARNING_THRESHOLD_MS) {
+        const remainingSeconds = Math.max(1, Math.ceil((IDLE_LIMIT_MS - idleMs) / 1000));
+        setAfkWarningRemaining(remainingSeconds);
+      } else {
+        setAfkWarningRemaining(null);
+      }
+    }, 1000);
+
+    return () => {
+      events.forEach((ev) => window.removeEventListener(ev, handleUserActivity));
+      clearInterval(interval);
+    };
+  }, [currentUser, afkWarningRemaining]);
 
   // High-performance continuous local position state (sub-pixel float coordinates)
   // Default spawn at the central Showa crossroads in front of the arcade and bridge
@@ -254,6 +300,19 @@ export const App: React.FC = () => {
         setLocalPos(nextState);
         localPosRef.current = nextState;
 
+        // Contextual footstep sounds during continuous walking
+        const now = Date.now();
+        if (now - lastStepSoundRef.current > 280) {
+          lastStepSoundRef.current = now;
+          const isWood = (newX >= 3.5 && newX <= 14.5 && newY >= 23.0 && newY <= 27.5) ||
+                         (newX >= 22.0 && newX <= 25.5 && newY >= 15.5 && newY <= 18.0);
+          if (isWood) {
+            sound.playStepWood();
+          } else {
+            sound.playStepDirt();
+          }
+        }
+
         syncSelfPresence(
           {
             x: Math.round(newX * 100) / 100,
@@ -284,7 +343,14 @@ export const App: React.FC = () => {
       if (dir === 'left') vx = -1;
       if (dir === 'right') vx = 1;
       handleMoveDelta(vx, vy, 0.16);
-      sound.playStep();
+      const cur = localPosRef.current;
+      const isWood = (cur.x >= 3.5 && cur.x <= 14.5 && cur.y >= 23.0 && cur.y <= 27.5) ||
+                     (cur.x >= 22.0 && cur.x <= 25.5 && cur.y >= 15.5 && cur.y <= 18.0);
+      if (isWood) {
+        sound.playStepWood();
+      } else {
+        sound.playStepDirt();
+      }
     },
     [handleMoveDelta]
   );
@@ -292,16 +358,27 @@ export const App: React.FC = () => {
   // Handle Interaction (Space / Enter / A Button / Click Prompt)
   const handleInteract = useCallback(() => {
     if (contextEntrance) {
-      sound.playDoor();
       if (contextEntrance.type === 'commercial') {
         const b = contextEntrance.building;
         if (b.type === 'boutique') {
+          sound.playWindChime();
           setBoutiqueInitialTab('shop');
           setIsBoutiqueOpen(true);
         } else if (b.type === 'arcade') {
+          sound.playTaiko();
           setArcadeInitialSoloSlots(false);
           setIsArcadeOpen(true);
         } else if (b.type === 'casino') {
+          sound.playTaiko();
+          setArcadeInitialSoloSlots(true);
+          setIsArcadeOpen(true);
+        }
+      } else if (contextEntrance.type === 'house') {
+        sound.playShojiDoor();
+        handleEnterHouse(contextEntrance.house);
+      }
+      return;
+    }
           setArcadeInitialSoloSlots(true);
           setIsArcadeOpen(true);
         }
@@ -492,12 +569,15 @@ export const App: React.FC = () => {
             onOpenUpgrade={() => setIsHouseUpgradeOpen(true)}
             onBuildingClick={(type) => {
               if (type === 'boutique') {
+                sound.playWindChime();
                 setBoutiqueInitialTab('shop');
                 setIsBoutiqueOpen(true);
               } else if (type === 'arcade') {
+                sound.playTaiko();
                 setArcadeInitialSoloSlots(false);
                 setIsArcadeOpen(true);
               } else if (type === 'casino') {
+                sound.playTaiko();
                 setArcadeInitialSoloSlots(true);
                 setIsArcadeOpen(true);
               }
@@ -629,6 +709,41 @@ export const App: React.FC = () => {
             handleVisitPlayerHome(targetPresence);
           }}
         />
+      )}
+
+      {/* AFK Idle Kick Warning Countdown Banner (30 seconds before 3-minute kick) */}
+      {afkWarningRemaining !== null && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 bg-[#991b1b]/95 border-2 border-[#fef08a] rounded-full text-white text-xs font-serif shadow-2xl flex items-center gap-2 animate-bounce">
+          <span className="text-base">⚠️</span>
+          <span>閒置提醒：您已長時間無動作，將於</span>
+          <span className="font-mono font-black text-amber-300 text-sm px-1.5 py-0.5 bg-black/40 rounded">{afkWarningRemaining}</span>
+          <span>秒後自動離線！(請移動或點擊任意處)</span>
+        </div>
+      )}
+
+      {/* 3-Minute Idle Kick Showa Japanese Alert Modal */}
+      {isAfkKicked && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-md bg-[#201109] border-4 border-[#8b4513] rounded-2xl p-6 text-center shadow-[0_0_30px_rgba(0,0,0,0.9)] text-[#fef08a] font-serif">
+            <div className="text-4xl mb-3">⛩️ 🏮</div>
+            <h3 className="text-lg font-bold text-[#fef08a] mb-2 tracking-wider">
+              閒置離線通知（3 分鐘無動作）
+            </h3>
+            <p className="text-sm text-[#fed7aa] mb-5 leading-relaxed">
+              因您已超過 3 分鐘未進行任何操作，為了維護櫻花島嶼平穩運行，系統已將您暫時請回休養。隨時歡迎您再次光臨！
+            </p>
+            <button
+              onClick={() => {
+                setIsAfkKicked(false);
+                setIsAuthOpen(true);
+                sound.playShojiDoor();
+              }}
+              className="w-full py-3 bg-[#991b1b] hover:bg-[#b91c1c] text-[#fef08a] font-bold text-sm rounded-xl border-2 border-[#f59e0b] shadow-lg cursor-pointer tracking-widest active:scale-95 transition-all"
+            >
+              重新踏入島嶼 🌸
+            </button>
+          </div>
+        </div>
       )}
       </>
       )}

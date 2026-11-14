@@ -111,67 +111,71 @@ export const BoutiqueModal: React.FC<BoutiqueModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/75 backdrop-blur-xs">
-      <div className="pixel-card w-full max-w-4xl bg-[#1e1b4b] border-4 border-slate-900 rounded-lg shadow-pixel-lg overflow-hidden flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="p-3 bg-slate-950 border-b-2 border-slate-800 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm">
+      <div className="pixel-card w-full max-w-4xl bg-[#201109] border-4 border-[#8b4513] rounded-2xl shadow-[0_0_35px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[90vh] font-serif text-[#fef08a]">
+        {/* Japanese Showa Lacquer Wood Header */}
+        <div className="p-3 bg-[#150a04] border-b-2 border-[#8b4513] flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xl">{activeTab === 'shop' ? '🛍️' : '👗'}</span>
-            <h2 className="font-arcade text-sm text-pink-400">
-              {activeTab === 'shop' ? '島嶼精品服飾店 (BOUTIQUE)' : '個人衣櫃與穿搭 (WARDROBE)'}
-            </h2>
+            <span className="text-xl">🏮</span>
+            <div>
+              <h2 className="text-sm sm:text-base font-bold text-[#fef08a] tracking-wider flex items-center gap-1.5">
+                {activeTab === 'shop' ? '和風・著物精品閣 (BOUTIQUE)' : '私藏桐木和式衣櫃 (WARDROBE)'}
+              </h2>
+              <p className="text-[10px] text-[#fed7aa]">昭和傳統服飾・全島造型同步</p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-950/80 border border-amber-600 rounded text-xs font-bold text-amber-300">
-              <Coins className="w-3.5 h-3.5" />
+            {/* Senryobako Japanese Gold Coins Box */}
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-[#3a1d0d] border border-[#b45309] rounded-full text-xs font-bold text-[#fbbf24] shadow-inner">
+              <Coins className="w-3.5 h-3.5 text-amber-400" />
               <span>{user.coins.toLocaleString()}</span>
             </div>
             <button
               onClick={onClose}
-              className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white"
+              className="p-1 hover:bg-[#3a1d0d] rounded-lg text-[#fed7aa] hover:text-white transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Top Tabs */}
-        <div className="flex border-b-2 border-slate-800 bg-slate-900/60 px-4 pt-2 gap-2">
+        {/* Top Japanese Wooden Plaque Tabs */}
+        <div className="flex border-b-2 border-[#8b4513] bg-[#1a0c06] px-4 pt-2 gap-2">
           <button
             onClick={() => {
               setActiveTab('shop');
-              sound.playClick();
+              sound.playWindChime();
             }}
-            className={`px-4 py-2 text-xs font-bold rounded-t border-t-2 border-x-2 flex items-center gap-1.5 ${
+            className={`px-4 py-2 text-xs font-bold rounded-t-lg border-t-2 border-x-2 flex items-center gap-1.5 transition-all cursor-pointer ${
               activeTab === 'shop'
-                ? 'bg-[#1e1b4b] border-slate-700 text-pink-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'bg-[#201109] border-[#b45309] text-[#fef08a] shadow-md'
+                : 'border-transparent text-[#fed7aa]/70 hover:text-[#fed7aa] hover:bg-[#281309]'
             }`}
           >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            服飾商城
+            <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
+            著物陳列閣
           </button>
           <button
             onClick={() => {
               setActiveTab('wardrobe');
-              sound.playClick();
+              sound.playWindChime();
             }}
-            className={`px-4 py-2 text-xs font-bold rounded-t border-t-2 border-x-2 flex items-center gap-1.5 ${
+            className={`px-4 py-2 text-xs font-bold rounded-t-lg border-t-2 border-x-2 flex items-center gap-1.5 transition-all cursor-pointer ${
               activeTab === 'wardrobe'
-                ? 'bg-[#1e1b4b] border-slate-700 text-pink-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'bg-[#201109] border-[#b45309] text-[#fef08a] shadow-md'
+                : 'border-transparent text-[#fed7aa]/70 hover:text-[#fed7aa] hover:bg-[#281309]'
             }`}
           >
-            <Shirt className="w-3.5 h-3.5" />
-            個人衣櫃
+            <Shirt className="w-3.5 h-3.5 text-rose-400" />
+            私藏衣櫃
           </button>
         </div>
 
         {/* Feedback Alert */}
         {feedback && (
-          <div className="px-4 py-2 bg-pink-950/80 border-b border-pink-800 text-pink-200 text-xs flex items-center justify-between">
+          <div className="px-4 py-2 bg-[#991b1b]/90 border-b border-[#f59e0b] text-[#fef08a] text-xs flex items-center justify-between">
             <span>{feedback}</span>
-            <button onClick={() => setFeedback(null)} className="text-pink-400 hover:text-white">
+            <button onClick={() => setFeedback(null)} className="text-[#fef08a] hover:text-white">
               ✕
             </button>
           </div>
@@ -180,14 +184,14 @@ export const BoutiqueModal: React.FC<BoutiqueModalProps> = ({
         {/* Body Layout: Left Mannequin Preview, Right Item Catalog */}
         <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-12 p-4 gap-4">
           {/* Mannequin Fitting Room Column */}
-          <div className="md:col-span-4 flex flex-col items-center justify-between p-4 bg-slate-950/80 border-2 border-slate-800 rounded-lg">
-            <div className="text-xs font-bold text-slate-300 text-center">
-              {activeTab === 'shop' ? '✨ 即時試穿預覽框' : '✨ 當前穿搭造型'}
+          <div className="md:col-span-4 flex flex-col items-center justify-between p-4 bg-[#150a04] border-2 border-[#8b4513] rounded-xl shadow-inner">
+            <div className="text-xs font-bold text-[#fed7aa] text-center tracking-wide">
+              {activeTab === 'shop' ? '⛩️ 著物試穿立鏡' : '⛩️ 當前造型鏡台'}
             </div>
 
-            {/* Scaled Up Character Preview */}
+            {/* Scaled Up Character Preview inside Japanese Wood Frame */}
             <div className="my-auto py-6 flex flex-col items-center justify-center">
-              <div className="p-4 bg-slate-900 border-2 border-amber-500/50 rounded-xl shadow-pixel">
+              <div className="p-4 bg-[#231006] border-2 border-[#b45309] rounded-2xl shadow-[0_0_20px_rgba(0,0,0,0.8)]">
                 <CharacterSprite
                   displayName={user.displayName}
                   equipped={previewEquipped}
@@ -204,7 +208,7 @@ export const BoutiqueModal: React.FC<BoutiqueModalProps> = ({
               <button
                 onClick={handleSaveOutfit}
                 disabled={isSaving}
-                className="pixel-btn w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded flex items-center justify-center gap-1.5 shadow-pixel"
+                className="w-full py-2.5 bg-[#991b1b] hover:bg-[#b91c1c] text-[#fef08a] font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 border-2 border-[#f59e0b] shadow-lg cursor-pointer tracking-wider active:scale-95 transition-all"
               >
                 <Check className="w-4 h-4" />
                 {isSaving ? '同步中...' : '確認換裝 (同步至全島)'}
@@ -212,7 +216,7 @@ export const BoutiqueModal: React.FC<BoutiqueModalProps> = ({
             ) : (
               <button
                 onClick={() => setPreviewEquipped(user.equipped)}
-                className="pixel-btn w-full py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs rounded"
+                className="w-full py-2 bg-[#33180c] hover:bg-[#451e0e] text-[#fed7aa] font-bold text-xs rounded-xl border border-[#8b4513] cursor-pointer"
               >
                 重設試穿
               </button>
@@ -225,64 +229,64 @@ export const BoutiqueModal: React.FC<BoutiqueModalProps> = ({
             <div className="flex items-center gap-1.5 overflow-x-auto pb-2 text-xs">
               <button
                 onClick={() => setSelectedCategory('all')}
-                className={`px-3 py-1 rounded font-bold transition-all ${
+                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
                   selectedCategory === 'all'
-                    ? 'bg-pink-600 text-white'
-                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    ? 'bg-[#991b1b] text-[#fef08a] border border-[#f59e0b]'
+                    : 'bg-[#2a140a] text-[#fed7aa] border border-[#78350f] hover:bg-[#381a0d]'
                 }`}
               >
                 全部
               </button>
               <button
                 onClick={() => setSelectedCategory('hair')}
-                className={`px-3 py-1 rounded font-bold transition-all ${
+                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
                   selectedCategory === 'hair'
-                    ? 'bg-pink-600 text-white'
-                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    ? 'bg-[#991b1b] text-[#fef08a] border border-[#f59e0b]'
+                    : 'bg-[#2a140a] text-[#fed7aa] border border-[#78350f] hover:bg-[#381a0d]'
                 }`}
               >
                 髮型
               </button>
               <button
                 onClick={() => setSelectedCategory('top')}
-                className={`px-3 py-1 rounded font-bold transition-all ${
+                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
                   selectedCategory === 'top'
-                    ? 'bg-pink-600 text-white'
-                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    ? 'bg-[#991b1b] text-[#fef08a] border border-[#f59e0b]'
+                    : 'bg-[#2a140a] text-[#fed7aa] border border-[#78350f] hover:bg-[#381a0d]'
                 }`}
               >
-                上衣
+                上衣・羽織
               </button>
               <button
                 onClick={() => setSelectedCategory('bottom')}
-                className={`px-3 py-1 rounded font-bold transition-all ${
+                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
                   selectedCategory === 'bottom'
-                    ? 'bg-pink-600 text-white'
-                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    ? 'bg-[#991b1b] text-[#fef08a] border border-[#f59e0b]'
+                    : 'bg-[#2a140a] text-[#fed7aa] border border-[#78350f] hover:bg-[#381a0d]'
                 }`}
               >
-                下著
+                下著・袴
               </button>
               <button
                 onClick={() => setSelectedCategory('accessory')}
-                className={`px-3 py-1 rounded font-bold transition-all ${
+                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
                   selectedCategory === 'accessory'
-                    ? 'bg-pink-600 text-white'
-                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    ? 'bg-[#991b1b] text-[#fef08a] border border-[#f59e0b]'
+                    : 'bg-[#2a140a] text-[#fed7aa] border border-[#78350f] hover:bg-[#381a0d]'
                 }`}
               >
-                配件
+                配件・飾物
               </button>
               {activeTab === 'shop' && (
                 <button
                   onClick={() => setSelectedCategory('furniture')}
-                  className={`px-3 py-1 rounded font-bold transition-all ${
+                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
                     selectedCategory === 'furniture'
-                      ? 'bg-pink-600 text-white'
-                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                      ? 'bg-[#991b1b] text-[#fef08a] border border-[#f59e0b]'
+                      : 'bg-[#2a140a] text-[#fed7aa] border border-[#78350f] hover:bg-[#381a0d]'
                   }`}
                 >
-                  家具
+                  和式家具
                 </button>
               )}
             </div>
@@ -301,14 +305,14 @@ export const BoutiqueModal: React.FC<BoutiqueModalProps> = ({
                       if (activeTab === 'shop') handleTryOn(it);
                       else handleToggleEquip(it);
                     }}
-                    className={`pixel-card p-2.5 bg-slate-900/90 border-2 rounded-lg cursor-pointer flex flex-col justify-between transition-all ${
+                    className={`p-2.5 bg-[#2a140a] border-2 rounded-xl cursor-pointer flex flex-col justify-between transition-all shadow-md ${
                       isEquipped
-                        ? 'border-pink-500 bg-pink-950/40 ring-1 ring-pink-400'
-                        : 'border-slate-800 hover:border-slate-600'
+                        ? 'border-[#f59e0b] bg-[#4a1c0d] ring-2 ring-[#fde047]'
+                        : 'border-[#78350f] hover:border-[#b45309]'
                     }`}
                   >
                     <div className="flex flex-col items-center text-center">
-                      <div className="p-2 bg-slate-950 rounded-md border border-slate-800 my-1">
+                      <div className="p-2 bg-[#1a0c06] rounded-xl border border-[#78350f] my-1">
                         <PixelAsset
                           category={it.category}
                           item={it}
@@ -317,23 +321,23 @@ export const BoutiqueModal: React.FC<BoutiqueModalProps> = ({
                           height={48}
                         />
                       </div>
-                      <div className="font-bold text-xs text-white mt-1 max-w-full truncate">
+                      <div className="font-bold text-xs text-[#fef08a] mt-1 max-w-full truncate tracking-wide">
                         {it.name}
                       </div>
-                      <div className="text-[10px] text-slate-400 capitalize">
+                      <div className="text-[10px] text-[#fed7aa]/70 capitalize">
                         {it.category}
                       </div>
                     </div>
 
-                    <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                    <div className="mt-3 pt-2 border-t border-[#78350f]/60 flex items-center justify-between">
                       {activeTab === 'shop' ? (
                         <>
-                          <div className="text-[11px] font-bold text-amber-400">
+                          <div className="text-[11px] font-bold text-[#fbbf24]">
                             🪙 {it.price}
                           </div>
                           {isOwned ? (
-                            <span className="text-[9px] bg-emerald-950 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-800">
-                              已擁有
+                            <span className="text-[9px] bg-[#1a3818] text-[#86efac] px-2 py-0.5 rounded-md border border-[#22c55e]">
+                              已收藏
                             </span>
                           ) : (
                             <button
@@ -341,7 +345,7 @@ export const BoutiqueModal: React.FC<BoutiqueModalProps> = ({
                                 e.stopPropagation();
                                 handleBuy(it);
                               }}
-                              className="pixel-btn px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[10px] rounded"
+                              className="px-2.5 py-1 bg-[#b45309] hover:bg-[#d97706] text-[#fef08a] font-bold text-[10px] rounded-lg border border-[#fef08a] shadow cursor-pointer active:scale-95 transition-all"
                             >
                               購買
                             </button>
@@ -354,13 +358,13 @@ export const BoutiqueModal: React.FC<BoutiqueModalProps> = ({
                               e.stopPropagation();
                               handleToggleEquip(it);
                             }}
-                            className={`w-full py-1 text-[10px] font-bold rounded ${
+                            className={`w-full py-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
                               isEquipped
-                                ? 'bg-pink-600 text-white'
-                                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                                ? 'bg-[#991b1b] text-[#fef08a] border border-[#f59e0b]'
+                                : 'bg-[#381a0d] text-[#fed7aa] hover:bg-[#4a2211] border border-[#78350f]'
                             }`}
                           >
-                            {isEquipped ? '✓ 已穿戴' : '點擊穿上'}
+                            {isEquipped ? '✓ 已穿戴' : '點擊穿戴'}
                           </button>
                         </div>
                       )}

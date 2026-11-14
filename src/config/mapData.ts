@@ -109,6 +109,7 @@ export interface ActiveHouse {
   doorY: number;
   level: number;
   isSelf: boolean;
+  isClaimed: boolean;
   prompt: string;
 }
 
@@ -128,10 +129,11 @@ export function getActiveHouses(
     ownerName: currentDisplayName || '冒險家',
     level: currentUserLevel || 1,
     isSelf: true,
-    prompt: '進入自己的溫馨小屋 🏡 (按 Space / 點我)',
+    isClaimed: true,
+    prompt: '進入自宅玄關 🏡 (按 Space / 點我)',
   });
 
-  // 2. All other plots 1..5 are ALWAYS populated
+  // 2. All other plots are ONLY claimed if there is an actual online player!
   const otherOnlineUids = Object.keys(presences).filter((uid) => uid !== currentUid);
 
   for (let i = 1; i < RESIDENTIAL_PLOTS.length; i++) {
@@ -147,17 +149,19 @@ export function getActiveHouses(
         ownerName,
         level: presence?.houseLevel || 1,
         isSelf: false,
-        prompt: `拜訪 ${ownerName} 的家 🏡 (按 Space / 點我)`,
+        isClaimed: true,
+        prompt: `拜訪 ${ownerName} 之宅 🏡 (按 Space / 點我)`,
       });
     } else {
-      const defaultRes = DEFAULT_ISLAND_RESIDENTS[(i - 1) % DEFAULT_ISLAND_RESIDENTS.length];
+      // Unclaimed empty house: do not write any owner name on top!
       houses.push({
         ...plot,
-        ownerUid: defaultRes.uid,
-        ownerName: defaultRes.name,
-        level: defaultRes.level,
+        ownerUid: '',
+        ownerName: '',
+        level: 0,
         isSelf: false,
-        prompt: `拜訪 ${defaultRes.name} 的家 🏡 (按 Space / 點我)`,
+        isClaimed: false,
+        prompt: '暫無人認領的日式居所 🏡',
       });
     }
   }
@@ -165,7 +169,7 @@ export function getActiveHouses(
   return houses;
 }
 
-// Smooth continuous walkability calibrated for the Japanese Showa island map
+// Smooth continuous walkability & accurate obstacles collision for the Japanese Showa island map
 export function isIslandWalkable(x: number, y: number, activeHouses: ActiveHouse[] = []): boolean {
   // 1. World outer boundary limits (Map is 64 x 35.6875 tiles)
   if (x < 3.0 || x > 60.5 || y < 2.5 || y > 33.5) {
@@ -183,7 +187,23 @@ export function isIslandWalkable(x: number, y: number, activeHouses: ActiveHouse
   if (x < 4.0) return false;
   if (x > 59.0 && y > 26.0) return false;
 
-  // 4. Building Footprints & Doorways
+  // 4. River & Waterfall channel: blocks player unless crossing on the wooden bridge
+  const isBridge = x >= 22.0 && x <= 25.5 && y >= 15.5 && y <= 18.0;
+  if (!isBridge && x >= 20.8 && x <= 24.5 && y >= 17.0 && y <= 27.0) {
+    return false;
+  }
+
+  // 5. Fenced amusement festival park (Ferris wheel & carousel)
+  if (x >= 34.5 && x <= 44.0 && y >= 2.0 && y <= 11.8) {
+    const isFestivalEntrance = Math.hypot(x - 34.8, y - 11.5) < 1.3;
+    if (!isFestivalEntrance) return false;
+  }
+
+  // 6. Cherry Blossom Trees & Rocks (Natural Obstacles)
+  if (Math.hypot(x - 26.5, y - 24.2) < 1.5) return false; // Large Sakura tree
+  if (x >= 8.0 && x <= 13.5 && y >= 2.5 && y <= 9.0) return false; // Mountain forest grove
+
+  // 7. Building Footprints & Doorways
   for (const b of BUILDINGS) {
     // Doorway entrance is always accessible!
     if (Math.hypot(x - b.doorX, y - b.doorY) <= 1.5) {
@@ -195,7 +215,7 @@ export function isIslandWalkable(x: number, y: number, activeHouses: ActiveHouse
     }
   }
 
-  // 5. Active Player Houses Footprints & Doorways
+  // 8. Active Player Houses Footprints & Doorways
   for (const h of activeHouses) {
     if (Math.hypot(x - h.doorX, y - h.doorY) <= 1.5) {
       return true;
@@ -206,6 +226,15 @@ export function isIslandWalkable(x: number, y: number, activeHouses: ActiveHouse
   }
 
   return true;
+}
+
+// Detect if player is standing behind an obstacle/canopy (for depth silhouette)
+export function isPlayerBehindObstacle(x: number, y: number): boolean {
+  if (y >= 8.0 && y <= 12.2 && x >= 13.5 && x <= 25.0) return true; // Kimono shop eaves
+  if (y >= 10.0 && y <= 15.0 && x >= 44.5 && x <= 55.5) return true; // Casino neon roof eaves
+  if (y >= 21.0 && y <= 25.5 && x >= 24.5 && x <= 28.5) return true; // Sakura tree canopy
+  if (y >= 21.5 && y <= 23.5 && x >= 31.5 && x <= 34.5) return true; // Torii gate beam
+  return false;
 }
 
 export type BuildingOrHouseEntrance = 

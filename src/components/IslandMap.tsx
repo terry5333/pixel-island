@@ -6,6 +6,7 @@ import {
   BUILDINGS,
   ActiveHouse,
   getActiveHouses,
+  isPlayerBehindObstacle,
 } from '../config/mapData';
 import { IslandPresence, Item, UserProfile } from '../types/game';
 import { CharacterSprite } from './CharacterSprite';
@@ -144,99 +145,122 @@ export const IslandMap: React.FC<IslandMapProps> = ({
         ))}
 
         {/* ================= 3. MULTIPLAYER RESIDENT HOUSES ================= */}
-        {activeHouses.map((house) => (
-          <div
-            key={house.plotId}
-            className="absolute z-20 pointer-events-auto"
-            style={{
-              left: house.x * TILE_SIZE,
-              top: house.y * TILE_SIZE,
-              width: house.width * TILE_SIZE,
-              height: house.height * TILE_SIZE,
-            }}
-          >
-            {/* House Owner Badge floating over roof */}
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 bg-slate-950/85 backdrop-blur-md rounded-full border border-amber-600/70 shadow-xl text-[11px] whitespace-nowrap pointer-events-auto">
-              <span className="font-black text-amber-300 flex items-center gap-1">
-                <Home className="w-3.5 h-3.5 text-amber-400" />
-                {house.ownerName} 的家
-              </span>
-              <span className="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-400 font-mono text-[9px] font-bold">
-                Lv.{house.level || 1}
-              </span>
-              {house.isSelf && onOpenUpgrade && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpenUpgrade();
-                  }}
-                  className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black rounded-full text-[9px] cursor-pointer shadow-sm active:scale-95 transition-transform"
-                >
-                  升級
-                </button>
-              )}
-            </div>
+        {activeHouses.map((house) => {
+          // Requirement 5: Unclaimed houses MUST NOT display any text or floating badge
+          if (!house.isClaimed) {
+            return null;
+          }
 
-            {/* Interactive Doorstep Mat */}
+          return (
             <div
+              key={house.plotId}
+              className="absolute z-20 pointer-events-auto"
+              style={{
+                left: house.x * TILE_SIZE,
+                top: house.y * TILE_SIZE,
+                width: house.width * TILE_SIZE,
+                height: house.height * TILE_SIZE,
+              }}
+            >
+              {/* Japanese Showa Wood Plaque House Owner Badge floating over roof */}
+              <div className="absolute -top-7 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 bg-[#201109]/95 backdrop-blur-md rounded-full border-2 border-[#b45309] shadow-2xl text-[11px] whitespace-nowrap pointer-events-auto font-serif tracking-wider">
+                <span className="font-bold text-[#fef08a] flex items-center gap-1">
+                  <Home className="w-3.5 h-3.5 text-amber-400" />
+                  {house.ownerName} 之宅
+                </span>
+                <span className="px-1.5 py-0.2 rounded-full bg-[#991b1b]/80 border border-[#f59e0b] text-[#fef08a] font-mono text-[9px] font-bold">
+                  Lv.{house.level || 1}
+                </span>
+                {house.isSelf && onOpenUpgrade && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenUpgrade();
+                    }}
+                    className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black rounded-full text-[9px] cursor-pointer shadow-sm active:scale-95 transition-transform"
+                  >
+                    升級
+                  </button>
+                )}
+              </div>
+
+              {/* Interactive Japanese Doorstep Mat */}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEnterHouse?.(house);
+                }}
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#b45309]/90 hover:bg-[#d97706] text-[#fef08a] font-serif font-black text-[10px] rounded-full animate-pulse cursor-pointer pointer-events-auto flex items-center justify-center gap-1 shadow-lg border-2 border-[#fef08a]"
+                title={`進入 ${house.ownerName} 的玄關`}
+              >
+                進入玄關 🚪
+              </div>
+            </div>
+          );
+        })}
+
+        {/* ================= 4. LOCAL PLAYER SPRITE (WITH OCCLUSION DEPTH) ================= */}
+        {(() => {
+          const isLocalBehind = isPlayerBehindObstacle(selfX, selfY);
+          return (
+            <div
+              className={`absolute z-30 pointer-events-none will-change-transform transition-all duration-150 ${
+                isLocalBehind
+                  ? 'opacity-70 contrast-125 brightness-110 drop-shadow-[0_0_12px_rgba(254,240,138,0.95)]'
+                  : ''
+              }`}
+              style={{
+                left: selfX * TILE_SIZE + (TILE_SIZE - 64) / 2,
+                top: selfY * TILE_SIZE + (TILE_SIZE - 64) / 2 - 8,
+              }}
+            >
+              <CharacterSprite
+                displayName={localDisplayName}
+                facing={localPos.facing}
+                equipped={localEquipped}
+                itemsMap={itemsMap}
+                isMoving={localPos.isMoving}
+                emojiBubble={localEmojiBubble}
+                isSelf={true}
+                size={56}
+              />
+            </div>
+          );
+        })()}
+
+        {/* ================= 5. REMOTE PLAYERS (WITH OCCLUSION DEPTH) ================= */}
+        {remotePlayers.map((player) => {
+          const isRemoteBehind = isPlayerBehindObstacle(player.x, player.y);
+          return (
+            <div
+              key={player.uid}
               onClick={(e) => {
                 e.stopPropagation();
-                onEnterHouse?.(house);
+                onPlayerClick?.(player);
               }}
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#b45309]/90 hover:bg-[#d97706] text-[#fef08a] font-serif font-black text-[10px] rounded-full animate-pulse cursor-pointer pointer-events-auto flex items-center justify-center gap-1 shadow-lg border-2 border-[#fef08a]"
-              title={`點擊進入 ${house.ownerName} 的家`}
+              className={`absolute z-30 transition-[left,top] duration-150 linear will-change-transform cursor-pointer ${
+                isRemoteBehind
+                  ? 'opacity-70 contrast-125 brightness-110 drop-shadow-[0_0_12px_rgba(254,240,138,0.95)]'
+                  : ''
+              }`}
+              style={{
+                left: player.x * TILE_SIZE + (TILE_SIZE - 64) / 2,
+                top: player.y * TILE_SIZE + (TILE_SIZE - 64) / 2 - 8,
+              }}
             >
-              進入玄關 🚪
+              <CharacterSprite
+                displayName={player.displayName}
+                facing={player.facing}
+                equipped={player.equipped}
+                itemsMap={itemsMap}
+                isMoving={player.isMoving}
+                emojiBubble={player.emojiBubble}
+                isSelf={false}
+                size={56}
+              />
             </div>
-          </div>
-        ))}
-
-        {/* ================= 4. LOCAL PLAYER SPRITE ================= */}
-        <div
-          className="absolute z-30 pointer-events-none will-change-transform"
-          style={{
-            left: selfX * TILE_SIZE + (TILE_SIZE - 64) / 2,
-            top: selfY * TILE_SIZE + (TILE_SIZE - 64) / 2 - 8,
-          }}
-        >
-          <CharacterSprite
-            displayName={localDisplayName}
-            facing={localPos.facing}
-            equipped={localEquipped}
-            itemsMap={itemsMap}
-            isMoving={localPos.isMoving}
-            emojiBubble={localEmojiBubble}
-            isSelf={true}
-            size={56}
-          />
-        </div>
-
-        {/* ================= 5. REMOTE PLAYERS ================= */}
-        {remotePlayers.map((player) => (
-          <div
-            key={player.uid}
-            onClick={(e) => {
-              e.stopPropagation();
-              onPlayerClick?.(player);
-            }}
-            className="absolute z-30 transition-[left,top] duration-150 linear will-change-transform cursor-pointer"
-            style={{
-              left: player.x * TILE_SIZE + (TILE_SIZE - 64) / 2,
-              top: player.y * TILE_SIZE + (TILE_SIZE - 64) / 2 - 8,
-            }}
-          >
-            <CharacterSprite
-              displayName={player.displayName}
-              facing={player.facing}
-              equipped={player.equipped}
-              itemsMap={itemsMap}
-              isMoving={player.isMoving}
-              emojiBubble={player.emojiBubble}
-              isSelf={false}
-              size={56}
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

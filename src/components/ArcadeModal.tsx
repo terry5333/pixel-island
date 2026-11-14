@@ -251,40 +251,43 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
   const hasGuest = !!room?.guestUid;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-xs">
-      <div className="pixel-card w-full max-w-3xl bg-[#0f172a] border-4 border-slate-900 rounded-2xl shadow-pixel-lg overflow-hidden flex flex-col h-[88vh] max-h-[660px]">
-        {/* Sleek Minimalist Header */}
-        <div className="px-4 py-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm">
+      <div className="pixel-card w-full max-w-3xl bg-[#1c0d06] border-4 border-[#8b4513] rounded-2xl shadow-[0_0_35px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col h-[88vh] max-h-[660px] font-serif text-[#fef08a]">
+        {/* Japanese Showa Lacquer Header */}
+        <div className="px-4 py-3 bg-[#150a04] border-b-2 border-[#8b4513] flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xl">🕹️</span>
+            <span className="text-xl">🏮</span>
             <div>
-              <h2 className="font-arcade text-xs sm:text-sm text-cyan-400">
-                銭屋 ARCADE CENTER
+              <h2 className="text-xs sm:text-base font-bold text-[#fef08a] tracking-wider flex items-center gap-1.5">
+                {isSoloSlots ? '銭屋 777 復古拉霸娛樂城 🎰' : '銭屋遊台・祭典對弈館 (ARCADE) 🕹️'}
               </h2>
-              <p className="text-[10px] text-slate-400">8-Bit 雙人即時對戰遊樂場</p>
+              <p className="text-[10px] text-[#fed7aa]">昭和傳統遊台・好友即時連線對戰</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             {isSoloSlots && (
               <button
-                onClick={() => setIsSoloSlots(false)}
-                className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg flex items-center gap-1 border border-slate-700 cursor-pointer"
+                onClick={() => {
+                  sound.playClick();
+                  setIsSoloSlots(false);
+                }}
+                className="px-2.5 py-1 bg-[#33180c] hover:bg-[#451e0e] text-[#fed7aa] text-xs rounded-lg flex items-center gap-1 border border-[#8b4513] cursor-pointer"
               >
-                <ArrowLeft className="w-3.5 h-3.5" /> 返回大廳
+                <ArrowLeft className="w-3.5 h-3.5 text-amber-400" /> 返回大廳
               </button>
             )}
             {activeRoomId && (
               <button
                 onClick={handleLeaveRoom}
-                className="pixel-btn px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg flex items-center gap-1 border border-slate-700"
+                className="px-2.5 py-1 bg-[#33180c] hover:bg-[#451e0e] text-[#fed7aa] text-xs rounded-lg flex items-center gap-1 border border-[#8b4513] cursor-pointer"
               >
-                <ArrowLeft className="w-3.5 h-3.5" /> 退出房間
+                <ArrowLeft className="w-3.5 h-3.5 text-rose-400" /> 退出房間
               </button>
             )}
             <button
               onClick={onClose}
-              className="p-1 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white cursor-pointer"
+              className="p-1 hover:bg-[#33180c] rounded-lg text-[#fed7aa] hover:text-white cursor-pointer transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -305,23 +308,26 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
           /* ================= VIEW 1: LOBBY (CREATE ROOM / JOIN) ================= */
           <div className="flex-1 p-4 sm:p-6 flex flex-col items-center justify-between overflow-y-auto">
             <div className="w-full max-w-md flex flex-col items-center gap-4 my-auto">
-              <div className="w-16 h-16 rounded-2xl bg-cyan-950/80 border-2 border-cyan-500/60 flex items-center justify-center text-cyan-400 shadow-pixel animate-bounce-gentle">
-                <Gamepad2 className="w-9 h-9" />
+              <div className="w-16 h-16 rounded-2xl bg-[#2d140a] border-2 border-[#b45309] flex items-center justify-center text-[#fef08a] shadow-[0_0_15px_rgba(180,83,9,0.5)]">
+                <Gamepad2 className="w-9 h-9 text-amber-400" />
               </div>
 
               <div className="text-center">
-                <h3 className="font-arcade text-base text-white mb-1">
+                <h3 className="text-base font-bold text-[#fef08a] mb-1 tracking-wide">
                   隨時隨地，即刻開戰！
                 </h3>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-[#fed7aa]">
                   一鍵建立專屬房間，可邀請好友連線對決或在房內加入電腦 NPC！
                 </p>
               </div>
 
               {/* Primary Action: CREATE ROOM FIRST */}
               <button
-                onClick={() => handleCreateRoom()}
-                className="pixel-btn w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-sm rounded-xl border-2 border-cyan-400 shadow-pixel-lg flex items-center justify-center gap-2 cursor-pointer"
+                onClick={() => {
+                  sound.playTaiko();
+                  handleCreateRoom();
+                }}
+                className="w-full py-3 bg-[#991b1b] hover:bg-[#b91c1c] text-[#fef08a] font-bold text-sm rounded-xl border-2 border-[#f59e0b] shadow-lg flex items-center justify-center gap-2 cursor-pointer tracking-wider active:scale-95 transition-all"
               >
                 <Plus className="w-5 h-5" />
                 <span>⚡ 建立對戰房間 (獲得4碼房號)</span>
@@ -330,37 +336,37 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
               {/* Solo 777 Slot Machine Quick Play */}
               <button
                 onClick={() => {
-                  sound.playClick();
+                  sound.playTaiko();
                   setIsSoloSlots(true);
                 }}
-                className="w-full py-2.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm rounded-xl border-2 border-purple-400/80 shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-transform"
+                className="w-full py-2.5 bg-gradient-to-r from-[#b45309] via-[#d97706] to-[#b45309] hover:from-[#d97706] hover:to-[#f59e0b] text-[#fef08a] font-bold text-xs sm:text-sm rounded-xl border-2 border-[#fde047] shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all tracking-wide"
               >
                 <span>🎰</span>
                 <span>777 復古拉霸機 (個人即刻暢玩)</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 font-extrabold">HOT</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#991b1b] text-[#fef08a] border border-[#fde047] font-extrabold">熱門</span>
               </button>
 
               {/* Join with 4-Digit Code */}
-              <div className="w-full flex items-center gap-2 pt-2 border-t border-slate-800">
+              <div className="w-full flex items-center gap-2 pt-2 border-t border-[#8b4513]/60">
                 <input
                   type="text"
                   maxLength={4}
                   value={joinCodeInput}
                   onChange={(e) => setJoinCodeInput(e.target.value)}
                   placeholder="輸入 4 碼房號..."
-                  className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-center text-sm font-arcade tracking-widest text-cyan-300 placeholder:text-slate-600 focus:outline-hidden focus:border-cyan-400 uppercase"
+                  className="flex-1 bg-[#150a04] border border-[#8b4513] rounded-xl px-3 py-2 text-center text-sm tracking-widest text-[#fef08a] placeholder:text-[#fed7aa]/40 focus:outline-hidden focus:border-[#f59e0b] uppercase font-mono font-bold"
                 />
                 <button
                   onClick={() => handleJoinRoom()}
                   disabled={!joinCodeInput.trim()}
-                  className="pixel-btn px-5 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-cyan-400 font-bold text-xs rounded-xl border border-slate-600"
+                  className="px-5 py-2 bg-[#3a1d0d] hover:bg-[#4a2411] disabled:opacity-50 text-[#fef08a] font-bold text-xs rounded-xl border border-[#b45309] cursor-pointer"
                 >
                   加入房間
                 </button>
               </div>
 
               {errorMessage && (
-                <p className="text-rose-400 text-xs text-center font-bold animate-shake">
+                <p className="text-rose-400 text-xs text-center font-bold">
                   {errorMessage}
                 </p>
               )}
@@ -368,23 +374,23 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
 
             {/* Public Rooms List */}
             {publicRooms.length > 0 && (
-              <div className="w-full max-w-lg mt-4 bg-slate-950/60 border border-slate-800/80 rounded-xl p-3">
-                <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-2">
-                  <Users className="w-3.5 h-3.5" />
-                  <span>等待加入的公開房間</span>
+              <div className="w-full max-w-lg mt-4 bg-[#150a04] border border-[#8b4513] rounded-xl p-3">
+                <div className="flex items-center gap-1.5 text-xs text-[#fed7aa] mb-2 font-bold">
+                  <Users className="w-3.5 h-3.5 text-amber-400" />
+                  <span>等待加入的公開遊台</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {publicRooms.map((r) => (
                     <div
                       key={r.roomId}
                       onClick={() => handleJoinRoom(r.roomId)}
-                      className="p-2.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-700 rounded-lg flex items-center justify-between cursor-pointer transition-all"
+                      className="p-2.5 bg-[#2a140a] hover:bg-[#3a1c0d] border border-[#78350f] rounded-lg flex items-center justify-between cursor-pointer transition-all"
                     >
                       <div>
-                        <div className="text-xs text-white font-bold">{r.hostName} 的房間</div>
-                        <div className="text-[10px] text-cyan-400 font-arcade">#{r.roomId}</div>
+                        <div className="text-xs text-[#fef08a] font-bold">{r.hostName} 的房間</div>
+                        <div className="text-[10px] text-amber-400 font-mono">#{r.roomId}</div>
                       </div>
-                      <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full">
+                      <span className="text-[10px] px-2 py-0.5 bg-[#1a3818] text-[#86efac] border border-[#22c55e] rounded-full">
                         加入
                       </span>
                     </div>
@@ -399,16 +405,16 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
         {room && room.status !== 'playing' && room.status !== 'finished' && (
           <div className="flex-1 p-4 sm:p-6 flex flex-col items-center justify-between overflow-y-auto">
             {/* Top Room Code Banner */}
-            <div className="w-full max-w-xl bg-slate-950/80 border border-slate-800 rounded-xl p-3 flex items-center justify-between shadow-pixel-sm mb-4">
+            <div className="w-full max-w-xl bg-[#150a04] border-2 border-[#8b4513] rounded-xl p-3 flex items-center justify-between shadow-md mb-4">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400">房間代碼:</span>
-                <span className="font-arcade text-base text-cyan-400 tracking-wider">
+                <span className="text-xs text-[#fed7aa]">房間木籤代碼:</span>
+                <span className="text-base text-[#fbbf24] font-mono font-bold tracking-wider">
                   #{room.roomId}
                 </span>
               </div>
               <button
                 onClick={handleCopyCode}
-                className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg border border-slate-700 flex items-center gap-1"
+                className="px-2.5 py-1 bg-[#33180c] hover:bg-[#451e0e] text-[#fed7aa] text-xs rounded-lg border border-[#8b4513] flex items-center gap-1 cursor-pointer"
               >
                 {copiedCode ? (
                   <>
@@ -417,7 +423,7 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
                   </>
                 ) : (
                   <>
-                    <Copy className="w-3.5 h-3.5" />
+                    <Copy className="w-3.5 h-3.5 text-amber-400" />
                     <span>複製房號</span>
                   </>
                 )}
@@ -426,7 +432,7 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
 
             {/* Game Selector Chips (Select Game Inside Room) */}
             <div className="w-full max-w-xl mb-4">
-              <div className="text-[11px] text-slate-400 mb-2 font-bold flex items-center gap-1">
+              <div className="text-[11px] text-[#fed7aa] mb-2 font-bold flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 <span>選擇對戰遊戲 (房主可切換)：</span>
               </div>
@@ -441,12 +447,12 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
                       onClick={() => handleChangeGame(g.id)}
                       className={`p-2.5 rounded-xl border flex flex-col items-center gap-1 transition-all ${
                         isSelected
-                          ? 'bg-cyan-500/20 border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.4)]'
-                          : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 opacity-80'
+                          ? 'bg-[#852a12] border-[#f59e0b] shadow-[0_0_12px_rgba(245,158,11,0.5)]'
+                          : 'bg-[#2a140a] border-[#78350f] hover:border-[#b45309]'
                       } ${!isHost ? 'cursor-default' : 'cursor-pointer'}`}
                     >
                       <span className="text-lg">{g.icon}</span>
-                      <span className={`text-xs font-bold ${isSelected ? 'text-cyan-300' : 'text-slate-300'}`}>
+                      <span className={`text-xs font-bold ${isSelected ? 'text-[#fef08a]' : 'text-[#fed7aa]'}`}>
                         {g.name}
                       </span>
                     </button>
@@ -458,33 +464,33 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
             {/* Players Battle Pods (Host VS Guest / NPC) */}
             <div className="flex items-center justify-center gap-4 w-full max-w-xl my-auto">
               {/* Host Card */}
-              <div className="flex-1 bg-slate-950/80 border-2 border-cyan-500/60 rounded-2xl p-4 flex flex-col items-center text-center shadow-pixel">
-                <div className="w-12 h-12 rounded-full bg-cyan-900/60 border border-cyan-400 flex items-center justify-center text-2xl mb-2">
+              <div className="flex-1 bg-[#150a04] border-2 border-[#b45309] rounded-2xl p-4 flex flex-col items-center text-center shadow-md">
+                <div className="w-12 h-12 rounded-full bg-[#3a1d0d] border border-amber-400 flex items-center justify-center text-2xl mb-2">
                   👑
                 </div>
-                <div className="text-sm font-bold text-white truncate max-w-[120px]">
+                <div className="text-sm font-bold text-[#fef08a] truncate max-w-[120px]">
                   {room.hostName}
                 </div>
-                <span className="text-[10px] text-cyan-400 mt-1 font-bold">房主</span>
+                <span className="text-[10px] text-amber-400 mt-1 font-bold">房主</span>
               </div>
 
               {/* VS Badge */}
-              <div className="font-arcade text-lg text-slate-600">VS</div>
+              <div className="text-lg font-bold text-amber-500/80">VS</div>
 
               {/* Guest / NPC Card */}
-              <div className="flex-1 bg-slate-950/80 border-2 border-slate-800 rounded-2xl p-4 flex flex-col items-center text-center shadow-pixel min-h-[140px] justify-center">
+              <div className="flex-1 bg-[#150a04] border-2 border-[#8b4513] rounded-2xl p-4 flex flex-col items-center text-center shadow-md min-h-[140px] justify-center">
                 {hasGuest ? (
                   <>
-                    <div className="w-12 h-12 rounded-full bg-purple-900/60 border border-purple-400 flex items-center justify-center text-2xl mb-2">
+                    <div className="w-12 h-12 rounded-full bg-[#3a1d0d] border border-rose-400 flex items-center justify-center text-2xl mb-2">
                       {room.guestUid === 'npc_bot' ? '🤖' : '⚔️'}
                     </div>
-                    <div className="text-sm font-bold text-white truncate max-w-[120px]">
+                    <div className="text-sm font-bold text-[#fef08a] truncate max-w-[120px]">
                       {room.guestName}
                     </div>
                     {room.guestUid === 'npc_bot' && isHost ? (
                       <button
                         onClick={handleRemoveNpc}
-                        className="text-[10px] text-rose-400 hover:text-rose-300 mt-1.5 flex items-center gap-0.5 underline"
+                        className="text-[10px] text-rose-400 hover:text-rose-300 mt-1.5 flex items-center gap-0.5 underline cursor-pointer"
                       >
                         <Trash2 className="w-3 h-3" /> 移除 NPC
                       </button>
@@ -494,13 +500,13 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
                   </>
                 ) : (
                   <div className="flex flex-col items-center gap-2">
-                    <span className="text-xs text-slate-400">等待玩家加入...</span>
+                    <span className="text-xs text-[#fed7aa]/70">等待玩家加入...</span>
                     {isHost && (
                       <button
                         onClick={handleAddNpc}
-                        className="pixel-btn px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-lg border border-purple-400 shadow-pixel flex items-center gap-1.5"
+                        className="px-3 py-1.5 bg-[#3a1d0d] hover:bg-[#4a2411] text-[#fef08a] text-xs font-bold rounded-lg border border-[#b45309] shadow flex items-center gap-1.5 cursor-pointer"
                       >
-                        <Bot className="w-3.5 h-3.5" />
+                        <Bot className="w-3.5 h-3.5 text-amber-400" />
                         <span>加入電腦 NPC 🤖</span>
                       </button>
                     )}
@@ -515,13 +521,13 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
                 <button
                   disabled={!hasGuest}
                   onClick={handleStartMatch}
-                  className="pixel-btn w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:opacity-40 text-slate-950 font-bold text-sm rounded-xl border-2 border-emerald-400 shadow-pixel-lg flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-[#991b1b] hover:bg-[#b91c1c] disabled:opacity-40 text-[#fef08a] font-bold text-sm rounded-xl border-2 border-[#f59e0b] shadow-lg flex items-center justify-center gap-2 tracking-wider cursor-pointer active:scale-95 transition-all"
                 >
                   <Play className="w-5 h-5 fill-current" />
                   <span>{hasGuest ? '🚀 開始對戰！' : '等待對手或加入 NPC 後即可開始'}</span>
                 </button>
               ) : (
-                <div className="text-center text-xs text-amber-300 font-bold py-3 bg-slate-950/60 rounded-xl border border-slate-800">
+                <div className="text-center text-xs text-[#fbbf24] font-bold py-3 bg-[#150a04] rounded-xl border border-[#8b4513]">
                   ⏳ 等待房主按下開始對戰...
                 </div>
               )}
@@ -572,6 +578,9 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
             )}
           </div>
         )}
+      </div>
+    </div>
+  );
       </div>
     </div>
   );
