@@ -792,7 +792,7 @@ const RoomsTab: React.FC = () => {
                   </span>
                 </div>
                 <div className="text-xs text-slate-300">
-                  {room.playerIds?.length || 0}/{room.maxPlayers || 2}
+                  {room.guestUid ? '2/2' : '1/2'}
                 </div>
                 <div>
                   <button
