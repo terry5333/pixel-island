@@ -9,8 +9,7 @@ import {
 } from '../config/mapData';
 import { IslandPresence, Item, UserProfile } from '../types/game';
 import { CharacterSprite } from './CharacterSprite';
-import { CozyCottageBuilding } from './scenery/CozyCottageBuilding';
-import { Gamepad2, ShoppingBag, Dices } from 'lucide-react';
+import { Gamepad2, ShoppingBag, Dices, Home } from 'lucide-react';
 
 interface IslandMapProps {
   currentUid: string;
@@ -34,7 +33,7 @@ export const IslandMap: React.FC<IslandMapProps> = ({
   presences,
   itemsMap,
   activeHouses: propHouses,
-  mapBgUrl = '/island_map_bg.jpg',
+  mapBgUrl = '/island_map_showa.jpg',
   onTileClick,
   onPlayerClick,
   onEnterHouse,
@@ -156,14 +155,27 @@ export const IslandMap: React.FC<IslandMapProps> = ({
               height: house.height * TILE_SIZE,
             }}
           >
-            <CozyCottageBuilding
-              width={house.width * TILE_SIZE}
-              height={house.height * TILE_SIZE}
-              level={house.level || 1}
-              ownerName={house.ownerName}
-              isSelf={house.isSelf}
-              onUpgradeClick={onOpenUpgrade}
-            />
+            {/* House Owner Badge floating over roof */}
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 bg-slate-950/85 backdrop-blur-md rounded-full border border-amber-600/70 shadow-xl text-[11px] whitespace-nowrap pointer-events-auto">
+              <span className="font-black text-amber-300 flex items-center gap-1">
+                <Home className="w-3.5 h-3.5 text-amber-400" />
+                {house.ownerName} 的家
+              </span>
+              <span className="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-400 font-mono text-[9px] font-bold">
+                Lv.{house.level || 1}
+              </span>
+              {house.isSelf && onOpenUpgrade && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenUpgrade();
+                  }}
+                  className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black rounded-full text-[9px] cursor-pointer shadow-sm active:scale-95 transition-transform"
+                >
+                  升級
+                </button>
+              )}
+            </div>
 
             {/* Interactive Doorstep Mat */}
             <div
@@ -171,12 +183,10 @@ export const IslandMap: React.FC<IslandMapProps> = ({
                 e.stopPropagation();
                 onEnterHouse?.(house);
               }}
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-4 bg-emerald-400/70 hover:bg-emerald-300 rounded-full animate-pulse cursor-pointer pointer-events-auto flex items-center justify-center group shadow-md"
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-500/80 hover:bg-emerald-400 text-slate-950 font-black text-[10px] rounded-full animate-pulse cursor-pointer pointer-events-auto flex items-center justify-center gap-1 shadow-lg border border-emerald-300"
               title={`點擊進入 ${house.ownerName} 的家`}
             >
-              <span className="text-[9px] text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                進入
-              </span>
+              進入玄關 🚪
             </div>
           </div>
         ))}

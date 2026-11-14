@@ -1,9 +1,9 @@
-export const ISLAND_WIDTH = 64; // 64 * 32px = 2048px (Exact 2x match of 1024x682 bg)
-export const ISLAND_HEIGHT = 42.625; // 42.625 * 32px = 1364px
+export const ISLAND_WIDTH = 64; // 64 * 32px = 2048px (Exact 2x match of 1024x571 Showa map)
+export const ISLAND_HEIGHT = 35.6875; // 35.6875 * 32px = 1142px
 export const TILE_SIZE = 32; // 32px coordinate unit
 
 export const WORLD_WIDTH = 2048;
-export const WORLD_HEIGHT = 1364;
+export const WORLD_HEIGHT = 1142;
 
 export const HOME_WIDTH = 12;
 export const HOME_HEIGHT = 12;
@@ -37,37 +37,37 @@ export const BUILDINGS: InteractiveBuilding[] = [
     id: 'casino_palace',
     name: 'CASINO 777 復古拉霸娛樂城',
     type: 'casino',
-    x: 14,
-    y: 3,
-    width: 12.5,
-    height: 11.5,
-    doorX: 20,
-    doorY: 15.5,
+    x: 44.5,
+    y: 6.5,
+    width: 11.0,
+    height: 11.0,
+    doorX: 49.7,
+    doorY: 18.0,
     prompt: '進入「CASINO」777 復古拉霸娛樂城 🎰 (按 Space / 點我)',
   },
   {
     id: 'arcade_qianwu',
-    name: 'ARCADE 街機遊樂中心 (1A2B/海戰棋/點線棋)',
+    name: 'ARCADE 街機遊樂中心 (遊台/1A2B/海戰棋)',
     type: 'arcade',
-    x: 31,
-    y: 6,
-    width: 12.5,
-    height: 8.5,
-    doorX: 37,
-    doorY: 15.2,
+    x: 28.5,
+    y: 8.0,
+    width: 9.0,
+    height: 9.0,
+    doorX: 31.0,
+    doorY: 17.0,
     prompt: '進入「ARCADE」街機遊樂中心 🕹️ (按 Space / 點我)',
   },
   {
     id: 'boutique_pavilion',
-    name: 'FASHION 島嶼精品服飾店',
+    name: 'FASHION 昭和和服精品店',
     type: 'boutique',
-    x: 4.5,
-    y: 20.5,
-    width: 9.5,
-    height: 7,
-    doorX: 9.2,
-    doorY: 28,
-    prompt: '進入「FASHION」精品服飾店 👗 (按 Space / 點我)',
+    x: 14.0,
+    y: 5.0,
+    width: 12.0,
+    height: 11.5,
+    doorX: 19.7,
+    doorY: 17.5,
+    prompt: '進入「FASHION」和服精品店 👗 (按 Space / 點我)',
   },
 ];
 
@@ -81,14 +81,11 @@ export interface ResidentialPlot {
   doorY: number;
 }
 
-// 6 Residential plots calibrated to the grassy lawns of the background art
+// 3 Residential plots calibrated to the Japanese houses in the background art
 export const RESIDENTIAL_PLOTS: ResidentialPlot[] = [
-  { plotId: 'plot_0', x: 7.5, y: 6, width: 4.5, height: 4.5, doorX: 9.8, doorY: 10.8 }, // North-West hillside plateau (Local player default)
-  { plotId: 'plot_1', x: 46, y: 16.5, width: 4.5, height: 4.5, doorX: 48.2, doorY: 21.2 }, // East coastal lawn (Terry's Manor)
-  { plotId: 'plot_2', x: 34, y: 32.5, width: 4, height: 4, doorX: 36, doorY: 36.8 }, // South park lawn right
-  { plotId: 'plot_3', x: 40, y: 32.5, width: 4, height: 4, doorX: 42, doorY: 36.8 }, // South park lawn far right
-  { plotId: 'plot_4', x: 18, y: 32.5, width: 4, height: 4, doorX: 20, doorY: 36.8 }, // South park lawn left
-  { plotId: 'plot_5', x: 4.5, y: 32.5, width: 4, height: 4, doorX: 6.5, doorY: 36.8 }, // South lawn near pond
+  { plotId: 'plot_0', x: 26.5, y: 20.0, width: 6.0, height: 6.0, doorX: 29.5, doorY: 26.5 }, // House 1 (Left Japanese house)
+  { plotId: 'plot_1', x: 36.5, y: 20.5, width: 6.5, height: 6.0, doorX: 39.7, doorY: 27.0 }, // House 2 (Middle Japanese house)
+  { plotId: 'plot_2', x: 45.5, y: 20.5, width: 6.0, height: 6.0, doorX: 48.75, doorY: 26.5 }, // House 3 (Right Japanese house)
 ];
 
 export const DEFAULT_ISLAND_RESIDENTS = [
@@ -168,27 +165,28 @@ export function getActiveHouses(
   return houses;
 }
 
-// Highly accurate, frictionless continuous walkability for the pixel-art world map
+// Smooth continuous walkability calibrated for the Japanese Showa island map
 export function isIslandWalkable(x: number, y: number, activeHouses: ActiveHouse[] = []): boolean {
-  // 1. World outer boundary limits
-  if (x < 1.5 || x > 62.5 || y < 1.5 || y > 41.5) {
+  // 1. World outer boundary limits (Map is 64 x 35.6875 tiles)
+  if (x < 3.0 || x > 60.5 || y < 2.5 || y > 33.5) {
     return false;
   }
 
-  // 2. Northern cliff wall (except the open tunnel road at x: 6..9.5)
-  if (y < 4 && !(x >= 5.5 && x <= 9.5)) {
-    return false;
+  // 2. Wooden Pier at Bottom-Left (always walkable)
+  const isWoodenPier = x >= 3.5 && x <= 14.5 && y >= 23.0 && y <= 27.5;
+  if (isWoodenPier) {
+    return true;
   }
 
-  // 3. Left mountain boundary
-  if (x < 2 && y > 15) {
-    return false;
-  }
+  // 3. Deep sea surrounding island
+  if (x < 6.0 && y > 27.0) return false;
+  if (x < 4.0) return false;
+  if (x > 59.0 && y > 26.0) return false;
 
   // 4. Building Footprints & Doorways
   for (const b of BUILDINGS) {
     // Doorway entrance is always accessible!
-    if (Math.abs(x - b.doorX) <= 1.0 && Math.abs(y - b.doorY) <= 1.0) {
+    if (Math.abs(x - b.doorX) <= 1.2 && Math.abs(y - b.doorY) <= 1.2) {
       return true;
     }
     // Solid building body
@@ -199,43 +197,12 @@ export function isIslandWalkable(x: number, y: number, activeHouses: ActiveHouse
 
   // 5. Active Player Houses Footprints & Doorways
   for (const h of activeHouses) {
-    if (Math.abs(x - h.doorX) <= 1.0 && Math.abs(y - h.doorY) <= 1.0) {
+    if (Math.abs(x - h.doorX) <= 1.2 && Math.abs(y - h.doorY) <= 1.2) {
       return true;
     }
     if (x >= h.x - 0.2 && x <= h.x + h.width + 0.2 && y >= h.y - 0.2 && y <= h.y + h.height) {
       return false;
     }
-  }
-
-  // 6. Central Roundabout Water Fountain (radius 2.2 tiles around center x: 30, y: 22)
-  if (Math.hypot(x - 30, y - 22) < 2.4) {
-    return false;
-  }
-
-  // 7. Bottom-Left Duck Pond (Except the wooden crossing bridge at x: 8..11)
-  if (x >= 2 && x <= 13.5 && y >= 34.5 && y <= 39) {
-    const isOnBridge = x >= 8.2 && x <= 11.2 && y >= 34 && y <= 39.5;
-    if (!isOnBridge) {
-      return false;
-    }
-  }
-
-  // 8. Ocean & Coastal Water on the right side
-  // Wooden Piers are fully walkable!
-  const isNorthPier = x >= 47 && x <= 58 && y >= 8 && y <= 11.5;
-  const isMidPier = x >= 54 && x <= 61.5 && y >= 19 && y <= 22.5;
-  const isSouthPier = x >= 53 && x <= 61.5 && y >= 35 && y <= 38.5;
-
-  if (isNorthPier || isMidPier || isSouthPier) {
-    return true;
-  }
-
-  // Deep ocean water
-  if (x > 56 && y < 35) {
-    return false;
-  }
-  if (x > 43 && y > 38.5) {
-    return false;
   }
 
   return true;

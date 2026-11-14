@@ -93,8 +93,8 @@ export const App: React.FC = () => {
 
   // High-performance continuous local position state (sub-pixel float coordinates)
   const [localPos, setLocalPos] = useState({
-    x: 30.0,
-    y: 27.0,
+    x: 28.0,
+    y: 18.0,
     facing: 'right' as 'left' | 'right',
     isMoving: false,
   });
@@ -138,7 +138,7 @@ export const App: React.FC = () => {
   // Initialize self presence on first load at the center boulevard
   useEffect(() => {
     if (currentUser && !presences[currentUser.uid]) {
-      syncSelfPresence({ x: 19, y: 13, facing: 'right' }, true);
+      syncSelfPresence({ x: 28, y: 18, facing: 'right' }, true);
     }
   }, [currentUser, presences, syncSelfPresence]);
 
@@ -484,7 +484,7 @@ export const App: React.FC = () => {
             presences={presences}
             itemsMap={itemsMap}
             activeHouses={activeHouses}
-            mapBgUrl={'/island_map_new.jpg'}
+            mapBgUrl={'/island_map_showa.jpg'}
             onTileClick={handleTileClick}
             onPlayerClick={(player) => setSelectedPlayer(player)}
             onEnterHouse={handleEnterHouse}
