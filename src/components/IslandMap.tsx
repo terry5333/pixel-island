@@ -121,23 +121,23 @@ export const IslandMap: React.FC<IslandMapProps> = ({
             }}
             title={b.prompt}
           >
-            {/* Glowing Entrance Mat Portal */}
+            {/* Japanese Entrance Mat / Stepping Stone Portal */}
             <div
-              className={`w-full h-full rounded-full animate-pulse-glow flex items-center justify-center border transition-all ${
+              className={`w-full h-full rounded-2xl animate-pulse-glow flex items-center justify-center border-2 transition-all ${
                 b.type === 'casino'
-                  ? 'bg-amber-400/40 hover:bg-amber-400/60 border-amber-300 shadow-amber-500/50'
+                  ? 'bg-[#b45309]/80 hover:bg-[#d97706] border-[#fef08a] shadow-[0_0_15px_rgba(245,158,11,0.8)]'
                   : b.type === 'arcade'
-                  ? 'bg-cyan-400/40 hover:bg-cyan-400/60 border-cyan-300 shadow-cyan-500/50'
-                  : 'bg-pink-400/40 hover:bg-pink-400/60 border-pink-300 shadow-pink-500/50'
-              } shadow-lg`}
+                  ? 'bg-[#991b1b]/80 hover:bg-[#b91c1c] border-[#fde047] shadow-[0_0_15px_rgba(220,38,38,0.8)]'
+                  : 'bg-[#1e1b4b]/85 hover:bg-[#312e81] border-[#38bdf8] shadow-[0_0_15px_rgba(56,189,248,0.8)]'
+              } shadow-xl`}
             >
-              {b.type === 'casino' && <Dices className="w-5 h-5 text-amber-200" />}
-              {b.type === 'arcade' && <Gamepad2 className="w-5 h-5 text-cyan-200" />}
-              {b.type === 'boutique' && <ShoppingBag className="w-5 h-5 text-pink-200" />}
+              {b.type === 'casino' && <Dices className="w-5 h-5 text-[#fef08a]" />}
+              {b.type === 'arcade' && <Gamepad2 className="w-5 h-5 text-[#fde047]" />}
+              {b.type === 'boutique' && <ShoppingBag className="w-5 h-5 text-[#38bdf8]" />}
             </div>
 
-            {/* Hover Tooltip Capsule */}
-            <div className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap px-2.5 py-0.5 rounded-full bg-slate-950/90 text-[11px] font-bold text-white border border-slate-700 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            {/* Hover Tooltip Japanese Wooden Plaque */}
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-1 rounded-xl bg-[#201109]/95 text-[11px] font-black text-[#fef08a] border-2 border-[#b45309] shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none font-serif tracking-wider">
               {b.name}
             </div>
           </div>
@@ -183,7 +183,7 @@ export const IslandMap: React.FC<IslandMapProps> = ({
                 e.stopPropagation();
                 onEnterHouse?.(house);
               }}
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-500/80 hover:bg-emerald-400 text-slate-950 font-black text-[10px] rounded-full animate-pulse cursor-pointer pointer-events-auto flex items-center justify-center gap-1 shadow-lg border border-emerald-300"
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#b45309]/90 hover:bg-[#d97706] text-[#fef08a] font-serif font-black text-[10px] rounded-full animate-pulse cursor-pointer pointer-events-auto flex items-center justify-center gap-1 shadow-lg border-2 border-[#fef08a]"
               title={`點擊進入 ${house.ownerName} 的家`}
             >
               進入玄關 🚪

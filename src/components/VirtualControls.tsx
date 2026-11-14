@@ -125,33 +125,33 @@ export const VirtualControls: React.FC<VirtualControlsProps> = ({
 
   return (
     <>
-      {/* ================= FLOATING CONTEXT PROMPT ================= */}
+      {/* ================= FLOATING CONTEXT PROMPT (和風懸浮木札提示) ================= */}
       {contextPrompt && (
-        <div className="fixed bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 z-40 animate-bounce-gentle select-none">
+        <div className="fixed bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 z-40 animate-bounce-gentle select-none font-serif">
           <button
             onClick={() => {
               sound.playDoor();
               if (onContextAction) onContextAction();
               else onInteract();
             }}
-            className="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-bold text-xs sm:text-sm rounded-full flex items-center gap-2 border-2 border-slate-950 shadow-2xl cursor-pointer active:scale-95 transition-transform"
+            className="px-5 py-2.5 bg-[#24130a]/95 hover:bg-[#381c0e] text-[#fef08a] font-black text-xs sm:text-sm rounded-2xl flex items-center gap-2.5 border-2 border-[#b45309] shadow-[0_4px_24px_rgba(0,0,0,0.9)] cursor-pointer active:scale-95 transition-all"
           >
-            <span>✨</span>
-            <span>{contextPrompt}</span>
-            <span className="text-[10px] bg-slate-950 text-amber-300 px-1.5 py-0.5 rounded-full ml-1 font-mono">
-              [SPACE / 點我]
+            <span className="text-base">🏮</span>
+            <span className="tracking-wide drop-shadow">{contextPrompt}</span>
+            <span className="text-[10px] bg-[#991b1b] text-[#fef08a] px-2 py-0.5 rounded-full ml-1 font-mono font-bold border border-[#f59e0b]">
+              [ SPACE / 點我 ]
             </span>
           </button>
         </div>
       )}
 
-      {/* ================= SLEEK QUICK EMOJI CAPSULE ================= */}
-      <div className="fixed bottom-2.5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 bg-slate-950/70 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-700/80 shadow-lg select-none">
+      {/* ================= QUICK EMOJI CAPSULE (和風表情條) ================= */}
+      <div className="fixed bottom-2.5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 bg-[#24130a]/90 backdrop-blur-md px-3 py-1.5 rounded-2xl border-2 border-[#8b4513] shadow-[0_4px_16px_rgba(0,0,0,0.8)] select-none">
         {EMOJI_LIST.map((emoji, idx) => (
           <button
             key={idx}
             onClick={() => onSendEmoji(emoji)}
-            className="w-7 h-7 rounded-full bg-slate-800/80 hover:bg-slate-700 active:bg-amber-500 flex items-center justify-center text-xs transition-transform active:scale-90 cursor-pointer"
+            className="w-7 h-7 rounded-xl bg-[#3a1d10] hover:bg-[#4d2716] active:bg-[#b91c1c] border border-[#6b3518] flex items-center justify-center text-xs transition-transform active:scale-90 cursor-pointer"
             title={`快捷鍵 ${idx + 1}`}
           >
             {emoji}
@@ -159,16 +159,16 @@ export const VirtualControls: React.FC<VirtualControlsProps> = ({
         ))}
       </div>
 
-      {/* ================= MOBILE TRANSLUCENT D-PAD (BOTTOM-LEFT) ================= */}
-      <div className="fixed bottom-4 left-3 z-30 sm:hidden select-none touch-none opacity-85 hover:opacity-100 transition-opacity">
-        <div className="relative w-28 h-28 bg-slate-950/50 backdrop-blur-md rounded-full border border-slate-600/60 p-1 flex items-center justify-center shadow-xl">
+      {/* ================= MOBILE TRANSLUCENT D-PAD (和風十字鍵) ================= */}
+      <div className="fixed bottom-4 left-3 z-30 sm:hidden select-none touch-none opacity-90 hover:opacity-100 transition-opacity">
+        <div className="relative w-28 h-28 bg-[#24130a]/80 backdrop-blur-md rounded-2xl border-2 border-[#8b4513] p-1 flex items-center justify-center shadow-2xl">
           {/* UP */}
           <button
             onTouchStart={(e) => { e.preventDefault(); handleTouchDir(0, -1); }}
             onTouchEnd={handleTouchStop}
             onMouseDown={() => handleTouchDir(0, -1)}
             onMouseUp={handleTouchStop}
-            className="absolute top-1 left-1/2 -translate-x-1/2 w-8 h-8 bg-slate-800/80 active:bg-amber-500 rounded-t border border-slate-600/80 flex items-center justify-center text-xs text-slate-200 cursor-pointer"
+            className="absolute top-1 left-1/2 -translate-x-1/2 w-8 h-8 bg-[#3a1d10] active:bg-[#991b1b] rounded-t-lg border border-[#8b4513] flex items-center justify-center text-xs text-[#fef08a] font-bold cursor-pointer"
           >
             ▲
           </button>
@@ -178,7 +178,7 @@ export const VirtualControls: React.FC<VirtualControlsProps> = ({
             onTouchEnd={handleTouchStop}
             onMouseDown={() => handleTouchDir(0, 1)}
             onMouseUp={handleTouchStop}
-            className="absolute bottom-1 left-1/2 -translate-x-1/2 w-8 h-8 bg-slate-800/80 active:bg-amber-500 rounded-b border border-slate-600/80 flex items-center justify-center text-xs text-slate-200 cursor-pointer"
+            className="absolute bottom-1 left-1/2 -translate-x-1/2 w-8 h-8 bg-[#3a1d10] active:bg-[#991b1b] rounded-b-lg border border-[#8b4513] flex items-center justify-center text-xs text-[#fef08a] font-bold cursor-pointer"
           >
             ▼
           </button>
@@ -188,7 +188,7 @@ export const VirtualControls: React.FC<VirtualControlsProps> = ({
             onTouchEnd={handleTouchStop}
             onMouseDown={() => handleTouchDir(-1, 0)}
             onMouseUp={handleTouchStop}
-            className="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-slate-800/80 active:bg-amber-500 rounded-l border border-slate-600/80 flex items-center justify-center text-xs text-slate-200 cursor-pointer"
+            className="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-[#3a1d10] active:bg-[#991b1b] rounded-l-lg border border-[#8b4513] flex items-center justify-center text-xs text-[#fef08a] font-bold cursor-pointer"
           >
             ◀
           </button>
@@ -198,26 +198,26 @@ export const VirtualControls: React.FC<VirtualControlsProps> = ({
             onTouchEnd={handleTouchStop}
             onMouseDown={() => handleTouchDir(1, 0)}
             onMouseUp={handleTouchStop}
-            className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-slate-800/80 active:bg-amber-500 rounded-r border border-slate-600/80 flex items-center justify-center text-xs text-slate-200 cursor-pointer"
+            className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-[#3a1d10] active:bg-[#991b1b] rounded-r-lg border border-[#8b4513] flex items-center justify-center text-xs text-[#fef08a] font-bold cursor-pointer"
           >
             ▶
           </button>
           {/* Center Hub */}
-          <div className="w-6 h-6 rounded-full bg-slate-900/80 border border-slate-700" />
+          <div className="w-6 h-6 rounded-lg bg-[#201109] border border-[#a16207]" />
         </div>
       </div>
 
-      {/* ================= MOBILE TRANSLUCENT ACTION BUTTON (BOTTOM-RIGHT) ================= */}
-      <div className="fixed bottom-5 right-3 z-30 sm:hidden select-none touch-none opacity-85 hover:opacity-100 transition-opacity">
+      {/* ================= MOBILE TRANSLUCENT ACTION BUTTON (和風朱漆互動鈕) ================= */}
+      <div className="fixed bottom-5 right-3 z-30 sm:hidden select-none touch-none opacity-90 hover:opacity-100 transition-opacity font-serif">
         <button
           onClick={() => {
             sound.playClick();
             onInteract();
           }}
-          className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 active:scale-95 border-2 border-slate-950 shadow-xl flex flex-col items-center justify-center text-slate-950 font-bold cursor-pointer"
+          className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#b91c1c] to-[#7f1d1d] active:scale-95 border-2 border-[#fef08a] shadow-[0_4px_16px_rgba(0,0,0,0.8)] flex flex-col items-center justify-center text-[#fef08a] font-black cursor-pointer"
         >
-          <span className="text-base font-arcade font-black">A</span>
-          <span className="text-[9px] font-extrabold -mt-1">互動</span>
+          <span className="text-base drop-shadow">調</span>
+          <span className="text-[9px] -mt-1 font-bold tracking-widest">互動</span>
         </button>
       </div>
     </>

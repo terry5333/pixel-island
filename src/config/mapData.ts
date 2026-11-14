@@ -38,11 +38,11 @@ export const BUILDINGS: InteractiveBuilding[] = [
     name: 'CASINO 777 復古拉霸娛樂城',
     type: 'casino',
     x: 44.5,
-    y: 6.5,
-    width: 11.0,
-    height: 11.0,
-    doorX: 49.7,
-    doorY: 18.0,
+    y: 4.0,
+    width: 11.5,
+    height: 10.0,
+    doorX: 51.0,
+    doorY: 14.5,
     prompt: '進入「CASINO」777 復古拉霸娛樂城 🎰 (按 Space / 點我)',
   },
   {
@@ -50,24 +50,24 @@ export const BUILDINGS: InteractiveBuilding[] = [
     name: 'ARCADE 街機遊樂中心 (遊台/1A2B/海戰棋)',
     type: 'arcade',
     x: 28.5,
-    y: 8.0,
-    width: 9.0,
-    height: 9.0,
-    doorX: 31.0,
-    doorY: 17.0,
-    prompt: '進入「ARCADE」街機遊樂中心 🕹️ (按 Space / 點我)',
+    y: 7.5,
+    width: 6.0,
+    height: 3.5,
+    doorX: 30.6,
+    doorY: 11.0,
+    prompt: '進入「遊台」街機遊樂中心 🕹️ (按 Space / 點我)',
   },
   {
     id: 'boutique_pavilion',
     name: 'FASHION 昭和和服精品店',
     type: 'boutique',
-    x: 14.0,
-    y: 5.0,
-    width: 12.0,
-    height: 11.5,
-    doorX: 19.7,
-    doorY: 17.5,
-    prompt: '進入「FASHION」和服精品店 👗 (按 Space / 點我)',
+    x: 13.5,
+    y: 3.5,
+    width: 11.5,
+    height: 8.0,
+    doorX: 19.1,
+    doorY: 11.6,
+    prompt: '進入「服」昭和和服精品店 👗 (按 Space / 點我)',
   },
 ];
 
@@ -83,9 +83,9 @@ export interface ResidentialPlot {
 
 // 3 Residential plots calibrated to the Japanese houses in the background art
 export const RESIDENTIAL_PLOTS: ResidentialPlot[] = [
-  { plotId: 'plot_0', x: 26.5, y: 20.0, width: 6.0, height: 6.0, doorX: 29.5, doorY: 26.5 }, // House 1 (Left Japanese house)
-  { plotId: 'plot_1', x: 36.5, y: 20.5, width: 6.5, height: 6.0, doorX: 39.7, doorY: 27.0 }, // House 2 (Middle Japanese house)
-  { plotId: 'plot_2', x: 45.5, y: 20.5, width: 6.0, height: 6.0, doorX: 48.75, doorY: 26.5 }, // House 3 (Right Japanese house)
+  { plotId: 'plot_0', x: 26.0, y: 18.5, width: 7.5, height: 7.5, doorX: 29.7, doorY: 26.0 }, // House 1 (Left Japanese house)
+  { plotId: 'plot_1', x: 35.0, y: 18.0, width: 9.5, height: 8.0, doorX: 39.7, doorY: 25.6 }, // House 2 (Middle Japanese house)
+  { plotId: 'plot_2', x: 45.5, y: 18.0, width: 7.0, height: 8.0, doorX: 48.75, doorY: 26.0 }, // House 3 (Right Japanese house)
 ];
 
 export const DEFAULT_ISLAND_RESIDENTS = [
@@ -186,21 +186,21 @@ export function isIslandWalkable(x: number, y: number, activeHouses: ActiveHouse
   // 4. Building Footprints & Doorways
   for (const b of BUILDINGS) {
     // Doorway entrance is always accessible!
-    if (Math.abs(x - b.doorX) <= 1.2 && Math.abs(y - b.doorY) <= 1.2) {
+    if (Math.hypot(x - b.doorX, y - b.doorY) <= 1.5) {
       return true;
     }
     // Solid building body
-    if (x >= b.x - 0.2 && x <= b.x + b.width + 0.2 && y >= b.y - 0.2 && y <= b.y + b.height) {
+    if (x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height) {
       return false;
     }
   }
 
   // 5. Active Player Houses Footprints & Doorways
   for (const h of activeHouses) {
-    if (Math.abs(x - h.doorX) <= 1.2 && Math.abs(y - h.doorY) <= 1.2) {
+    if (Math.hypot(x - h.doorX, y - h.doorY) <= 1.5) {
       return true;
     }
-    if (x >= h.x - 0.2 && x <= h.x + h.width + 0.2 && y >= h.y - 0.2 && y <= h.y + h.height) {
+    if (x >= h.x && x <= h.x + h.width && y >= h.y && y <= h.y + h.height) {
       return false;
     }
   }
@@ -219,13 +219,13 @@ export function checkBuildingOrHouseEntrance(
   activeHouses: ActiveHouse[] = []
 ): BuildingOrHouseEntrance | null {
   for (const b of BUILDINGS) {
-    if (Math.abs(x - b.doorX) <= 1.4 && Math.abs(y - b.doorY) <= 1.4) {
+    if (Math.hypot(x - b.doorX, y - b.doorY) <= 1.8) {
       return { type: 'commercial', building: b };
     }
   }
 
   for (const h of activeHouses) {
-    if (Math.abs(x - h.doorX) <= 1.4 && Math.abs(y - h.doorY) <= 1.4) {
+    if (Math.hypot(x - h.doorX, y - h.doorY) <= 1.8) {
       return { type: 'house', house: h };
     }
   }
@@ -235,7 +235,7 @@ export function checkBuildingOrHouseEntrance(
 
 export function checkBuildingEntrance(x: number, y: number): InteractiveBuilding | null {
   for (const b of BUILDINGS) {
-    if (Math.abs(x - b.doorX) <= 1.4 && Math.abs(y - b.doorY) <= 1.4) {
+    if (Math.hypot(x - b.doorX, y - b.doorY) <= 1.8) {
       return b;
     }
   }

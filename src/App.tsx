@@ -92,9 +92,10 @@ export const App: React.FC = () => {
   }, []);
 
   // High-performance continuous local position state (sub-pixel float coordinates)
+  // Default spawn at the central Showa crossroads in front of the arcade and bridge
   const [localPos, setLocalPos] = useState({
-    x: 28.0,
-    y: 18.0,
+    x: 31.0,
+    y: 14.5,
     facing: 'right' as 'left' | 'right',
     isMoving: false,
   });
@@ -138,7 +139,7 @@ export const App: React.FC = () => {
   // Initialize self presence on first load at the center boulevard
   useEffect(() => {
     if (currentUser && !presences[currentUser.uid]) {
-      syncSelfPresence({ x: 28, y: 18, facing: 'right' }, true);
+      syncSelfPresence({ x: 31, y: 14.5, facing: 'right' }, true);
     }
   }, [currentUser, presences, syncSelfPresence]);
 
@@ -169,16 +170,16 @@ export const App: React.FC = () => {
     if (contextEntrance) {
       if (contextEntrance.type === 'commercial') {
         const b = contextEntrance.building;
-        if (b.type === 'boutique') return '進入「FASHION」精品服飾店 👗';
-        if (b.type === 'arcade') return '進入「ARCADE」街機遊樂中心 🕹️';
+        if (b.type === 'boutique') return '進入「服」昭和和服精品店 👘';
+        if (b.type === 'arcade') return '進入「遊台」街機遊樂中心 🕹️';
         if (b.type === 'casino') return '進入「CASINO」777 復古拉霸娛樂城 🎰';
       } else if (contextEntrance.type === 'house') {
         const h = contextEntrance.house;
-        return h.isSelf ? '進入個人溫馨小屋 🏡' : `拜訪 ${h.ownerName} 的家 🏡`;
+        return h.isSelf ? '進入自宅玄關 🏡' : `拜訪 ${h.ownerName} 之宅 🏡`;
       }
     }
     if (isHomeExitMat) {
-      return '離開小屋 (回到島嶼) 🚪';
+      return '邁出門扉（返回櫻花島）🚪';
     }
     return null;
   }, [contextEntrance, isHomeExitMat]);
