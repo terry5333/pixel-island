@@ -581,8 +581,5 @@ export const ArcadeModal: React.FC<ArcadeModalProps> = ({
       </div>
     </div>
   );
-      </div>
-    </div>
-  );
 };
 export default ArcadeModal;
