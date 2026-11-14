@@ -3,7 +3,7 @@ import confetti from 'canvas-confetti';
 import { ArcadeRoom, Game1A2BState, GuessRecord, UserProfile } from '../../types/game';
 import { sound } from '../../services/audio';
 import { dbService } from '../../services/dbService';
-import { Trophy, RefreshCw, Delete } from 'lucide-react';
+import { Trophy, RefreshCw, Delete, Check, HelpCircle } from 'lucide-react';
 
 interface Game1A2BProps {
   room: ArcadeRoom;
@@ -120,6 +120,8 @@ export const Game1A2B: React.FC<Game1A2BProps> = ({
     const targetSecret = opponentSecret || '1234';
     const { a, b } = calculateAB(targetSecret, inputCode);
 
+    sound.playClick();
+
     const newRecord: GuessRecord = {
       guess: inputCode,
       a,
@@ -127,74 +129,82 @@ export const Game1A2B: React.FC<Game1A2BProps> = ({
       timestamp: Date.now(),
     };
 
-    sound.playClick();
+    const nextMyGuesses = [...myGuesses, newRecord];
+    const isWin = a === 4;
 
-    const nextHostGuesses = isHost ? [...state1a2b.hostGuesses, newRecord] : state1a2b.hostGuesses;
-    const nextGuestGuesses = !isHost ? [...state1a2b.guestGuesses, newRecord] : state1a2b.guestGuesses;
-
-    // Check if I won
-    if (a === 4) {
+    if (isWin) {
       sound.playWin();
-      confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 },
+      });
       await onRewardCoins(100);
+
+      const updatedState: Game1A2BState = {
+        ...state1a2b,
+        [isHost ? 'hostGuesses' : 'guestGuesses']: nextMyGuesses,
+      };
+
       await onUpdateRoom({
         status: 'finished',
         winner: currentUser.uid,
-        state1a2b: {
-          ...state1a2b,
-          hostGuesses: nextHostGuesses,
-          guestGuesses: nextGuestGuesses,
-        },
+        state1a2b: updatedState,
       });
       setInputCode('');
       return;
     }
 
-    // AI Turn or pass to guest
+    // Switch turn to opponent or trigger AI turn
     if (isAiMode) {
-      // AI makes a guess
+      // AI turn
+      const updatedState: Game1A2BState = {
+        ...state1a2b,
+        hostGuesses: nextMyGuesses,
+      };
+
+      // AI calculates guess
       const aiGuess = generateRandomSecret();
-      const aiResult = calculateAB(state1a2b.hostSecret || '1234', aiGuess);
+      const aiAB = calculateAB(mySecret || '1234', aiGuess);
       const aiRecord: GuessRecord = {
         guess: aiGuess,
-        a: aiResult.a,
-        b: aiResult.b,
+        a: aiAB.a,
+        b: aiAB.b,
         timestamp: Date.now(),
       };
 
-      const finalGuestGuesses = [...nextGuestGuesses, aiRecord];
+      const nextAiGuesses = [...(updatedState.guestGuesses || []), aiRecord];
+      const isAiWin = aiAB.a === 4;
 
-      if (aiResult.a === 4) {
-        sound.playLose();
+      if (isAiWin) {
+        sound.playBump();
         await onUpdateRoom({
           status: 'finished',
-          winner: 'ai_bot',
+          winner: 'npc_bot',
           state1a2b: {
-            ...state1a2b,
-            hostGuesses: nextHostGuesses,
-            guestGuesses: finalGuestGuesses,
+            ...updatedState,
+            guestGuesses: nextAiGuesses,
           },
         });
       } else {
         await onUpdateRoom({
           currentTurn: currentUser.uid,
           state1a2b: {
-            ...state1a2b,
-            hostGuesses: nextHostGuesses,
-            guestGuesses: finalGuestGuesses,
+            ...updatedState,
+            guestGuesses: nextAiGuesses,
           },
         });
       }
     } else {
-      // Switch turns in PvP
-      const nextTurnUid = isHost ? room.guestUid : room.hostUid;
+      const nextTurn = isHost ? room.guestUid : room.hostUid;
+      const updatedState: Game1A2BState = {
+        ...state1a2b,
+        [isHost ? 'hostGuesses' : 'guestGuesses']: nextMyGuesses,
+      };
+
       await onUpdateRoom({
-        currentTurn: nextTurnUid,
-        state1a2b: {
-          ...state1a2b,
-          hostGuesses: nextHostGuesses,
-          guestGuesses: nextGuestGuesses,
-        },
+        currentTurn: nextTurn,
+        state1a2b: updatedState,
       });
     }
 
@@ -214,29 +224,42 @@ export const Game1A2B: React.FC<Game1A2BProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden text-xs">
-      {/* Top Game Status Bar */}
-      <div className="p-2.5 bg-slate-900 border-b-2 border-slate-800 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-amber-400 font-bold">1A2B 數字密碼大對決</span>
-          <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded">
-            房號: #{room.roomId}
-          </span>
+    <div className="flex flex-col h-full overflow-hidden text-xs bg-white font-sans">
+      {/* Top Game Status Bar (Clean Light Style matching 1a2b.terry0215.com) */}
+      <div className="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-black flex items-center justify-center text-xs shadow-xs">
+            1A
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-800 font-extrabold text-sm">1A2B 猜數字</span>
+              <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-mono font-bold">
+                房號: #{room.roomId}
+              </span>
+            </div>
+            <p className="text-[11px] text-indigo-600 font-medium">
+              {isSetupPhase ? '請先設定 4 位不重複秘密密碼' : '請輸入 4 個不重複的數字'}
+            </p>
+          </div>
         </div>
+
         <div>
           {room.status === 'finished' ? (
-            <span className="font-bold text-amber-300 flex items-center gap-1">
-              <Trophy className="w-3.5 h-3.5 text-amber-400" />
+            <span className="font-bold text-amber-600 flex items-center gap-1.5 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+              <Trophy className="w-4 h-4 text-amber-500" />
               {room.winner === currentUser.uid ? '🎉 你贏了！獲得 100 金幣' : '對方率先猜中密碼！'}
             </span>
           ) : isSetupPhase ? (
-            <span className="text-cyan-300 animate-pulse">🔒 密碼設定階段</span>
+            <span className="text-indigo-600 font-bold bg-indigo-50 px-3 py-1 rounded-full border border-indigo-200 animate-pulse">
+              🔒 密碼設定中
+            </span>
           ) : (
             <span
-              className={`font-bold px-2 py-0.5 rounded ${
+              className={`font-bold px-3 py-1 rounded-full text-xs ${
                 isMyTurn
-                  ? 'bg-emerald-950 text-emerald-400 border border-emerald-800 animate-pulse'
-                  : 'bg-slate-800 text-slate-400'
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 animate-pulse'
+                  : 'bg-slate-100 text-slate-500 border border-slate-200'
               }`}
             >
               {isMyTurn ? '👉 輪到你猜測！' : '⏳ 等待對手猜測...'}
@@ -245,31 +268,45 @@ export const Game1A2B: React.FC<Game1A2BProps> = ({
         </div>
       </div>
 
-      {/* Main Dual Column Game Log Area */}
-      <div className="flex-1 overflow-y-auto p-3 grid grid-cols-2 gap-3 bg-[#111022]">
+      {/* Main Dual Column Game Log Area (Clean White & Slate Grid) */}
+      <div className="flex-1 overflow-y-auto p-3 grid grid-cols-2 gap-3 bg-slate-50/70">
         {/* Left Column: My Guesses */}
-        <div className="pixel-card p-2.5 bg-slate-950/80 border-2 border-slate-800 rounded flex flex-col">
-          <div className="font-bold text-slate-200 border-b border-slate-800 pb-1.5 mb-2 flex items-center justify-between">
-            <span className="text-emerald-400">你猜對方的紀錄</span>
-            <span className="text-[10px] text-slate-400">你的秘密: {mySecret ? '****' : '未設定'}</span>
+        <div className="bg-white p-3 border border-slate-200 rounded-2xl flex flex-col shadow-xs">
+          <div className="font-bold text-slate-700 border-b border-slate-100 pb-2 mb-2 flex items-center justify-between">
+            <span className="text-indigo-600 flex items-center gap-1">
+              <span>🎯</span> 你猜對方的紀錄
+            </span>
+            <span className="text-[10px] text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">
+              你的秘密: {mySecret ? '****' : '未設定'}
+            </span>
           </div>
-          <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1 max-h-48">
+          <div className="flex-1 overflow-y-auto flex flex-col gap-1.5 pr-1 max-h-48">
             {myGuesses.length === 0 ? (
-              <div className="text-slate-500 text-center py-6 text-[11px]">尚未有猜測紀錄</div>
+              <div className="text-slate-400 text-center py-8 text-xs">尚未有猜測紀錄</div>
             ) : (
               myGuesses.map((rec, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between p-1.5 bg-slate-900 rounded border border-slate-800"
+                  className="flex items-center justify-between p-2 bg-slate-50/80 rounded-xl border border-slate-100 hover:bg-slate-100/70 transition-colors"
                 >
-                  <span className="font-mono text-amber-300 tracking-widest font-bold">
-                    #{i + 1} {rec.guess}
-                  </span>
+                  <div className="flex items-center gap-1.5 font-mono">
+                    <span className="text-[10px] text-slate-400 font-bold">#{i + 1}</span>
+                    <div className="flex gap-1">
+                      {rec.guess.split('').map((ch, idx) => (
+                        <span
+                          key={idx}
+                          className="w-5 h-5 rounded-full bg-white border border-slate-200 text-slate-800 font-bold flex items-center justify-center text-xs shadow-2xs"
+                        >
+                          {ch}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                   <span
-                    className={`font-mono font-bold px-1.5 py-0.5 rounded text-[10px] ${
+                    className={`font-mono font-bold px-2 py-0.5 rounded-lg text-xs ${
                       rec.a === 4
-                        ? 'bg-amber-400 text-black font-extrabold'
-                        : 'bg-slate-800 text-cyan-300'
+                        ? 'bg-amber-400 text-slate-950 font-black'
+                        : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
                     }`}
                   >
                     {rec.a}A{rec.b}B
@@ -281,28 +318,38 @@ export const Game1A2B: React.FC<Game1A2BProps> = ({
         </div>
 
         {/* Right Column: Opponent Guesses */}
-        <div className="pixel-card p-2.5 bg-slate-950/80 border-2 border-slate-800 rounded flex flex-col">
-          <div className="font-bold text-slate-200 border-b border-slate-800 pb-1.5 mb-2 flex items-center justify-between">
-            <span className="text-rose-400">
-              {isAiMode ? '電腦 AI 猜你' : `${room.guestName || '對手'} 猜你`}
+        <div className="bg-white p-3 border border-slate-200 rounded-2xl flex flex-col shadow-xs">
+          <div className="font-bold text-slate-700 border-b border-slate-100 pb-2 mb-2 flex items-center justify-between">
+            <span className="text-slate-700 flex items-center gap-1">
+              <span>⚔️</span> {isAiMode ? '電腦 AI 猜你' : `${room.guestName || '對手'} 猜你`}
             </span>
-            <span className="text-[10px] text-slate-400">
+            <span className="text-[10px] text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">
               {room.status === 'finished' ? `對方密碼: ${opponentSecret}` : '對手密碼: ****'}
             </span>
           </div>
-          <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1 max-h-48">
+          <div className="flex-1 overflow-y-auto flex flex-col gap-1.5 pr-1 max-h-48">
             {opponentGuesses.length === 0 ? (
-              <div className="text-slate-500 text-center py-6 text-[11px]">對手尚未猜測</div>
+              <div className="text-slate-400 text-center py-8 text-xs">對手尚未猜測</div>
             ) : (
               opponentGuesses.map((rec, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between p-1.5 bg-slate-900 rounded border border-slate-800"
+                  className="flex items-center justify-between p-2 bg-slate-50/80 rounded-xl border border-slate-100"
                 >
-                  <span className="font-mono text-rose-300 tracking-widest font-bold">
-                    #{i + 1} {rec.guess}
-                  </span>
-                  <span className="font-mono font-bold px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300">
+                  <div className="flex items-center gap-1.5 font-mono">
+                    <span className="text-[10px] text-slate-400 font-bold">#{i + 1}</span>
+                    <div className="flex gap-1">
+                      {rec.guess.split('').map((ch, idx) => (
+                        <span
+                          key={idx}
+                          className="w-5 h-5 rounded-full bg-white border border-slate-200 text-slate-600 font-bold flex items-center justify-center text-xs shadow-2xs"
+                        >
+                          {ch}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <span className="font-mono font-bold px-2 py-0.5 rounded-lg text-xs bg-slate-100 text-slate-600 border border-slate-200">
                     {rec.a}A{rec.b}B
                   </span>
                 </div>
@@ -312,74 +359,101 @@ export const Game1A2B: React.FC<Game1A2BProps> = ({
         </div>
       </div>
 
-      {/* Input Code Display & Retro Keypad */}
-      <div className="p-3 bg-slate-950 border-t-2 border-slate-800 flex flex-col gap-2">
+      {/* Input Code Display & Modern Keypad (Exact match to 1a2b.terry0215.com screenshot!) */}
+      <div className="p-3 bg-white border-t border-slate-200 flex flex-col items-center gap-2.5">
         {/* Error warning if any */}
         {errorMessage && (
-          <div className="text-center text-rose-400 font-bold text-[11px] animate-bounce-gentle">
+          <div className="text-center text-rose-500 font-bold text-xs animate-bounce-gentle">
             ⚠️ {errorMessage}
           </div>
         )}
 
-        {/* Secret Setup Instructions */}
-        {isSetupPhase ? (
-          <div className="text-center text-amber-300 text-xs font-bold">
-            請輸入 4 位不重複數字作為你的秘密數字：
-          </div>
-        ) : null}
-
-        {/* Display Bar */}
-        <div className="flex items-center justify-center gap-2">
-          <div className="w-48 h-10 bg-slate-900 border-2 border-slate-700 rounded flex items-center justify-center text-lg font-mono tracking-widest font-bold text-amber-300">
-            {inputCode || <span className="text-slate-600 text-sm font-normal">_ _ _ _</span>}
-          </div>
-
-          {isSetupPhase ? (
-            <button
-              onClick={handleSetSecret}
-              disabled={inputCode.length !== 4}
-              className="pixel-btn px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-bold text-xs rounded"
-            >
-              設定密碼
-            </button>
-          ) : (
-            <button
-              onClick={handleSubmitGuess}
-              disabled={!isMyTurn || inputCode.length !== 4 || room.status === 'finished'}
-              className="pixel-btn px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs rounded"
-            >
-              送出猜測
-            </button>
-          )}
-
-          <button
-            onClick={handleBackspace}
-            className="p-2 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-slate-300"
-            title="倒退刪除"
-          >
-            <Delete className="w-4 h-4" />
-          </button>
+        {/* 4 Circular Display Bubbles */}
+        <div className="flex items-center justify-center gap-3 py-1">
+          {[0, 1, 2, 3].map((pos) => {
+            const digit = inputCode[pos];
+            const isCurrent = inputCode.length === pos;
+            return (
+              <div
+                key={pos}
+                className={`w-11 h-11 rounded-full flex items-center justify-center text-lg font-black transition-all shadow-xs ${
+                  digit
+                    ? 'bg-indigo-50 border-2 border-indigo-600 text-indigo-700 scale-105'
+                    : isCurrent
+                    ? 'bg-white border-2 border-dashed border-indigo-500 animate-pulse'
+                    : 'bg-slate-50 border-2 border-slate-200 text-slate-300'
+                }`}
+              >
+                {digit || ''}
+              </div>
+            );
+          })}
         </div>
 
-        {/* Retro 0-9 Keypad Grid */}
-        <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5 max-w-lg mx-auto w-full pt-1">
-          {['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map((digit) => {
+        <div className="text-[11px] text-slate-400 font-medium">
+          點擊下方圓圈輸入數字 (不可重複)
+        </div>
+
+        {/* Modern 3-Column Round Keypad (Matching 1a2b.terry0215.com layout) */}
+        <div className="grid grid-cols-3 gap-2.5 max-w-xs w-full pb-1">
+          {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => {
             const isUsed = inputCode.includes(digit);
             return (
               <button
                 key={digit}
                 onClick={() => handleKeypadPress(digit)}
                 disabled={isUsed || (!isSetupPhase && !isMyTurn)}
-                className={`py-2 rounded font-mono font-bold text-sm border transition-all ${
+                className={`w-12 h-12 mx-auto rounded-full font-bold text-base border flex items-center justify-center shadow-xs transition-all ${
                   isUsed
-                    ? 'bg-slate-900 text-slate-600 border-slate-800 cursor-not-allowed'
-                    : 'bg-slate-800 hover:bg-slate-700 text-white border-slate-600 active:scale-95'
+                    ? 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed'
+                    : 'bg-white hover:bg-slate-50 active:scale-95 text-slate-800 border-slate-200 hover:border-indigo-300 shadow-sm'
                 }`}
               >
                 {digit}
               </button>
             );
           })}
+
+          {/* Bottom Row: Backspace, 0, Submit */}
+          <button
+            onClick={handleBackspace}
+            className="w-12 h-12 mx-auto rounded-full bg-amber-50 hover:bg-amber-100 active:scale-95 border border-amber-200 text-amber-700 flex items-center justify-center shadow-xs transition-all"
+            title="倒退刪除"
+          >
+            <Delete className="w-5 h-5" />
+          </button>
+
+          <button
+            onClick={() => handleKeypadPress('0')}
+            disabled={inputCode.includes('0') || (!isSetupPhase && !isMyTurn)}
+            className={`w-12 h-12 mx-auto rounded-full font-bold text-base border flex items-center justify-center shadow-xs transition-all ${
+              inputCode.includes('0')
+                ? 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed'
+                : 'bg-white hover:bg-slate-50 active:scale-95 text-slate-800 border-slate-200 hover:border-indigo-300 shadow-sm'
+            }`}
+          >
+            0
+          </button>
+
+          {isSetupPhase ? (
+            <button
+              onClick={handleSetSecret}
+              disabled={inputCode.length !== 4}
+              className="w-12 h-12 mx-auto rounded-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 active:scale-95 text-white flex items-center justify-center shadow-md shadow-indigo-200 transition-all font-bold text-xs"
+              title="設定密碼"
+            >
+              <Check className="w-5 h-5 stroke-[2.5]" />
+            </button>
+          ) : (
+            <button
+              onClick={handleSubmitGuess}
+              disabled={!isMyTurn || inputCode.length !== 4 || room.status === 'finished'}
+              className="w-12 h-12 mx-auto rounded-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 active:scale-95 text-white flex items-center justify-center shadow-md shadow-indigo-200 transition-all font-bold text-xs"
+              title="送出猜測"
+            >
+              <Check className="w-5 h-5 stroke-[2.5]" />
+            </button>
+          )}
         </div>
       </div>
     </div>

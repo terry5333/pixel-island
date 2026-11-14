@@ -220,6 +220,10 @@ export class DatabaseService {
 
   public async updateUserProfile(uid: string, updates: Partial<UserProfile>): Promise<void> {
     const cleanUpdates = removeUndefinedFields(updates);
+    if (cleanUpdates.coins !== undefined) {
+      cleanUpdates.coins = Math.max(0, Math.floor(cleanUpdates.coins));
+    }
+
     if (isFirebaseConfigured && db) {
       const userRef = doc(db, 'users', uid);
       await updateDoc(userRef, cleanUpdates);
@@ -239,12 +243,12 @@ export class DatabaseService {
   public async buyItem(uid: string, item: Item): Promise<void> {
     const profile = await this.getUserProfile(uid);
     if (!profile) return;
-    if (profile.coins < item.price) {
+    if ((profile.coins || 0) < item.price) {
       throw new Error('金幣不足！');
     }
     const newInventory = [...profile.inventory, item.id];
     await this.updateUserProfile(uid, {
-      coins: profile.coins - item.price,
+      coins: Math.max(0, (profile.coins || 0) - item.price),
       inventory: newInventory,
     });
   }
@@ -266,7 +270,7 @@ export class DatabaseService {
     const profile = await this.getUserProfile(uid);
     if (profile) {
       await this.updateUserProfile(uid, {
-        coins: Math.max((profile.coins || 0) + amount, 0),
+        coins: Math.max(0, (profile.coins || 0) + amount),
       });
     }
   }
@@ -274,11 +278,11 @@ export class DatabaseService {
   public async upgradeHouse(uid: string, nextLevel: number, cost: number): Promise<void> {
     const profile = await this.getUserProfile(uid);
     if (profile) {
-      if (profile.coins < cost) {
+      if ((profile.coins || 0) < cost) {
         throw new Error('金幣不足，無法升級房屋！');
       }
       await this.updateUserProfile(uid, {
-        coins: profile.coins - cost,
+        coins: Math.max(0, (profile.coins || 0) - cost),
         houseLevel: nextLevel,
       });
     }

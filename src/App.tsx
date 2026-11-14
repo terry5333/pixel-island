@@ -22,6 +22,7 @@ import { Navbar } from './components/Navbar';
 import { VirtualControls } from './components/VirtualControls';
 import { BoutiqueModal } from './components/BoutiqueModal';
 import { ArcadeModal } from './components/ArcadeModal';
+import { CasinoModal } from './components/CasinoModal';
 import { AdminDashboardModal } from './components/AdminDashboardModal';
 import { AuthModal } from './components/AuthModal';
 import { PlayerActionModal } from './components/PlayerActionModal';
@@ -44,7 +45,7 @@ export const App: React.FC = () => {
   const [isBoutiqueOpen, setIsBoutiqueOpen] = useState(false);
   const [boutiqueInitialTab, setBoutiqueInitialTab] = useState<'shop' | 'wardrobe'>('shop');
   const [isArcadeOpen, setIsArcadeOpen] = useState(false);
-  const [arcadeInitialSoloSlots, setArcadeInitialSoloSlots] = useState(false);
+  const [isCasinoOpen, setIsCasinoOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isFriendPanelOpen, setIsFriendPanelOpen] = useState(false);
@@ -366,12 +367,10 @@ export const App: React.FC = () => {
           setIsBoutiqueOpen(true);
         } else if (b.type === 'arcade') {
           sound.playTaiko();
-          setArcadeInitialSoloSlots(false);
           setIsArcadeOpen(true);
         } else if (b.type === 'casino') {
           sound.playTaiko();
-          setArcadeInitialSoloSlots(true);
-          setIsArcadeOpen(true);
+          setIsCasinoOpen(true);
         }
       } else if (contextEntrance.type === 'house') {
         sound.playShojiDoor();
@@ -566,12 +565,10 @@ export const App: React.FC = () => {
                 setIsBoutiqueOpen(true);
               } else if (type === 'arcade') {
                 sound.playTaiko();
-                setArcadeInitialSoloSlots(false);
                 setIsArcadeOpen(true);
               } else if (type === 'casino') {
                 sound.playTaiko();
-                setArcadeInitialSoloSlots(true);
-                setIsArcadeOpen(true);
+                setIsCasinoOpen(true);
               }
             }}
           />
@@ -629,7 +626,6 @@ export const App: React.FC = () => {
       {currentUser && (
         <ArcadeModal
           isOpen={isArcadeOpen}
-          initialSoloSlots={arcadeInitialSoloSlots}
           onClose={() => {
             setIsArcadeOpen(false);
             setChallengedPlayer(null);
@@ -637,6 +633,17 @@ export const App: React.FC = () => {
           currentUser={currentUser}
           challengedPlayer={challengedPlayer}
           onClearChallenge={() => setChallengedPlayer(null)}
+        />
+      )}
+
+      {/* Casino Center Modal (777 Retro Slot Machine) */}
+      {currentUser && (
+        <CasinoModal
+          isOpen={isCasinoOpen}
+          onClose={() => setIsCasinoOpen(false)}
+          currentUser={currentUser}
+          onRewardCoins={(amt) => dbService.rewardCoins(currentUser.uid, amt)}
+          onDeductCoins={(amt) => dbService.rewardCoins(currentUser.uid, -amt)}
         />
       )}
 

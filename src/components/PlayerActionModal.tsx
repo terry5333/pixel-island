@@ -35,22 +35,24 @@ export const PlayerActionModal: React.FC<PlayerActionModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/70 backdrop-blur-xs">
-      <div className="pixel-card w-full max-w-sm bg-[#1e1b4b] border-4 border-slate-900 rounded-lg shadow-pixel-lg overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/60 backdrop-blur-sm animate-fade-in font-sans">
+      <div className="w-full max-w-sm bg-white rounded-3xl border border-slate-200/90 shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-3 bg-slate-950 border-b-2 border-slate-800 flex items-center justify-between">
-          <span className="font-arcade text-xs text-amber-400">島民互動</span>
+        <div className="px-5 py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex items-center justify-between shadow-xs">
+          <span className="text-sm font-bold text-white flex items-center gap-1.5">
+            <span>👥</span> 島民互動交流
+          </span>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white"
+            className="p-1 hover:bg-white/20 rounded-full text-white/90 hover:text-white transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Player Profile Preview */}
-        <div className="p-5 flex flex-col items-center gap-3">
-          <div className="p-3 bg-slate-900 border-2 border-slate-700 rounded-xl shadow-pixel">
+        <div className="p-5 flex flex-col items-center gap-3 bg-slate-50/50">
+          <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-xs">
             <CharacterSprite
               displayName={player.displayName}
               facing={player.facing}
@@ -61,8 +63,8 @@ export const PlayerActionModal: React.FC<PlayerActionModalProps> = ({
           </div>
 
           <div className="text-center">
-            <div className="font-bold text-base text-white">{player.displayName}</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">UID: {player.uid}</div>
+            <div className="font-black text-base text-slate-800">{player.displayName}</div>
+            <div className="text-[11px] text-slate-400 mt-0.5 font-mono">UID: #{player.uid.slice(-6)}</div>
           </div>
 
           {/* Action Buttons */}
@@ -73,10 +75,10 @@ export const PlayerActionModal: React.FC<PlayerActionModalProps> = ({
                 onChallenge(player);
                 onClose();
               }}
-              className="pixel-btn w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-sm shadow-indigo-200 active:scale-95 transition-all cursor-pointer"
             >
               <Gamepad2 className="w-4 h-4" />
-              發起遊樂場對戰邀請 (1A2B / OOXX)
+              發起對戰邀請 (1A2B / OOXX)
             </button>
 
             <button
@@ -85,7 +87,7 @@ export const PlayerActionModal: React.FC<PlayerActionModalProps> = ({
                 onVisitHome(player);
                 onClose();
               }}
-              className="pixel-btn w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-2xl flex items-center justify-center gap-2 shadow-xs active:scale-95 transition-all cursor-pointer"
             >
               <Home className="w-4 h-4" />
               拜訪他的個人小屋
@@ -93,22 +95,22 @@ export const PlayerActionModal: React.FC<PlayerActionModalProps> = ({
 
             <button
               onClick={handleAddFriend}
-              className="pixel-btn w-full py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-white hover:bg-slate-100 text-slate-700 font-bold rounded-2xl border border-slate-200 flex items-center justify-center gap-2 shadow-2xs active:scale-95 transition-all cursor-pointer"
             >
-              <UserPlus className="w-4 h-4" />
+              <UserPlus className="w-4 h-4 text-indigo-600" />
               加為好友 ➕
             </button>
 
             <button
               onClick={() => {
-                sound.playEmoji();
+                sound.playPop();
                 onSendWave(player);
                 onClose();
               }}
-              className="pixel-btn w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded flex items-center justify-center gap-2"
+              className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
-              <Hand className="w-4 h-4 text-amber-400" />
-              向他揮手打招呼 (👋)
+              <Hand className="w-4 h-4 text-amber-500" />
+              揮手打招呼 👋
             </button>
           </div>
         </div>

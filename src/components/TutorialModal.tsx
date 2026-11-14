@@ -11,28 +11,28 @@ interface TutorialModalProps {
 const STEPS = [
   {
     icon: Compass,
-    iconColor: 'text-sky-400',
-    title: '歡迎來到像素島！',
+    iconColor: 'text-indigo-600',
+    title: '歡迎來到昭和・櫻花島！',
     subtitle: '自由無拘束的復古多人線上冒險',
     content: (
-      <div className="space-y-3 text-xs text-slate-300">
-        <p>你現在是這座美麗海濱島嶼的正式島民！地圖已全面解鎖，無任何格子阻礙，讓你享受最絲滑的自由奔跑：</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 bg-slate-900 rounded-xl border border-slate-800">
+      <div className="space-y-3 text-xs text-slate-600 font-sans">
+        <p className="text-slate-700 font-medium">你現在是這座美麗島嶼的正式島民！地圖全境解鎖，自由奔跑探索：</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
           <div className="flex items-center gap-2.5">
-            <span className="p-1.5 bg-slate-800 rounded-lg text-amber-400 font-mono font-bold text-xs">W A S D</span>
+            <span className="p-1.5 bg-white border border-slate-200 rounded-lg text-indigo-600 font-mono font-bold text-xs shadow-2xs">W A S D</span>
             <span>鍵盤方向鍵自由走動</span>
           </div>
           <div className="flex items-center gap-2.5">
-            <span className="p-1.5 bg-slate-800 rounded-lg text-emerald-400 font-mono font-bold text-xs">SPACE</span>
-            <span>進入建築 / 拜訪好友房屋</span>
+            <span className="p-1.5 bg-white border border-slate-200 rounded-lg text-emerald-600 font-mono font-bold text-xs shadow-2xs">SPACE</span>
+            <span>進入店舖 / 拜訪住宅</span>
           </div>
           <div className="flex items-center gap-2.5">
-            <span className="p-1.5 bg-slate-800 rounded-lg text-pink-400 text-xs">📱 虛擬搖桿</span>
-            <span>手機點擊螢幕即可瞬間移動</span>
+            <span className="p-1.5 bg-white border border-slate-200 rounded-lg text-rose-500 text-xs shadow-2xs">📱 虛擬按鍵</span>
+            <span>手機直接點擊螢幕自由行走</span>
           </div>
           <div className="flex items-center gap-2.5">
-            <span className="p-1.5 bg-slate-800 rounded-lg text-purple-400 text-xs">💬 快捷氣泡</span>
-            <span>即時發送動態表情與島民打招呼</span>
+            <span className="p-1.5 bg-white border border-slate-200 rounded-lg text-purple-600 text-xs shadow-2xs">💬 快捷氣泡</span>
+            <span>即時發送表情與島民互動</span>
           </div>
         </div>
       </div>
@@ -40,25 +40,25 @@ const STEPS = [
   },
   {
     icon: Home,
-    iconColor: 'text-amber-400',
-    title: '你的專屬島嶼小屋與房屋升級',
-    subtitle: '每位島民都擁有專屬地契與 3D 豪宅',
+    iconColor: 'text-amber-500',
+    title: '你的專屬島嶼居所與外觀升級',
+    subtitle: '每位島民都擁有專屬日式宅邸地契',
     content: (
-      <div className="space-y-3 text-xs text-slate-300">
-        <p>島嶼住宅區已經自動為你建好了專屬小屋！走到門口即可進入專屬的 2.5D Isometric 3D 室內空間：</p>
-        <div className="space-y-2 p-3 bg-slate-900 rounded-xl border border-slate-800">
+      <div className="space-y-3 text-xs text-slate-600 font-sans">
+        <p className="text-slate-700 font-medium">島嶼住宅區已經自動為你建好了專屬居所！走至門口玄關即可進入：</p>
+        <div className="space-y-2 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
           <div className="flex items-start gap-2.5">
-            <span className="text-base">🔨</span>
+            <span className="text-lg">🔨</span>
             <div>
-              <div className="font-bold text-amber-300">四段式房屋外觀升級</div>
-              <div className="text-[11px] text-slate-400">賺取金幣可將小屋從「紅頂小屋」升級至「原木小屋」、「石木宅邸」，直至「豪華雙層大莊園」！</div>
+              <div className="font-bold text-slate-800">四段式房屋外觀升級工坊</div>
+              <div className="text-[11px] text-slate-500">賺取金幣可將小屋從「紅頂小屋」升級至「原木小屋」、「石木宅邸」，直至「豪華雙層莊園」！</div>
             </div>
           </div>
           <div className="flex items-start gap-2.5">
-            <span className="text-base">🛋️</span>
+            <span className="text-lg">🛋️</span>
             <div>
-              <div className="font-bold text-emerald-300">3D 家具自由佈置</div>
-              <div className="text-[11px] text-slate-400">進入房間後點擊「佈置模式」，自由旋轉擺放床鋪、沙發與壁爐，隨時邀請線上好友到家裡開趴！</div>
+              <div className="font-bold text-slate-800">2.5D 和風家具自由佈置</div>
+              <div className="text-[11px] text-slate-500">室內空間隨著房屋升級而擴充，可自由擺設屏風、榻榻米、茶几等典雅家具。</div>
             </div>
           </div>
         </div>
@@ -67,47 +67,50 @@ const STEPS = [
   },
   {
     icon: Gamepad2,
-    iconColor: 'text-rose-400',
-    title: '「銭屋」街機樂園與對戰遊戲',
-    subtitle: '多種經典休閒對戰，隨時開房或連線 NPC',
+    iconColor: 'text-purple-600',
+    title: '街機遊樂中心與 777 娛樂城',
+    subtitle: '熱門 1A2B、海戰棋、無限 OOXX 與拉霸機',
     content: (
-      <div className="space-y-3 text-xs text-slate-300">
-        <p>走過中央大道即可抵達復古風情的「銭屋」街機旗艦館，先創房間獲得專屬 4 碼房號，再自由挑選遊玩項目：</p>
-        <div className="grid grid-cols-2 gap-2 p-3 bg-slate-900 rounded-xl border border-slate-800 text-[11px]">
-          <div className="p-2 bg-slate-950 rounded-lg border border-slate-800">
-            <span className="font-bold text-sky-400 block">🚢 海戰棋 Battleship</span>
-            <span className="text-slate-400 text-[10px]">雷達偵測排兵佈陣，雙方互射</span>
+      <div className="space-y-3 text-xs text-slate-600 font-sans">
+        <p className="text-slate-700 font-medium">島嶼中心設有各大娛樂場所，隨時隨地開啟多人對戰：</p>
+        <div className="grid grid-cols-2 gap-2 text-center">
+          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+            <div className="text-2xl mb-1">🔢</div>
+            <div className="font-bold text-slate-800">雙人 1A2B</div>
+            <div className="text-[10px] text-slate-400">邏輯推理猜密碼</div>
           </div>
-          <div className="p-2 bg-slate-950 rounded-lg border border-slate-800">
-            <span className="font-bold text-amber-400 block">✏️ 點線棋 Dots & Boxes</span>
-            <span className="text-slate-400 text-[10px]">連線佔地盤，步步為營</span>
+          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+            <div className="text-2xl mb-1">⭕❌</div>
+            <div className="font-bold text-slate-800">無限 OOXX</div>
+            <div className="text-[10px] text-slate-400">第4子消第1子</div>
           </div>
-          <div className="p-2 bg-slate-950 rounded-lg border border-slate-800">
-            <span className="font-bold text-indigo-400 block">🔢 1A2B 數字密碼</span>
-            <span className="text-slate-400 text-[10px]">經典益智推理對決</span>
+          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+            <div className="text-2xl mb-1">🚢</div>
+            <div className="font-bold text-slate-800">海戰棋 (8×8)</div>
+            <div className="text-[10px] text-slate-400">砲擊擊沉敵方艦隊</div>
           </div>
-          <div className="p-2 bg-slate-950 rounded-lg border border-slate-800">
-            <span className="font-bold text-rose-400 block">🎰 777 復古拉霸機</span>
-            <span className="text-slate-400 text-[10px]">拉動搖桿拚大獎，高額金幣</span>
+          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+            <div className="text-2xl mb-1">🎰</div>
+            <div className="font-bold text-slate-800">CASINO 777</div>
+            <div className="text-[10px] text-slate-400">娛樂城拉霸贏 50 倍彩金</div>
           </div>
         </div>
-        <p className="text-[11px] text-amber-300">💡 提示：沒有好友在線時，可以點擊房間內的「加入電腦 NPC」練習對戰！</p>
       </div>
     ),
   },
   {
     icon: Gift,
-    iconColor: 'text-emerald-400',
-    title: '新手登島大禮包 🎉',
-    subtitle: '1,000 島嶼金幣見面禮已備齊',
+    iconColor: 'text-emerald-600',
+    title: '新人啟航特權禮包！',
+    subtitle: '恭喜完成導引，領取 1,000 島嶼金幣',
     content: (
-      <div className="flex flex-col items-center justify-center p-6 bg-slate-900/90 rounded-2xl border border-amber-500/40 text-center gap-3">
-        <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center text-3xl animate-bounce">
+      <div className="space-y-3 text-center py-2 font-sans">
+        <div className="w-16 h-16 mx-auto rounded-3xl bg-amber-50 border border-amber-200 flex items-center justify-center text-3xl shadow-xs">
           🪙
         </div>
-        <div className="text-lg font-bold text-amber-300">贈送 1,000 枚島嶼金幣！</div>
-        <p className="text-xs text-slate-300 max-w-sm">
-          這筆金幣已存入你的帳戶，你可以立刻用來購買精品服裝、家具，或是直接升級你的島嶼小屋！
+        <div className="font-black text-xl text-slate-800">恭喜獲得 1,000 島嶼金幣！</div>
+        <p className="text-xs text-slate-500 max-w-sm mx-auto">
+          你現在可以前往和服精品店購買昭和傳統服飾，或者直接去娛樂城拉霸拚大獎，甚至準備升級你的專屬宅邸！
         </p>
       </div>
     ),
@@ -140,44 +143,44 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-sm select-none">
-      <div className="w-full max-w-xl bg-[#0f172a] border-4 border-amber-500 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-slide-up">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm select-none animate-fade-in font-sans">
+      <div className="w-full max-w-xl bg-white rounded-3xl border border-slate-200/90 shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+        <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-xl bg-slate-900 border border-slate-800 ${step.iconColor}`}>
+            <div className={`p-2.5 rounded-2xl bg-white border border-slate-200 shadow-2xs ${step.iconColor}`}>
               <IconComponent className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="font-arcade text-sm sm:text-base text-amber-400">{step.title}</h2>
-              <p className="text-[11px] text-slate-400">{step.subtitle}</p>
+              <h2 className="font-black text-base text-slate-800">{step.title}</h2>
+              <p className="text-xs text-slate-400 font-medium">{step.subtitle}</p>
             </div>
           </div>
-          <span className="text-xs font-mono font-bold text-slate-400 bg-slate-900 px-2.5 py-1 rounded-full border border-slate-800">
+          <span className="text-xs font-mono font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-200">
             {currentStep + 1} / {STEPS.length}
           </span>
         </div>
 
         {/* Progress Bar */}
-        <div className="h-1 bg-slate-900 w-full">
+        <div className="h-1 bg-slate-100 w-full">
           <div
-            className="h-full bg-gradient-to-r from-amber-500 to-emerald-400 transition-all duration-300"
+            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300"
             style={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
           />
         </div>
 
         {/* Body Content */}
-        <div className="p-5 flex-1">{step.content}</div>
+        <div className="p-5 sm:p-6 flex-1">{step.content}</div>
 
         {/* Footer */}
-        <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+        <div className="px-5 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
           {currentStep > 0 ? (
             <button
               onClick={() => {
                 sound.playClick();
                 setCurrentStep((prev) => prev - 1);
               }}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-200 cursor-pointer transition-colors"
             >
               上一步
             </button>
@@ -188,10 +191,19 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({
           <button
             onClick={handleNext}
             disabled={isFinishing}
-            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-amber-500/20 active:scale-95 transition-transform cursor-pointer"
+            className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-sm shadow-indigo-200 flex items-center gap-2 cursor-pointer active:scale-95 transition-all"
           >
-            <span>{isLast ? '領取獎勵並開始冒險 🚀' : '下一步'}</span>
-            {!isLast && <ArrowRight className="w-4 h-4" />}
+            {isLast ? (
+              <>
+                <Check className="w-4 h-4 stroke-[3]" />
+                <span>{isFinishing ? '正在領取獎勵...' : '完成教學並領取 1,000 金幣'}</span>
+              </>
+            ) : (
+              <>
+                <span>下一步</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </div>
       </div>

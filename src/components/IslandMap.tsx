@@ -138,8 +138,8 @@ export const IslandMap: React.FC<IslandMapProps> = ({
               {b.type === 'boutique' && <ShoppingBag className="w-5 h-5 text-[#38bdf8]" />}
             </div>
 
-            {/* Hover Tooltip Japanese Wooden Plaque */}
-            <div className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-1 rounded-xl bg-[#201109]/95 text-[11px] font-black text-[#fef08a] border-2 border-[#b45309] shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none font-serif tracking-wider">
+            {/* Hover Tooltip Clean Light Plaque */}
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-1 rounded-xl bg-white/95 text-[11px] font-bold text-slate-800 border border-slate-200 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none font-sans tracking-wide">
               {b.name}
             </div>
           </div>
@@ -163,13 +163,13 @@ export const IslandMap: React.FC<IslandMapProps> = ({
                 height: house.height * TILE_SIZE,
               }}
             >
-              {/* Japanese Showa Wood Plaque House Owner Badge floating over roof */}
-              <div className="absolute -top-7 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 bg-[#201109]/95 backdrop-blur-md rounded-full border-2 border-[#b45309] shadow-2xl text-[11px] whitespace-nowrap pointer-events-auto font-serif tracking-wider">
-                <span className="font-bold text-[#fef08a] flex items-center gap-1">
-                  <Home className="w-3.5 h-3.5 text-amber-400" />
+              {/* Clean Light Modern House Owner Badge floating over roof */}
+              <div className="absolute -top-7 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 bg-white/95 backdrop-blur-md rounded-full border border-slate-200/90 shadow-lg text-[11px] whitespace-nowrap pointer-events-auto font-sans tracking-wide">
+                <span className="font-bold text-slate-800 flex items-center gap-1">
+                  <Home className="w-3.5 h-3.5 text-indigo-600" />
                   {house.ownerName} 之宅
                 </span>
-                <span className="px-1.5 py-0.2 rounded-full bg-[#991b1b]/80 border border-[#f59e0b] text-[#fef08a] font-mono text-[9px] font-bold">
+                <span className="px-1.5 py-0.2 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 font-mono text-[9px] font-bold">
                   Lv.{house.level || 1}
                 </span>
                 {house.isSelf && onOpenUpgrade && (
@@ -178,7 +178,7 @@ export const IslandMap: React.FC<IslandMapProps> = ({
                       e.stopPropagation();
                       onOpenUpgrade();
                     }}
-                    className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black rounded-full text-[9px] cursor-pointer shadow-sm active:scale-95 transition-transform"
+                    className="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-full text-[9px] cursor-pointer shadow-sm active:scale-95 transition-all"
                   >
                     升級
                   </button>
@@ -191,7 +191,7 @@ export const IslandMap: React.FC<IslandMapProps> = ({
                   e.stopPropagation();
                   onEnterHouse?.(house);
                 }}
-                className="absolute bottom-0 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#b45309]/90 hover:bg-[#d97706] text-[#fef08a] font-serif font-black text-[10px] rounded-full animate-pulse cursor-pointer pointer-events-auto flex items-center justify-center gap-1 shadow-lg border-2 border-[#fef08a]"
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 px-3 py-1 bg-white/95 hover:bg-indigo-50 text-indigo-700 font-bold text-[10px] rounded-full animate-bounce-gentle cursor-pointer pointer-events-auto flex items-center justify-center gap-1 shadow-md border border-indigo-200"
                 title={`進入 ${house.ownerName} 的玄關`}
               >
                 進入玄關 🚪
@@ -200,16 +200,15 @@ export const IslandMap: React.FC<IslandMapProps> = ({
           );
         })}
 
-        {/* ================= 4. LOCAL PLAYER SPRITE (WITH OCCLUSION DEPTH) ================= */}
+        {/* ================= 4. LOCAL PLAYER SPRITE (SMOOTH 60FPS WITH OCCLUSION DEPTH) ================= */}
         <div
-          className={`absolute z-30 pointer-events-none will-change-transform transition-all duration-150 ${
+          className={`absolute top-0 left-0 z-30 pointer-events-none will-change-transform ${
             isLocalBehind
-              ? 'opacity-70 contrast-125 brightness-110 drop-shadow-[0_0_12px_rgba(254,240,138,0.95)]'
+              ? 'opacity-75 contrast-125 brightness-110 drop-shadow-[0_0_14px_rgba(255,255,255,0.95)]'
               : ''
           }`}
           style={{
-            left: selfX * TILE_SIZE + (TILE_SIZE - 64) / 2,
-            top: selfY * TILE_SIZE + (TILE_SIZE - 64) / 2 - 8,
+            transform: `translate3d(${selfX * TILE_SIZE + (TILE_SIZE - 64) / 2}px, ${selfY * TILE_SIZE + (TILE_SIZE - 64) / 2 - 8}px, 0)`,
           }}
         >
           <CharacterSprite
@@ -234,14 +233,13 @@ export const IslandMap: React.FC<IslandMapProps> = ({
                 e.stopPropagation();
                 onPlayerClick?.(player);
               }}
-              className={`absolute z-30 transition-[left,top] duration-150 linear will-change-transform cursor-pointer ${
+              className={`absolute top-0 left-0 z-30 transition-transform duration-150 linear will-change-transform cursor-pointer ${
                 isRemoteBehind
-                  ? 'opacity-70 contrast-125 brightness-110 drop-shadow-[0_0_12px_rgba(254,240,138,0.95)]'
+                  ? 'opacity-75 contrast-125 brightness-110 drop-shadow-[0_0_14px_rgba(255,255,255,0.95)]'
                   : ''
               }`}
               style={{
-                left: player.x * TILE_SIZE + (TILE_SIZE - 64) / 2,
-                top: player.y * TILE_SIZE + (TILE_SIZE - 64) / 2 - 8,
+                transform: `translate3d(${player.x * TILE_SIZE + (TILE_SIZE - 64) / 2}px, ${player.y * TILE_SIZE + (TILE_SIZE - 64) / 2 - 8}px, 0)`,
               }}
             >
               <CharacterSprite

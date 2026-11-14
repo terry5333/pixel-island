@@ -199,11 +199,48 @@ export function isIslandWalkable(x: number, y: number, activeHouses: ActiveHouse
     if (!isFestivalEntrance) return false;
   }
 
-  // 6. Cherry Blossom Trees & Rocks (Natural Obstacles)
-  if (Math.hypot(x - 26.5, y - 24.2) < 1.5) return false; // Large Sakura tree
-  if (x >= 8.0 && x <= 13.5 && y >= 2.5 && y <= 9.0) return false; // Mountain forest grove
+  // 6. Cherry Blossom & Pine Trees (Trunks Colliders)
+  // Sakura Trees trunks
+  if (Math.hypot(x - 26.8, y - 25.0) < 1.3) return false; // Sakura Tree 1 (cliffside near bridge)
+  if (Math.hypot(x - 23.5, y - 4.2) < 1.2) return false;  // Sakura Tree 2 (top shore)
+  if (Math.hypot(x - 13.8, y - 3.8) < 1.2) return false;  // Sakura Tree 3 (top-left shore)
+  if (Math.hypot(x - 9.0, y - 11.5) < 1.2) return false;  // Sakura Tree 4 (left beach sand)
+  if (Math.hypot(x - 8.8, y - 17.0) < 1.2) return false;  // Sakura Tree 5 (bottom-left sand edge)
+  if (Math.hypot(x - 54.2, y - 18.5) < 1.3) return false; // Sakura Tree 6 (right of house 3)
 
-  // 7. Building Footprints & Doorways
+  // Pine tree groves & dense pine clusters
+  if (x >= 10.0 && x <= 13.0 && y >= 19.5 && y <= 23.5) return false; // Left coast pines
+  if (x >= 17.5 && x <= 20.5 && y >= 15.5 && y <= 18.5) return false; // Pines near river
+  if (x >= 55.5 && x <= 58.5 && y >= 7.5 && y <= 12.5) return false;  // Pines right of casino
+  if (x >= 43.5 && x <= 47.5 && y >= 1.5 && y <= 3.5) return false;   // Pines top cliff
+
+  // 7. Rocks & Reefs (海灘與礁石實體障礙)
+  if (x >= 11.0 && x <= 15.5 && y >= 27.5 && y <= 32.0) return false; // Sea rocks bottom-left
+  if (x >= 18.0 && x <= 22.5 && y >= 29.0 && y <= 33.5) return false; // Waterfall cliff rocks
+  if (x >= 52.5 && x <= 58.5 && y >= 24.0 && y <= 30.0) return false; // Bottom-right coast rocks
+  if (x >= 3.5 && x <= 7.0 && y >= 9.5 && y <= 13.0) return false;    // Top-left sea rocks
+  if (Math.hypot(x - 14.8, y - 19.8) < 0.9) return false;              // Shoreline rock near pier
+  if (Math.hypot(x - 22.8, y - 26.5) < 0.9) return false;              // Shoreline rock near waterfall
+  if (Math.hypot(x - 53.5, y - 22.5) < 0.9) return false;              // Shoreline rock bottom right
+
+  // 8. Visible Island Fixtures & Obstacles
+  // Torii gate posts (passable through center x: 33.6 - 36.4)
+  if (Math.hypot(x - 32.8, y - 24.8) < 0.6) return false;
+  if (Math.hypot(x - 37.2, y - 24.8) < 0.6) return false;
+  if (x >= 55.0 && x <= 57.5 && y >= 14.5 && y <= 16.0) return false; // East Torii
+
+  // Vending machines & benches
+  if (x >= 26.5 && x <= 27.8 && y >= 12.8 && y <= 14.2) return false; // Crossroads vending machine
+  if (x >= 38.2 && x <= 39.5 && y >= 25.0 && y <= 26.2) return false; // Residential vending machine
+  if (x >= 23.5 && x <= 25.5 && y >= 13.0 && y <= 14.2) return false; // River bench
+  if (x >= 14.5 && x <= 16.5 && y >= 17.0 && y <= 18.2) return false; // Beach path bench
+
+  // Stone lanterns (石燈籠)
+  if (Math.hypot(x - 12.5, y - 19.5) < 0.7) return false;
+  if (Math.hypot(x - 19.5, y - 25.0) < 0.7) return false;
+  if (Math.hypot(x - 33.5, y - 18.0) < 0.7) return false;
+
+  // 9. Building Footprints & Doorways
   for (const b of BUILDINGS) {
     // Doorway entrance is always accessible!
     if (Math.hypot(x - b.doorX, y - b.doorY) <= 1.5) {
@@ -215,7 +252,7 @@ export function isIslandWalkable(x: number, y: number, activeHouses: ActiveHouse
     }
   }
 
-  // 8. Active Player Houses Footprints & Doorways
+  // 10. Active Player Houses Footprints & Doorways
   for (const h of activeHouses) {
     if (Math.hypot(x - h.doorX, y - h.doorY) <= 1.5) {
       return true;
@@ -230,10 +267,32 @@ export function isIslandWalkable(x: number, y: number, activeHouses: ActiveHouse
 
 // Detect if player is standing behind an obstacle/canopy (for depth silhouette)
 export function isPlayerBehindObstacle(x: number, y: number): boolean {
-  if (y >= 8.0 && y <= 12.2 && x >= 13.5 && x <= 25.0) return true; // Kimono shop eaves
-  if (y >= 10.0 && y <= 15.0 && x >= 44.5 && x <= 55.5) return true; // Casino neon roof eaves
-  if (y >= 21.0 && y <= 25.5 && x >= 24.5 && x <= 28.5) return true; // Sakura tree canopy
-  if (y >= 21.5 && y <= 23.5 && x >= 31.5 && x <= 34.5) return true; // Torii gate beam
+  // Commercial roofs & eaves
+  if (y >= 7.5 && y <= 12.2 && x >= 13.5 && x <= 25.0) return true; // Kimono shop eaves
+  if (y >= 9.5 && y <= 15.0 && x >= 44.5 && x <= 56.0) return true; // Casino neon roof eaves
+
+  // Residential roofs
+  if (y >= 17.5 && y <= 22.0 && x >= 26.0 && x <= 33.5) return true; // House 1 roof
+  if (y >= 17.0 && y <= 22.0 && x >= 35.0 && x <= 44.5) return true; // House 2 roof
+  if (y >= 17.0 && y <= 22.0 && x >= 45.5 && x <= 52.5) return true; // House 3 roof
+
+  // Sakura tree canopies (standing under/behind upper blossom branches)
+  if (y >= 22.0 && y <= 25.2 && x >= 24.8 && x <= 28.8) return true; // Sakura 1
+  if (y >= 15.5 && y <= 19.0 && x >= 52.0 && x <= 56.5) return true; // Sakura 6
+  if (y >= 14.5 && y <= 17.5 && x >= 7.0 && x <= 11.0) return true;  // Sakura 5
+  if (y >= 9.0 && y <= 12.0 && x >= 7.0 && x <= 11.0) return true;   // Sakura 4
+  if (y >= 2.0 && y <= 5.0 && x >= 12.0 && x <= 16.0) return true;   // Sakura 3
+  if (y >= 2.0 && y <= 5.0 && x >= 21.5 && x <= 25.5) return true;   // Sakura 2
+
+  // Pine tree canopies
+  if (y >= 18.0 && y <= 22.0 && x >= 9.5 && x <= 13.5) return true;
+  if (y >= 14.0 && y <= 17.0 && x >= 17.0 && x <= 21.0) return true;
+  if (y >= 6.5 && y <= 12.0 && x >= 55.0 && x <= 59.0) return true;
+
+  // Torii gate top beams
+  if (y >= 23.0 && y <= 25.0 && x >= 32.5 && x <= 37.5) return true;
+  if (y >= 13.5 && y <= 15.5 && x >= 54.5 && x <= 58.0) return true;
+
   return false;
 }
 

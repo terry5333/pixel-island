@@ -64,30 +64,30 @@ export const FriendPanel: React.FC<FriendPanelProps> = ({
   };
 
   const tabClass = (t: Tab) =>
-    `flex-1 py-1.5 text-[11px] font-bold transition-colors ${
+    `flex-1 py-2 text-xs font-bold transition-all ${
       tab === t
-        ? 'bg-slate-700 text-amber-300'
-        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+        ? 'bg-white text-indigo-600 border-b-2 border-indigo-600 shadow-2xs'
+        : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
     }`;
 
   return (
-    <div className="fixed right-0 top-0 h-full z-40 flex flex-col w-72 bg-[#181425] border-l-2 border-slate-700 shadow-pixel-lg">
+    <div className="fixed right-0 top-0 h-full z-40 flex flex-col w-72 sm:w-80 bg-white border-l border-slate-200 shadow-2xl font-sans">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-slate-950 border-b border-slate-800">
+      <div className="flex items-center justify-between px-4 py-3.5 bg-slate-50 border-b border-slate-200">
         <div className="flex items-center gap-2">
-          <Users className="w-4 h-4 text-cyan-400" />
-          <span className="font-arcade text-xs text-amber-400">好友系統</span>
+          <Users className="w-4 h-4 text-indigo-600" />
+          <span className="font-bold text-sm text-slate-800">島民好友系統</span>
         </div>
         <button
           onClick={onClose}
-          className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white"
+          className="p-1 hover:bg-slate-200 rounded-full text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-800">
+      <div className="flex bg-slate-50 border-b border-slate-200">
         <button className={tabClass('friends')} onClick={() => setTab('friends')}>
           👥 好友 ({friends.length})
         </button>
@@ -100,13 +100,13 @@ export const FriendPanel: React.FC<FriendPanelProps> = ({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+      <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50/50">
         {/* --- Friends Tab --- */}
         {tab === 'friends' && (
           <>
             {friends.length === 0 ? (
-              <div className="text-center text-slate-500 text-xs mt-8">
-                還沒有好友，去搜尋玩家吧！
+              <div className="text-center text-slate-400 text-xs mt-10">
+                目前尚無好友，去搜尋或點擊島民加好友吧！
               </div>
             ) : (
               friends.map((f) => {
@@ -115,20 +115,20 @@ export const FriendPanel: React.FC<FriendPanelProps> = ({
                 return (
                   <div
                     key={f.uid}
-                    className="flex items-center justify-between p-2 bg-slate-900 rounded border border-slate-800"
+                    className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-slate-200 shadow-2xs"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <span
                         className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                          isOnline ? 'bg-emerald-400' : 'bg-slate-600'
+                          isOnline ? 'bg-emerald-500' : 'bg-slate-300'
                         }`}
                       />
                       <div className="min-w-0">
-                        <div className="text-xs font-bold text-white truncate">
+                        <div className="text-xs font-bold text-slate-800 truncate">
                           {f.displayName}
                         </div>
-                        <div className="text-[10px] text-slate-500">
-                          {isOnline ? '● 線上' : '○ 離線'}
+                        <div className="text-[10px] text-slate-400">
+                          {isOnline ? '● 在線中' : '○ 離線'}
                         </div>
                       </div>
                     </div>
@@ -137,17 +137,17 @@ export const FriendPanel: React.FC<FriendPanelProps> = ({
                         <button
                           onClick={() => onVisitHome(presence)}
                           title="拜訪小屋"
-                          className="p-1 hover:bg-slate-700 rounded text-amber-400"
+                          className="p-1 hover:bg-slate-100 rounded-lg text-amber-500 cursor-pointer"
                         >
-                          <Home className="w-3.5 h-3.5" />
+                          <Home className="w-4 h-4" />
                         </button>
                       )}
                       <button
                         onClick={() => handleRemoveFriend(f.uid)}
                         title="刪除好友"
-                        className="p-1 hover:bg-red-900 rounded text-slate-500 hover:text-red-400"
+                        className="p-1 hover:bg-rose-50 rounded-lg text-slate-400 hover:text-rose-500 cursor-pointer"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -161,27 +161,27 @@ export const FriendPanel: React.FC<FriendPanelProps> = ({
         {tab === 'requests' && (
           <>
             {requests.length === 0 ? (
-              <div className="text-center text-slate-500 text-xs mt-8">
-                目前沒有好友申請
+              <div className="text-center text-slate-400 text-xs mt-10">
+                目前沒有新的好友申請
               </div>
             ) : (
               requests.map((r) => (
                 <div
                   key={r.fromUid}
-                  className="p-2 bg-slate-900 rounded border border-slate-700"
+                  className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs"
                 >
-                  <div className="text-xs font-bold text-white mb-1">{r.fromName}</div>
-                  <div className="text-[10px] text-slate-500 mb-2">想加你為好友</div>
-                  <div className="flex gap-1.5">
+                  <div className="text-xs font-bold text-slate-800 mb-0.5">{r.fromName}</div>
+                  <div className="text-[10px] text-slate-400 mb-2">請求新增你為好友</div>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => handleAccept(r.fromUid)}
-                      className="flex-1 py-1 text-[11px] font-bold bg-emerald-700 hover:bg-emerald-600 text-white rounded"
+                      className="flex-1 py-1 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-2xs cursor-pointer"
                     >
                       接受
                     </button>
                     <button
                       onClick={() => handleReject(r.fromUid)}
-                      className="flex-1 py-1 text-[11px] font-bold bg-slate-700 hover:bg-slate-600 text-slate-200 rounded"
+                      className="flex-1 py-1 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg cursor-pointer"
                     >
                       拒絕
                     </button>
@@ -197,36 +197,36 @@ export const FriendPanel: React.FC<FriendPanelProps> = ({
           <>
             <input
               type="text"
-              placeholder="搜尋線上玩家名稱..."
+              placeholder="搜尋線上島民名稱..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-2 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+              className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 shadow-2xs"
             />
-            <div className="space-y-1.5 mt-1">
+            <div className="space-y-1.5 mt-2">
               {onlinePlayers.length === 0 ? (
-                <div className="text-center text-slate-500 text-xs mt-6">
-                  {searchQuery ? '找不到符合的玩家' : '沒有其他線上玩家'}
+                <div className="text-center text-slate-400 text-xs mt-8">
+                  {searchQuery ? '找不到符合名稱的玩家' : '目前沒有其他線上玩家'}
                 </div>
               ) : (
                 onlinePlayers.map((p) => (
                   <div
                     key={p.uid}
-                    className="flex items-center justify-between p-2 bg-slate-900 rounded border border-slate-800"
+                    className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-slate-200 shadow-2xs"
                   >
                     <div>
-                      <div className="text-xs font-bold text-white">{p.displayName}</div>
-                      <div className="text-[10px] text-emerald-400">● 線上中</div>
+                      <div className="text-xs font-bold text-slate-800">{p.displayName}</div>
+                      <div className="text-[10px] text-emerald-600 font-medium">● 線上遊玩中</div>
                     </div>
                     <button
                       onClick={() => handleSendRequest(p.uid, p.displayName)}
                       disabled={sentUids.has(p.uid)}
-                      className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold ${
+                      className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                         sentUids.has(p.uid)
-                          ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                          : 'bg-cyan-700 hover:bg-cyan-600 text-white'
+                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xs'
                       }`}
                     >
-                      <UserPlus className="w-3 h-3" />
+                      <UserPlus className="w-3.5 h-3.5" />
                       {sentUids.has(p.uid) ? '已送出' : '加好友'}
                     </button>
                   </div>
@@ -240,7 +240,6 @@ export const FriendPanel: React.FC<FriendPanelProps> = ({
   );
 };
 
-/** Badge showing pending friend request count — used on the toggle button */
 export const FriendBadge: React.FC<{ currentUid: string; onClick: () => void }> = ({
   currentUid,
   onClick,
@@ -257,12 +256,12 @@ export const FriendBadge: React.FC<{ currentUid: string; onClick: () => void }> 
   return (
     <button
       onClick={onClick}
-      className="relative p-1.5 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-200 transition-colors"
+      className="relative p-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-full text-slate-600 shadow-2xs transition-colors cursor-pointer"
       title="好友系統"
     >
-      <Bell className="w-3.5 h-3.5 text-cyan-400" />
+      <Bell className="w-4 h-4 text-indigo-600" />
       {count > 0 && (
-        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+        <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
           {count > 9 ? '9+' : count}
         </span>
       )}

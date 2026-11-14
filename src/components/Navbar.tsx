@@ -51,21 +51,22 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   const houseLevel = user?.houseLevel || 1;
+  const safeCoins = Math.max(0, user?.coins || 0);
 
   return (
     <>
-      {/* ================= SHOWA JAPANESE RETRO TOP HUD (日式昭和和風頂部導航) ================= */}
-      <header className="fixed top-2.5 inset-x-2.5 sm:inset-x-4 z-40 flex items-center justify-between pointer-events-none select-none font-serif">
-        {/* Left Japanese Wooden Plaque (木札風格招牌) */}
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-[#24130a]/95 backdrop-blur-md rounded-2xl border-2 border-[#8b4513] shadow-[0_4px_16px_rgba(0,0,0,0.8)] pointer-events-auto">
-          <span className="text-base">🏮</span>
-          <span className="text-[#fef08a] font-black text-xs sm:text-sm tracking-wider drop-shadow">
+      {/* ================= CLEAN LIGHT MODERN JAPANESE TOP HUD ================= */}
+      <header className="fixed top-2.5 inset-x-2.5 sm:inset-x-4 z-40 flex items-center justify-between pointer-events-none select-none font-sans">
+        {/* Left Clean Light Island Badge */}
+        <div className="flex items-center gap-2 px-3.5 py-1.5 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-md pointer-events-auto">
+          <span className="text-base">🌸</span>
+          <span className="text-slate-800 font-black text-xs sm:text-sm tracking-wide">
             昭和・櫻花島
           </span>
           {user && (
-            <div className="flex items-center gap-1.5 pl-2 border-l border-[#8b4513]">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="truncate max-w-[85px] sm:max-w-[120px] font-bold text-[#f5ebd7] text-[11px] bg-[#3a1d10] px-2 py-0.5 rounded border border-[#6b3518]">
+            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-200">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="truncate max-w-[85px] sm:max-w-[120px] font-bold text-slate-700 text-xs bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
                 {user.displayName}
               </span>
             </div>
@@ -76,23 +77,23 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
           {user && (
             <>
-              {/* Gold Coins Plaque (千兩小判金幣匣) */}
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#3a1d10]/95 backdrop-blur-md rounded-2xl border-2 border-[#b45309] shadow-md text-xs font-bold text-[#fde047] font-mono">
-                <Coins className="w-3.5 h-3.5 text-[#fbbf24] shrink-0" />
-                <span className="tracking-wide">{user.coins.toLocaleString()} 兩</span>
+              {/* Gold Coins Pill */}
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-2xl border border-amber-200 shadow-sm text-xs font-bold text-amber-700 font-mono">
+                <Coins className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span className="tracking-wide">{safeCoins.toLocaleString()}</span>
               </div>
 
-              {/* House Upgrade Japanese Plaque */}
+              {/* House Upgrade Pill */}
               <button
                 onClick={() => {
                   sound.playClick();
                   onOpenHouseUpgrade();
                 }}
-                className="hidden xs:flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#991b1b] to-[#7f1d1d] hover:from-[#b91c1c] hover:to-[#991b1b] text-[#fef08a] font-bold text-[11px] rounded-2xl shadow-md active:scale-95 transition-all cursor-pointer border-2 border-[#f59e0b]"
+                className="hidden xs:flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs rounded-2xl shadow-sm active:scale-95 transition-all cursor-pointer"
                 title="開啟房屋升級工坊"
               >
                 <span>🏡</span>
-                <span>邸宅 Lv.{houseLevel} 普請</span>
+                <span>Lv.{houseLevel} 升級</span>
               </button>
 
               {/* Friends Panel Toggle Button */}
@@ -101,12 +102,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                   sound.playClick();
                   onToggleFriends();
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#3a1d10]/95 hover:bg-[#4a2716] text-[#f5ebd7] text-[11px] font-bold rounded-2xl border-2 border-[#8b4513] shadow-md active:scale-95 transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white/95 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-2xl border border-slate-200 shadow-sm active:scale-95 transition-all cursor-pointer"
                 title="島民名冊"
               >
-                <Users className="w-3.5 h-3.5 text-[#fde047]" />
-                <span className="hidden sm:inline">島民帳</span>
-                <span className="text-[10px] px-1.5 bg-[#201109] text-[#fbbf24] border border-[#a16207] rounded-full font-mono">
+                <Users className="w-3.5 h-3.5 text-indigo-600" />
+                <span className="hidden sm:inline">島民名冊</span>
+                <span className="text-[10px] px-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full font-mono font-bold">
                   {onlineCount}
                 </span>
               </button>
@@ -116,10 +117,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Sound Mute Toggle */}
           <button
             onClick={toggleSound}
-            className="p-2 bg-[#3a1d10]/95 hover:bg-[#4a2716] rounded-2xl text-[#fde047] border-2 border-[#8b4513] shadow-md transition-colors cursor-pointer"
+            className="p-2 bg-white/95 hover:bg-slate-50 rounded-2xl text-slate-700 border border-slate-200 shadow-sm transition-colors cursor-pointer"
             title={muted ? '開啟音效' : '靜音'}
           >
-            {muted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
+            {muted ? <VolumeX className="w-4 h-4 text-rose-500" /> : <Volume2 className="w-4 h-4 text-emerald-600" />}
           </button>
 
           {/* Drawer Menu Button */}
@@ -128,56 +129,56 @@ export const Navbar: React.FC<NavbarProps> = ({
               sound.playClick();
               setIsMenuOpen(!isMenuOpen);
             }}
-            className="p-2 bg-[#3a1d10]/95 hover:bg-[#4a2716] rounded-2xl text-[#fef08a] border-2 border-[#b45309] shadow-md transition-colors cursor-pointer"
+            className="p-2 bg-white/95 hover:bg-slate-50 rounded-2xl text-slate-800 border border-slate-200 shadow-sm transition-colors cursor-pointer"
             title="功能目錄"
           >
-            {isMenuOpen ? <X className="w-4 h-4 text-amber-300" /> : <Menu className="w-4 h-4" />}
+            {isMenuOpen ? <X className="w-4 h-4 text-indigo-600" /> : <Menu className="w-4 h-4" />}
           </button>
         </div>
       </header>
 
-      {/* ================= SHOWA JAPANESE TEA ROOM DRAWER (日式茶屋風格滑出選單) ================= */}
+      {/* ================= CLEAN LIGHT THEME DRAWER ================= */}
       {isMenuOpen && (
         <div
           onClick={() => setIsMenuOpen(false)}
-          className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-fade-in font-serif"
+          className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs animate-fade-in font-sans"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-72 sm:w-80 h-full bg-[#1e0f07] border-l-4 border-[#8b4513] p-5 flex flex-col justify-between shadow-[0_0_50px_rgba(0,0,0,0.9)] select-none text-[#f5ebd7]"
+            className="w-72 sm:w-80 h-full bg-white border-l border-slate-200 p-5 flex flex-col justify-between shadow-2xl select-none text-slate-800"
           >
             {/* Drawer Top */}
             <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between pb-3 border-b-2 border-[#6b3518]">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🏮</span>
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-2xl">🌸</span>
                   <div>
-                    <h3 className="font-black text-sm text-[#fde047] tracking-wider">櫻花島・遊島宿帳</h3>
-                    <p className="text-[10px] text-[#d4a373] tracking-widest">SHOWA RETRO ISLAND</p>
+                    <h3 className="font-black text-sm text-slate-800 tracking-wide">櫻花島・遊客導航</h3>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Showa Retro Island</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsMenuOpen(false)}
-                  className="p-1 hover:bg-[#381c0e] rounded-xl text-[#d4a373] hover:text-white transition-colors"
+                  className="p-1 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* User Identity Plaque */}
+              {/* User Identity Card */}
               {user ? (
-                <div className="p-3 bg-[#2d170b] rounded-2xl border-2 border-[#78350f] flex items-center justify-between shadow-inner">
+                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between shadow-2xs">
                   <div>
-                    <div className="text-[10px] text-[#a88265]">島民登錄證</div>
-                    <div className="font-black text-sm text-[#fef08a] mt-0.5">{user.displayName}</div>
-                    <div className="text-[11px] text-[#f59e0b] font-mono mt-0.5">🪙 所持金：{user.coins.toLocaleString()} 兩</div>
+                    <div className="text-[10px] text-slate-400 font-bold">目前登入身分</div>
+                    <div className="font-black text-sm text-slate-800 mt-0.5">{user.displayName}</div>
+                    <div className="text-xs text-amber-600 font-mono font-bold mt-0.5">🪙 所持金：{safeCoins.toLocaleString()}</div>
                   </div>
                   <button
                     onClick={() => {
                       setIsMenuOpen(false);
                       onOpenAuthModal();
                     }}
-                    className="text-[11px] px-3 py-1.5 bg-[#422211] hover:bg-[#572e18] text-[#fde047] font-bold rounded-xl border border-[#b45309] cursor-pointer"
+                    className="text-xs px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 font-bold rounded-xl border border-slate-200 cursor-pointer shadow-xs"
                   >
                     切換
                   </button>
@@ -188,13 +189,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                     setIsMenuOpen(false);
                     onOpenAuthModal();
                   }}
-                  className="w-full py-2.5 bg-gradient-to-r from-[#b91c1c] to-[#991b1b] hover:from-[#dc2626] hover:to-[#b91c1c] text-[#fef08a] font-black text-xs rounded-2xl shadow-lg border-2 border-[#fef08a] cursor-pointer"
+                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-2xl shadow-sm cursor-pointer"
                 >
-                  🏮 登入櫻花島
+                  登入櫻花島
                 </button>
               )}
 
-              {/* Menu Navigation Links (木札短冊風格選項) */}
+              {/* Menu Navigation Links */}
               <div className="space-y-2 pt-2">
                 {user && (
                   <>
@@ -203,11 +204,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setIsMenuOpen(false);
                         onOpenHouseUpgrade();
                       }}
-                      className="w-full p-3 bg-[#2d170b] hover:bg-[#3d200f] text-[#f5ebd7] text-xs font-bold rounded-2xl flex items-center gap-3 border-2 border-[#5c2b12] hover:border-[#b45309] shadow transition-all cursor-pointer"
+                      className="w-full p-3 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-2xl flex items-center gap-3 border border-slate-200 shadow-2xs transition-all cursor-pointer"
                     >
-                      <Home className="w-4 h-4 text-[#fde047]" />
-                      <span>🏡 邸宅普請（房屋升級工坊）</span>
-                      <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-[#78350f] text-[#fde047] font-mono font-bold border border-[#b45309]">
+                      <Home className="w-4 h-4 text-amber-500" />
+                      <span>🏡 房屋升級工坊</span>
+                      <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-mono font-bold border border-amber-200">
                         Lv.{houseLevel}
                       </span>
                     </button>
@@ -217,10 +218,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setIsMenuOpen(false);
                         onOpenWardrobe();
                       }}
-                      className="w-full p-3 bg-[#2d170b] hover:bg-[#3d200f] text-[#f5ebd7] text-xs font-bold rounded-2xl flex items-center gap-3 border-2 border-[#5c2b12] hover:border-[#b45309] shadow transition-all cursor-pointer"
+                      className="w-full p-3 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-2xl flex items-center gap-3 border border-slate-200 shadow-2xs transition-all cursor-pointer"
                     >
-                      <Shirt className="w-4 h-4 text-[#fb7185]" />
-                      <span>👘 著物衣櫥（個人換裝）</span>
+                      <Shirt className="w-4 h-4 text-rose-500" />
+                      <span>👘 和式著物衣櫃</span>
                     </button>
 
                     <button
@@ -228,10 +229,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setIsMenuOpen(false);
                         onToggleFriends();
                       }}
-                      className="w-full p-3 bg-[#2d170b] hover:bg-[#3d200f] text-[#f5ebd7] text-xs font-bold rounded-2xl flex items-center gap-3 border-2 border-[#5c2b12] hover:border-[#b45309] shadow transition-all cursor-pointer"
+                      className="w-full p-3 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-2xl flex items-center gap-3 border border-slate-200 shadow-2xs transition-all cursor-pointer"
                     >
-                      <Users className="w-4 h-4 text-[#38bdf8]" />
-                      <span>👥 島民名冊（好友名簿）</span>
+                      <Users className="w-4 h-4 text-indigo-500" />
+                      <span>👥 島民好友名冊</span>
                     </button>
                   </>
                 )}
@@ -241,10 +242,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                     setIsMenuOpen(false);
                     onOpenTutorial();
                   }}
-                  className="w-full p-3 bg-[#2d170b] hover:bg-[#3d200f] text-[#f5ebd7] text-xs font-bold rounded-2xl flex items-center gap-3 border-2 border-[#5c2b12] hover:border-[#b45309] shadow transition-all cursor-pointer"
+                  className="w-full p-3 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-2xl flex items-center gap-3 border border-slate-200 shadow-2xs transition-all cursor-pointer"
                 >
-                  <HelpCircle className="w-4 h-4 text-[#4ade80]" />
-                  <span>📜 昭和島遊覽導引指南</span>
+                  <HelpCircle className="w-4 h-4 text-emerald-500" />
+                  <span>📜 櫻花島新手導引指南</span>
                 </button>
 
                 {user?.role === 'admin' && (
@@ -253,25 +254,25 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setIsMenuOpen(false);
                       onOpenAdmin();
                     }}
-                    className="w-full p-3 bg-gradient-to-r from-[#7f1d1d] to-[#450a0a] hover:from-[#991b1b] hover:to-[#5c1111] text-[#fef08a] text-xs font-bold rounded-2xl flex items-center gap-3 border-2 border-[#dc2626] shadow-lg transition-all cursor-pointer"
+                    className="w-full p-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold rounded-2xl flex items-center gap-3 shadow-sm transition-all cursor-pointer"
                   >
-                    <Shield className="w-4 h-4 text-[#fde047]" />
-                    <span>👑 御用管理後台總覽</span>
+                    <Shield className="w-4 h-4 text-amber-300" />
+                    <span>👑 管理員後台控制中心</span>
                   </button>
                 )}
               </div>
             </div>
 
             {/* Drawer Bottom */}
-            <div className="pt-4 border-t-2 border-[#6b3518] space-y-2 text-[11px] text-[#d4a373]">
+            <div className="pt-4 border-t border-slate-100 space-y-2 text-xs text-slate-500">
               <div className="flex items-center justify-between">
-                <span>島內即時人數</span>
-                <span className="font-mono text-[#4ade80] font-black">{onlineCount} 人</span>
+                <span>島內即時在線</span>
+                <span className="font-mono text-emerald-600 font-bold">{onlineCount} 人</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>連線狀態</span>
-                <span className="font-mono text-[#fde047] font-bold">
-                  {isFirebaseConfigured ? '連線良好 🟢' : '本地模擬 🟡'}
+                <span className="font-mono text-slate-700 font-bold">
+                  {isFirebaseConfigured ? '即時連線 🟢' : '本地模擬 🟡'}
                 </span>
               </div>
 
@@ -281,10 +282,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                     setIsMenuOpen(false);
                     onSignOut();
                   }}
-                  className="w-full mt-2 py-2.5 bg-[#2d170b] hover:bg-[#7f1d1d] text-[#f5ebd7] hover:text-[#fef08a] text-xs font-bold rounded-2xl border-2 border-[#5c2b12] flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                  className="w-full mt-2 py-2.5 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 text-xs font-bold rounded-2xl border border-slate-200 hover:border-rose-200 flex items-center justify-center gap-2 cursor-pointer transition-colors"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  <span>門扉登出</span>
+                  <span>登出帳號</span>
                 </button>
               )}
             </div>
