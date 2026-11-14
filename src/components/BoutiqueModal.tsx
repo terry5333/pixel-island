@@ -10,7 +10,7 @@ interface BoutiqueModalProps {
   onClose: () => void;
   user: UserProfile;
   items: Item[];
-  itemsMap: Record<string, Item>;
+  itemsMap?: Record<string, Item>;
   onBuyItem: (item: Item) => Promise<void>;
   onEquipChange: (equipped: EquippedItems) => Promise<void>;
   initialTab?: 'shop' | 'wardrobe';
@@ -21,7 +21,7 @@ export const BoutiqueModal: React.FC<BoutiqueModalProps> = ({
   onClose,
   user,
   items,
-  itemsMap,
+  itemsMap = {},
   onBuyItem,
   onEquipChange,
   initialTab = 'shop',

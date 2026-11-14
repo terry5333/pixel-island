@@ -616,6 +616,7 @@ export const App: React.FC = () => {
           onClose={() => setIsBoutiqueOpen(false)}
           user={currentUser}
           items={items}
+          itemsMap={itemsMap}
           initialTab={boutiqueInitialTab}
           onEquipChange={handleEquipChange}
           onBuyItem={handleBuyItem}

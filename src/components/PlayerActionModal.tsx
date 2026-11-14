@@ -103,7 +103,7 @@ export const PlayerActionModal: React.FC<PlayerActionModalProps> = ({
 
             <button
               onClick={() => {
-                sound.playPop();
+                sound.playClick();
                 onSendWave(player);
                 onClose();
               }}

@@ -140,6 +140,10 @@ class RetroAudioEngine {
     this.playTone(1200, 'sine', 0.1, 0.05, 0.1);
   }
 
+  public playPop() {
+    this.playTone(600, 'sine', 0.05, 0, 0.08);
+  }
+
   public playSuccess() {
     this.playWin();
   }
