@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { sound } from '../../services/audio';
-import { Coins, Sparkles, Trophy, HelpCircle } from 'lucide-react';
+import { Coins, Sparkles, Trophy } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 interface GameSlotMachineProps {
   currentUid: string;
@@ -10,16 +11,15 @@ interface GameSlotMachineProps {
 }
 
 const SYMBOLS = [
-  { id: 'seven', label: '7', color: '#ef4444', payout3: 50, payout2: 2 },
-  { id: 'bar', label: 'BAR', color: '#3b82f6', payout3: 30, payout2: 2 },
-  { id: 'diamond', label: '💎', color: '#06b6d4', payout3: 20, payout2: 2 },
-  { id: 'star', label: '⭐', color: '#facc15', payout3: 15, payout2: 1.5 },
-  { id: 'bell', label: '🔔', color: '#eab308', payout3: 10, payout2: 1.5 },
-  { id: 'cherry', label: '🍒', color: '#f43f5e', payout3: 5, payout2: 1 },
+  { id: 'seven', label: '7', color: '#C62828', payout3: 50, payout2: 2 },
+  { id: 'bar', label: 'BAR', color: '#1A237E', payout3: 30, payout2: 2 },
+  { id: 'diamond', label: '💎', color: '#00695C', payout3: 20, payout2: 2 },
+  { id: 'star', label: '⭐', color: '#F57F17', payout3: 15, payout2: 1.5 },
+  { id: 'bell', label: '🔔', color: '#E65100', payout3: 10, payout2: 1.5 },
+  { id: 'cherry', label: '🍒', color: '#AD1457', payout3: 5, payout2: 1 },
 ];
 
 export const GameSlotMachine: React.FC<GameSlotMachineProps> = ({
-  currentUid,
   userCoins,
   onRewardCoins,
   onDeductCoins,
@@ -31,7 +31,7 @@ export const GameSlotMachine: React.FC<GameSlotMachineProps> = ({
   const [isSpinning, setIsSpinning] = useState(false);
   const [leverPulled, setLeverPulled] = useState(false);
   const [winMessage, setWinMessage] = useState<string | null>(null);
-  const [beaconFlash, setBeaconFlash] = useState(false);
+  const [jackpotWon, setJackpotWon] = useState(false);
 
   const spinIntervalRef = useRef<number | null>(null);
 
@@ -45,190 +45,182 @@ export const GameSlotMachine: React.FC<GameSlotMachineProps> = ({
     if (isSpinning) return;
     if (userCoins < betAmount || userCoins <= 0) {
       sound.playBump();
-      setWinMessage('金幣不足，請調整投注金幣！');
+      setWinMessage('所持金幣不足，請調整投注額！');
       return;
     }
 
-    // Deduct bet safely with non-negative guarantee
     const safeDeduct = Math.min(userCoins, betAmount);
     await onDeductCoins(safeDeduct);
     sound.playClick();
     setWinMessage(null);
-    setBeaconFlash(false);
+    setJackpotWon(false);
     setLeverPulled(true);
     setTimeout(() => setLeverPulled(false), 300);
 
     setIsSpinning(true);
 
-    // Rapid reel cycle animation
-    let counter = 0;
+    const startTime = Date.now();
     spinIntervalRef.current = window.setInterval(() => {
-      counter++;
-      setReel1((prev) => (prev + 1) % SYMBOLS.length);
-      setReel2((prev) => (prev + 2) % SYMBOLS.length);
-      setReel3((prev) => (prev + 3) % SYMBOLS.length);
-      if (counter % 2 === 0) sound.playSlotSpin();
+      setReel1(Math.floor(Math.random() * SYMBOLS.length));
+      setReel2(Math.floor(Math.random() * SYMBOLS.length));
+      setReel3(Math.floor(Math.random() * SYMBOLS.length));
     }, 70);
 
-    // Stop Reel 1 after 1.2s
-    setTimeout(() => {
-      const final1 = Math.floor(Math.random() * SYMBOLS.length);
-      setReel1(final1);
-      sound.playClick();
-    }, 1200);
-
-    // Stop Reel 2 after 1.8s
-    setTimeout(() => {
-      const final2 = Math.random() < 0.35 ? reel1 : Math.floor(Math.random() * SYMBOLS.length);
-      setReel2(final2);
-      sound.playClick();
-    }, 1800);
-
-    // Stop Reel 3 after 2.4s and calculate win
     setTimeout(async () => {
       if (spinIntervalRef.current) clearInterval(spinIntervalRef.current);
-
-      // Controlled odds: generous 28% matching chance for thrilling gameplay
-      let final3: number;
-      if (Math.random() < 0.28) {
-        final3 = reel1;
-      } else {
-        final3 = Math.floor(Math.random() * SYMBOLS.length);
-      }
-      setReel3(final3);
       setIsSpinning(false);
 
-      const sym1 = SYMBOLS[reel1];
-      const sym2 = SYMBOLS[reel2];
-      const sym3 = SYMBOLS[final3];
+      // Determine outcomes with realistic retro slot weights
+      const roll = Math.random();
+      let r1 = Math.floor(Math.random() * SYMBOLS.length);
+      let r2 = Math.floor(Math.random() * SYMBOLS.length);
+      let r3 = Math.floor(Math.random() * SYMBOLS.length);
 
-      if (sym1.id === sym2.id && sym2.id === sym3.id) {
-        // JACKPOT!
+      if (roll < 0.08) {
+        // 8% Jackpot 777!
+        r1 = 0; r2 = 0; r3 = 0;
+      } else if (roll < 0.28) {
+        // 20% Triple Match
+        const matchIdx = Math.floor(Math.random() * SYMBOLS.length);
+        r1 = matchIdx; r2 = matchIdx; r3 = matchIdx;
+      } else if (roll < 0.55) {
+        // 27% Double Match
+        const matchIdx = Math.floor(Math.random() * SYMBOLS.length);
+        r1 = matchIdx; r2 = matchIdx;
+        r3 = (matchIdx + 1 + Math.floor(Math.random() * (SYMBOLS.length - 1))) % SYMBOLS.length;
+      }
+
+      setReel1(r1);
+      setReel2(r2);
+      setReel3(r3);
+
+      const sym1 = SYMBOLS[r1];
+      const sym2 = SYMBOLS[r2];
+      const sym3 = SYMBOLS[r3];
+
+      if (r1 === r2 && r2 === r3) {
+        // Triple Match!
         const win = betAmount * sym1.payout3;
-        sound.playSlotJackpot();
-        setBeaconFlash(true);
-        setWinMessage(`🎉 大獎 JACKPOT！三連【${sym1.label}】贏得 ${win} 金幣！`);
         await onRewardCoins(win);
-      } else if (sym1.id === sym2.id || sym2.id === sym3.id || sym1.id === sym3.id) {
-        // Pair match
-        const matchedSym = sym1.id === sym2.id ? sym1 : sym3;
+        sound.playWin();
+        confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+        setJackpotWon(true);
+        setWinMessage(`🎉 大當標！三連【${sym1.label}】！榮獲 ${win} 金幣！`);
+      } else if (r1 === r2 || r2 === r3 || r1 === r3) {
+        // Double Match
+        const matchedSym = r1 === r2 ? sym1 : r2 === r3 ? sym2 : sym1;
         const win = Math.floor(betAmount * matchedSym.payout2);
-        sound.playCoin();
-        setBeaconFlash(true);
-        setWinMessage(`✨ 恭喜中獎！雙連【${matchedSym.label}】贏得 ${win} 金幣！`);
         await onRewardCoins(win);
+        sound.playBuy();
+        setWinMessage(`✨ 雙連命中！獲贈 ${win} 金幣！`);
       } else {
         sound.playBump();
         setWinMessage('再接再厲！拉動搖桿拚大獎！');
       }
-    }, 2400);
+    }, 2200);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-2 select-none w-full">
-      {/* ================= 16-BIT RETRO SLOT MACHINE CABINET (Ref: media_1794590271141_fa50a12a.jpg) ================= */}
-      <div className="relative w-80 sm:w-96 flex flex-col items-center">
-        {/* Top Flashing Red Siren / Beacon */}
-        <div className="relative flex flex-col items-center z-10 -mb-2">
-          <div
-            className={`w-12 h-10 rounded-t-xl border-3 border-slate-900 transition-all duration-150 ${
-              beaconFlash
-                ? 'bg-rose-500 shadow-[0_0_25px_#f43f5e] scale-110'
-                : 'bg-rose-700 shadow-sm'
-            }`}
-          >
-            <div className="w-full h-2 bg-white/40 rounded-t-lg" />
-            <div className="w-2 h-4 bg-white/60 mx-auto mt-1 rounded-full" />
+    <div className="flex flex-col items-center justify-center p-3 sm:p-5 select-none w-full bg-[#F7F3E9] text-[#2D1E18] font-serif">
+      {/* 1. Header Masthead with Double Border & Noto Serif Typography */}
+      <div className="w-full max-w-lg mb-4 text-center">
+        <div className="text-[10px] sm:text-xs text-[#8D6E63] font-bold tracking-[0.25em] uppercase">
+          - SHOWA RETRO MECHANICAL SLOT MACHINE -
+        </div>
+        <h2 className="text-xl sm:text-2xl font-black tracking-[0.2em] text-[#2D1E18] border-b-4 border-double border-[#5D4037] pb-2">
+          777 昭和機械式拉霸機
+        </h2>
+      </div>
+
+      {/* Main Machine Housing */}
+      <div className="relative w-80 sm:w-96 flex flex-col items-center bg-[#FFFDF9] border-4 border-[#5D4037] shadow-[6px_6px_0px_#5D4037] p-5">
+        {/* Vermilion Stamp on Jackpot */}
+        {jackpotWon && (
+          <div className="absolute top-2 right-2 pointer-events-none z-30">
+            <div
+              className="w-22 h-22 rounded-full border-4 border-double border-[#C62828] flex flex-col items-center justify-center text-[#C62828] font-black tracking-widest animate-stamp"
+              style={{ transform: 'rotate(-12deg)' }}
+            >
+              <span className="text-[9px] border-b border-[#C62828] pb-0.5">昭和遊技所</span>
+              <span className="text-base">大 當 標</span>
+            </div>
           </div>
-          <div className="w-16 h-2 bg-slate-800 border-2 border-slate-900" />
+        )}
+
+        {/* Machine Marquee */}
+        <div className="w-full py-2 bg-[#F7F3E9] border-2 border-[#5D4037] mb-4 text-center shadow-[3px_3px_0px_#5D4037]">
+          <span className="text-xs sm:text-sm font-black tracking-[0.2em] text-[#5D4037]">
+            ★ 昭和拾年・機械遊技特獎機 ★
+          </span>
         </div>
 
-        {/* Main Cabinet Housing (Pixel art Blue-Steel chassis matching attachment) */}
-        <div className="w-full bg-slate-800 border-4 border-slate-900 rounded-2xl shadow-2xl p-4 flex flex-col items-center relative overflow-hidden">
-          {/* Header Marquee Sign */}
-          <div className="w-full py-2 bg-slate-950 rounded-xl border-2 border-amber-400 mb-3 flex items-center justify-center relative overflow-hidden shadow-inner">
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-amber-500/10 animate-pulse" />
-            <span className="text-sm sm:text-base text-amber-300 font-black tracking-widest flex items-center gap-2 drop-shadow-md">
-              <span>★</span> 777 CASINO SLOTS <span>★</span>
+        {/* The 3 Mechanical Reels */}
+        <div className="grid grid-cols-3 gap-3 w-full p-3 bg-[#F7F3E9] border-2 border-dashed border-[#5D4037]">
+          {[reel1, reel2, reel3].map((rIdx, idx) => {
+            const sym = SYMBOLS[rIdx];
+            return (
+              <div
+                key={idx}
+                className="h-28 sm:h-32 bg-[#FFFDF9] border-2 border-[#5D4037] shadow-[3px_3px_0px_#5D4037] flex flex-col items-center justify-center relative overflow-hidden"
+              >
+                {/* Center Payline Guide */}
+                <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-0.5 bg-[#C62828]/30 pointer-events-none" />
+
+                {/* Symbol Display */}
+                <div
+                  className={`text-4xl sm:text-5xl font-black transition-transform duration-75 select-none tracking-tight ${
+                    isSpinning ? 'blur-xs scale-90' : 'scale-100'
+                  }`}
+                  style={{ color: sym.color }}
+                >
+                  {sym.label}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Interactive Mechanical Pull Lever */}
+        <div
+          onClick={handlePullLever}
+          className="absolute -right-5 top-28 sm:top-32 cursor-pointer z-30 group"
+          title="拉動搖桿開始下注！"
+        >
+          <div className="w-6 h-14 bg-[#5D4037] border-2 border-[#2D1E18] flex items-center justify-center shadow-[3px_3px_0px_#2D1E18]">
+            <div
+              className={`w-3.5 bg-[#D7CCC8] border-2 border-[#5D4037] origin-bottom transition-transform duration-200 ${
+                leverPulled ? 'h-10 rotate-45' : 'h-20 group-hover:-rotate-6'
+              }`}
+            >
+              <div className="w-8 h-8 -top-5 -left-2.5 absolute bg-[#C62828] rounded-full border-2 border-[#2D1E18] shadow-md flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="w-2.5 h-2.5 rounded-full bg-white/60 -top-0.5 left-1 absolute" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Win / Result Notice */}
+        <div className="w-full mt-3 min-h-[32px] flex items-center justify-center">
+          {winMessage && (
+            <div className="text-xs sm:text-sm font-black text-[#C62828] text-center border-2 border-dashed border-[#C62828] bg-red-50 px-3 py-1">
+              {winMessage}
+            </div>
+          )}
+        </div>
+
+        {/* Coin Balance & Bet Selectors */}
+        <div className="w-full mt-3 border-t-2 border-double border-[#5D4037] pt-3 flex flex-col gap-2">
+          <div className="flex items-center justify-between text-xs font-bold">
+            <span className="text-[#8D6E63]">受驗生所持金幣：</span>
+            <span className="font-black text-[#2D1E18] font-mono flex items-center gap-1 text-sm">
+              <Coins className="w-4 h-4 text-[#C62828]" />
+              {Math.max(0, userCoins).toLocaleString()}
             </span>
           </div>
 
-          {/* Reel Display Bezel Window */}
-          <div className="w-full bg-slate-950 border-4 border-slate-900 rounded-xl p-3 flex flex-col items-center shadow-inner relative">
-            {/* The 3 Mechanical Reels */}
-            <div className="grid grid-cols-3 gap-2.5 w-full">
-              {[reel1, reel2, reel3].map((rIdx, idx) => {
-                const sym = SYMBOLS[rIdx];
-                return (
-                  <div
-                    key={idx}
-                    className="h-28 sm:h-32 bg-white rounded-xl border-3 border-slate-800 flex flex-col items-center justify-center shadow-inner relative overflow-hidden"
-                  >
-                    {/* Shadow at top and bottom of cylindrical reel */}
-                    <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-slate-400/80 to-transparent pointer-events-none" />
-                    <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-slate-400/80 to-transparent pointer-events-none" />
-
-                    {/* Red Center Payline Guide */}
-                    <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-0.5 bg-rose-500/40 pointer-events-none" />
-
-                    {/* Symbol Display */}
-                    <div
-                      className={`text-3xl sm:text-4xl font-black transition-transform duration-75 select-none ${
-                        isSpinning ? 'blur-xs scale-90' : 'scale-100'
-                      }`}
-                      style={{ color: sym.color }}
-                    >
-                      {sym.label}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Interactive Mechanical Pull Lever (Mounted on the right side) */}
-          <div
-            onClick={handlePullLever}
-            className="absolute -right-3 top-28 sm:top-32 cursor-pointer z-30 group"
-            title="拉動搖桿開始下注！"
-          >
-            {/* Lever Base */}
-            <div className="w-5 h-12 bg-slate-900 rounded-r-lg border-2 border-slate-700 flex items-center justify-center">
-              {/* Lever Shaft */}
-              <div
-                className={`w-3 bg-slate-200 border-2 border-slate-900 rounded origin-bottom transition-transform duration-200 ${
-                  leverPulled ? 'h-10 rotate-45' : 'h-18 group-hover:-rotate-6'
-                }`}
-              >
-                {/* Red Ball Handle */}
-                <div className="w-7 h-7 -top-4 -left-2 absolute bg-rose-600 rounded-full border-2 border-slate-900 shadow-md flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <div className="w-2 h-2 rounded-full bg-white/60 -top-0.5 left-1 absolute" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Result & Feedback Message */}
-          <div className="w-full mt-3 min-h-[32px] flex items-center justify-center">
-            {winMessage && (
-              <div className="text-xs sm:text-sm font-bold text-amber-300 text-center animate-fade-in bg-slate-950 px-3 py-1 rounded-full border border-amber-400/50 shadow">
-                {winMessage}
-              </div>
-            )}
-          </div>
-
-          {/* Bottom Coin Balance & Bet Selector */}
-          <div className="w-full mt-2 bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs text-slate-300 font-medium">
-              <span>所持金幣：</span>
-              <span className="font-bold text-amber-300 font-mono flex items-center gap-1 text-sm">
-                <Coins className="w-4 h-4 text-amber-400" />
-                {Math.max(0, userCoins).toLocaleString()}
-              </span>
-            </div>
-
-            {/* Bet Selector */}
-            <div className="flex items-center gap-1">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-[#8D6E63] font-bold">投入代幣：</span>
+            <div className="flex items-center gap-1.5">
               {[10, 20, 50, 100].map((amt) => (
                 <button
                   key={amt}
@@ -236,10 +228,10 @@ export const GameSlotMachine: React.FC<GameSlotMachineProps> = ({
                     sound.playClick();
                     setBetAmount(amt);
                   }}
-                  className={`px-2 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 text-xs font-black border-2 transition-all cursor-pointer ${
                     betAmount === amt
-                      ? 'bg-amber-500 text-slate-950 border-amber-300 shadow font-extrabold'
-                      : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                      ? 'bg-[#5D4037] text-[#FFFDF9] border-[#2D1E18] shadow-[2px_2px_0px_#2D1E18]'
+                      : 'bg-[#FFFDF9] text-[#5D4037] border-[#5D4037] hover:bg-[#EFEBE4]'
                   }`}
                 >
                   {amt}
@@ -247,36 +239,36 @@ export const GameSlotMachine: React.FC<GameSlotMachineProps> = ({
               ))}
             </div>
           </div>
-
-          {/* Spin Action Button */}
-          <button
-            onClick={handlePullLever}
-            disabled={isSpinning || userCoins < betAmount}
-            className={`w-full mt-3 py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 border shadow-lg transition-transform active:scale-95 cursor-pointer ${
-              isSpinning || userCoins < betAmount
-                ? 'bg-slate-700 text-slate-400 border-slate-600 cursor-not-allowed'
-                : 'bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-white border-amber-300 shadow-amber-500/25'
-            }`}
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>{isSpinning ? '轉動中...' : `拉動搖桿 / 下注 (${betAmount} 金幣)`}</span>
-          </button>
         </div>
+
+        {/* Physical Press Button */}
+        <button
+          onClick={handlePullLever}
+          disabled={isSpinning || userCoins < betAmount}
+          className={`w-full mt-4 py-3 font-black text-xs sm:text-sm tracking-widest border-2 border-[#5D4037] shadow-[4px_4px_0px_#5D4037] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            isSpinning || userCoins < betAmount
+              ? 'bg-[#EFEBE4] text-[#A1887F] cursor-not-allowed'
+              : 'bg-[#C62828] hover:bg-[#B71C1C] text-[#FFFDF9]'
+          }`}
+        >
+          <Sparkles className="w-4 h-4" />
+          <span>{isSpinning ? '滾輪旋轉中...' : `拉動搖桿・投注 (${betAmount} 金幣)`}</span>
+        </button>
       </div>
 
-      {/* Paytable Guide Card (Clean Light Aesthetic) */}
-      <div className="mt-4 w-full max-w-sm p-3.5 bg-white border border-slate-200 rounded-2xl shadow-xs text-xs text-slate-600">
-        <div className="font-bold text-slate-800 mb-2 flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-          <Trophy className="w-4 h-4 text-amber-500" />
-          <span>中獎賠率規則：</span>
+      {/* Paytable Guide Card */}
+      <div className="mt-4 w-full max-w-sm p-4 bg-[#FFFDF9] border-2 border-dashed border-[#5D4037] shadow-[4px_4px_0px_#5D4037] text-xs">
+        <div className="font-black text-[#2D1E18] mb-2 flex items-center gap-1.5 border-b-2 border-double border-[#5D4037] pb-1">
+          <Trophy className="w-4 h-4 text-[#C62828]" />
+          <span>昭和特賞中獎倍率規約：</span>
         </div>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 font-mono">
-          <div className="flex justify-between"><span>7 7 7：</span><span className="text-rose-600 font-bold">50 倍</span></div>
-          <div className="flex justify-between"><span>BAR×3：</span><span className="text-indigo-600 font-bold">30 倍</span></div>
-          <div className="flex justify-between"><span>💎×3：</span><span className="text-cyan-600 font-bold">20 倍</span></div>
-          <div className="flex justify-between"><span>⭐×3：</span><span className="text-amber-500 font-bold">15 倍</span></div>
-          <div className="flex justify-between"><span>🔔×3：</span><span className="text-amber-600 font-bold">10 倍</span></div>
-          <div className="flex justify-between"><span>任意雙連：</span><span className="text-emerald-600 font-bold">1~2 倍</span></div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 font-mono text-[#5D4037] font-bold">
+          <div className="flex justify-between"><span>7 7 7：</span><span className="text-[#C62828] font-black">50 倍</span></div>
+          <div className="flex justify-between"><span>BAR×3：</span><span className="text-[#1A237E] font-black">30 倍</span></div>
+          <div className="flex justify-between"><span>💎×3：</span><span className="text-[#00695C] font-black">20 倍</span></div>
+          <div className="flex justify-between"><span>⭐×3：</span><span className="text-[#F57F17] font-black">15 倍</span></div>
+          <div className="flex justify-between"><span>🔔×3：</span><span className="text-[#E65100] font-black">10 倍</span></div>
+          <div className="flex justify-between"><span>任意雙連：</span><span className="text-[#2E7D32] font-black">1~2 倍</span></div>
         </div>
       </div>
     </div>

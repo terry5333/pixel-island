@@ -1,18 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { ArcadeRoom, UserProfile } from '../../types/game';
 import { dbService } from '../../services/dbService';
 import { sound } from '../../services/audio';
 import confetti from 'canvas-confetti';
-import { Trophy, RefreshCw, Sparkles, Box, User, Bot } from 'lucide-react';
+import { Trophy, Box } from 'lucide-react';
 
 interface GameDotsBoxesProps {
   room: ArcadeRoom;
   currentUser: UserProfile;
 }
 
-const DOTS_COUNT = 5; // 5x5 dots -> 4x4 = 16 boxes
 const BOXES_COUNT = 16;
-const TOTAL_EDGES = 40; // 20 horizontal + 20 vertical
 
 export const GameDotsBoxes: React.FC<GameDotsBoxesProps> = ({ room, currentUser }) => {
   const isHost = currentUser.uid === room.hostUid;
@@ -33,7 +31,6 @@ export const GameDotsBoxes: React.FC<GameDotsBoxesProps> = ({ room, currentUser 
   const myScore = gameState.scores[myUid] || 0;
   const opponentScore = gameState.scores[opponentUid || 'npc_bot'] || 0;
 
-  // Check which boxes are completed by a move
   const checkCompletedBoxes = (
     hEdges: boolean[],
     vEdges: boolean[],
@@ -63,10 +60,8 @@ export const GameDotsBoxes: React.FC<GameDotsBoxesProps> = ({ room, currentUser 
     return { newBoxes, completedCount };
   };
 
-  // Handle clicking an edge
   const handleEdgeClick = async (type: 'h' | 'v', index: number) => {
     if (!isMyTurn || room.winner || isFinished) return;
-
     if (type === 'h' && gameState.horizontalEdges[index]) return;
     if (type === 'v' && gameState.verticalEdges[index]) return;
 
@@ -79,15 +74,13 @@ export const GameDotsBoxes: React.FC<GameDotsBoxesProps> = ({ room, currentUser 
     else newVEdges[index] = true;
 
     const { newBoxes, completedCount } = checkCompletedBoxes(newHEdges, newVEdges, gameState.boxes, myUid);
-
     const newScores = { ...gameState.scores };
     newScores[myUid] = (newScores[myUid] || 0) + completedCount;
 
     if (completedCount > 0) {
-      sound.playBuy();
+      sound.playWin();
     }
 
-    // Rule: If you complete a box, you get another turn! Otherwise pass turn to opponent.
     const keepTurn = completedCount > 0;
     const nextTurn = keepTurn ? myUid : (isAiMode ? 'npc_bot' : opponentUid);
 
@@ -99,8 +92,8 @@ export const GameDotsBoxes: React.FC<GameDotsBoxesProps> = ({ room, currentUser 
       const oppFinalScore = newScores[opponentUid || 'npc_bot'] || 0;
       if (myFinalScore > oppFinalScore) {
         winner = myUid;
-        confetti({ particleCount: 70, spread: 70, origin: { y: 0.6 } });
-        sound.playBuy();
+        confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+        sound.playWin();
         await dbService.rewardCoins(myUid, 100);
       } else if (oppFinalScore > myFinalScore) {
         winner = opponentUid || 'npc_bot';
@@ -122,7 +115,7 @@ export const GameDotsBoxes: React.FC<GameDotsBoxesProps> = ({ room, currentUser 
     });
   };
 
-  // AI Move Loop
+  // AI loop
   useEffect(() => {
     if (!isAiMode || room.winner || isFinished || room.currentTurn !== 'npc_bot') return;
 
@@ -132,11 +125,9 @@ export const GameDotsBoxes: React.FC<GameDotsBoxesProps> = ({ room, currentUser 
       const currentBoxes = [...gameState.boxes];
       const aiUid = 'npc_bot';
 
-      // 1. Try to find any edge that completes a box immediately
       let chosenType: 'h' | 'v' | null = null;
       let chosenIndex = -1;
 
-      // Check horizontal candidates
       for (let i = 0; i < 20; i++) {
         if (!hEdges[i]) {
           const testH = [...hEdges];
@@ -150,7 +141,6 @@ export const GameDotsBoxes: React.FC<GameDotsBoxesProps> = ({ room, currentUser 
         }
       }
 
-      // Check vertical candidates if not found
       if (!chosenType) {
         for (let i = 0; i < 20; i++) {
           if (!vEdges[i]) {
@@ -166,7 +156,6 @@ export const GameDotsBoxes: React.FC<GameDotsBoxesProps> = ({ room, currentUser 
         }
       }
 
-      // 2. Fallback to random unclaimed edge
       if (!chosenType) {
         const availableMoves: { type: 'h' | 'v'; index: number }[] = [];
         for (let i = 0; i < 20; i++) {
@@ -223,196 +212,201 @@ export const GameDotsBoxes: React.FC<GameDotsBoxesProps> = ({ room, currentUser 
     return () => clearTimeout(aiTimer);
   }, [isAiMode, room.currentTurn, room.winner, isFinished]);
 
+  const isWinner = room.status === 'finished' && room.winner === myUid;
+  const isLoser = room.status === 'finished' && room.winner && room.winner !== myUid;
+
   return (
-    <div className="flex flex-col items-center justify-between w-full h-full p-2 sm:p-4 bg-[#0d1322] text-white select-none overflow-y-auto">
-      {/* Top Header */}
-      <div className="w-full max-w-xl bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 flex items-center justify-between shadow-pixel-sm mb-3">
-        <div className="flex items-center gap-2">
-          <Box className="w-5 h-5 text-amber-400" />
-          <span className="font-arcade text-xs sm:text-sm text-amber-300">
-            點線棋 (Dots & Boxes)
-          </span>
+    <div className="flex flex-col h-full bg-[#F7F3E9] text-[#2D1E18] font-serif select-none">
+      {/* 1. Header Masthead with Double Border & Noto Serif Typography */}
+      <div className="p-3 sm:p-4 bg-[#FFFDF9] border-b-4 border-double border-[#5D4037] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[0_2px_4px_rgba(93,64,55,0.06)]">
+        <div>
+          <div className="text-[10px] sm:text-xs text-[#8D6E63] font-bold tracking-[0.25em] uppercase">
+            - TERRITORY GRID EXPANSION PROTOCOL -
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black tracking-[0.2em] text-[#2D1E18] flex items-center gap-2">
+            <span>方格點線棋 領地測繪試驗</span>
+            <span className="text-xs px-2 py-0.5 border border-[#5D4037] bg-[#F7F3E9] text-[#5D4037] font-semibold tracking-normal">
+              5×5 點陣公文圖
+            </span>
+          </h2>
         </div>
 
         {/* Turn Status */}
         <div className="text-xs font-bold">
           {room.winner ? (
-            <span className="text-amber-300 flex items-center gap-1">
-              <Trophy className="w-4 h-4 text-amber-400" />
-              {room.winner === myUid ? '🎉 恭喜獲勝 (+100金幣)！' : '比賽結束！'}
+            <span className="text-[#C62828] font-black flex items-center gap-1">
+              <Trophy className="w-4 h-4 text-[#C62828]" />
+              {room.winner === myUid ? '領地擴張大成！測繪合格（金幣 +100）' : '試驗終結，對手佔得更多領地'}
             </span>
           ) : isMyTurn ? (
-            <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 rounded-full animate-pulse">
-              🎯 你的連線回合
+            <span className="px-3 py-1 bg-[#FFFDF9] border-2 border-[#C62828] text-[#C62828] shadow-[3px_3px_0px_#C62828] animate-pulse">
+              輪到我方劃線！完成封閉方格得連續行動
             </span>
           ) : (
-            <span className="px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/50 rounded-full">
-              ⏳ 對手思考中...
+            <span className="px-3 py-1 bg-[#F7F3E9] border-2 border-dashed border-[#5D4037] text-[#5D4037]">
+              對手繪線思索中，請靜候...
             </span>
           )}
         </div>
       </div>
 
-      {/* Scoreboard Cards */}
-      <div className="flex items-center justify-center gap-4 w-full max-w-md mb-2">
-        {/* My Score */}
-        <div
-          className={`flex-1 p-2.5 rounded-xl border flex items-center justify-between transition-all ${
-            isMyTurn
-              ? 'bg-emerald-950/50 border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
-              : 'bg-slate-900/60 border-slate-700/60'
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-slate-950 font-bold text-xs">
-              我
+      {/* 2. Main Board Area */}
+      <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-5 relative overflow-y-auto">
+        {/* Victory Seal Stamp */}
+        {room.status === 'finished' && (
+          <div className="absolute top-2 right-4 pointer-events-none z-20">
+            <div
+              className={`w-24 h-24 rounded-full border-4 border-double border-[#C62828] flex flex-col items-center justify-center text-[#C62828] font-black tracking-widest ${
+                isWinner ? 'animate-stamp' : 'opacity-85'
+              }`}
+              style={{ transform: 'rotate(-10deg)' }}
+            >
+              <span className="text-[10px] border-b border-[#C62828] pb-0.5">地圖測繪局</span>
+              <span className="text-base sm:text-lg">{isWinner ? '合 格' : isLoser ? '完 局' : '平 局'}</span>
             </div>
-            <span className="text-xs text-slate-200 truncate">{currentUser.displayName}</span>
           </div>
-          <span className="text-xl font-arcade text-emerald-400">{myScore}</span>
-        </div>
+        )}
 
-        {/* VS badge */}
-        <div className="text-xs font-arcade text-slate-500">VS</div>
-
-        {/* Opponent Score */}
-        <div
-          className={`flex-1 p-2.5 rounded-xl border flex items-center justify-between transition-all ${
-            !isMyTurn && !room.winner
-              ? 'bg-rose-950/50 border-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.3)]'
-              : 'bg-slate-900/60 border-slate-700/60'
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-rose-500 flex items-center justify-center text-white font-bold text-xs">
-              {isAiMode ? '🤖' : '敵'}
+        {/* Score Dossier with Double Border */}
+        <div className="flex items-center justify-center gap-4 w-full max-w-md mb-4">
+          <div className={`flex-1 p-2.5 bg-[#FFFDF9] border-2 border-[#5D4037] shadow-[4px_4px_0px_#5D4037] flex items-center justify-between ${isMyTurn ? 'ring-2 ring-[#C62828]' : ''}`}>
+            <div>
+              <div className="text-[10px] text-[#8D6E63] font-bold">我方佔領格數</div>
+              <div className="text-xs font-black text-[#2D1E18] truncate">{currentUser.displayName}</div>
             </div>
-            <span className="text-xs text-slate-200 truncate">
-              {room.guestName || (isAiMode ? '街機小霸王 🤖' : '對手')}
-            </span>
+            <div className="text-3xl font-black text-[#C62828] tracking-tight">{myScore}</div>
           </div>
-          <span className="text-xl font-arcade text-rose-400">{opponentScore}</span>
+
+          <div className="text-sm font-black text-[#5D4037]">對</div>
+
+          <div className={`flex-1 p-2.5 bg-[#FFFDF9] border-2 border-[#5D4037] shadow-[4px_4px_0px_#5D4037] flex items-center justify-between ${!isMyTurn && !room.winner ? 'ring-2 ring-[#1A237E]' : ''}`}>
+            <div>
+              <div className="text-[10px] text-[#8D6E63] font-bold">對手佔領格數</div>
+              <div className="text-xs font-black text-[#2D1E18] truncate">{room.guestName || (isAiMode ? '測繪官 AI' : '對手')}</div>
+            </div>
+            <div className="text-3xl font-black text-[#1A237E] tracking-tight">{opponentScore}</div>
+          </div>
         </div>
-      </div>
 
-      {/* Main 5x5 Dots & 4x4 Boxes Grid Board */}
-      <div className="relative p-6 bg-slate-950/80 border-2 border-slate-800 rounded-2xl shadow-pixel-lg my-auto">
-        <div className="relative" style={{ width: 4 * 60, height: 4 * 60 }}>
-          {/* Claimed Boxes */}
-          {Array.from({ length: BOXES_COUNT }).map((_, idx) => {
-            const r = Math.floor(idx / 4);
-            const c = idx % 4;
-            const ownerUid = gameState.boxes[idx];
-            const isMyBox = ownerUid === myUid;
+        {/* 5x5 Dots & 4x4 Boxes Grid Board */}
+        <div className="relative p-6 sm:p-8 bg-[#FFFDF9] border-4 border-[#5D4037] shadow-[6px_6px_0px_#5D4037] my-auto">
+          <div className="relative" style={{ width: 4 * 60, height: 4 * 60 }}>
+            {/* Claimed Boxes */}
+            {Array.from({ length: BOXES_COUNT }).map((_, idx) => {
+              const r = Math.floor(idx / 4);
+              const c = idx % 4;
+              const ownerUid = gameState.boxes[idx];
+              const isMyBox = ownerUid === myUid;
 
-            return (
-              <div
-                key={`box_${idx}`}
-                className={`absolute transition-all duration-300 flex items-center justify-center rounded-sm ${
-                  ownerUid
-                    ? isMyBox
-                      ? 'bg-emerald-500/30 border border-emerald-400/60 animate-bounce-gentle'
-                      : 'bg-rose-500/30 border border-rose-400/60'
-                    : 'bg-transparent'
-                }`}
-                style={{
-                  left: c * 60 + 8,
-                  top: r * 60 + 8,
-                  width: 44,
-                  height: 44,
-                }}
-              >
-                {ownerUid && (
-                  <span
-                    className={`font-arcade text-xs font-bold ${
-                      isMyBox ? 'text-emerald-300' : 'text-rose-300'
-                    }`}
-                  >
-                    {isMyBox ? '★' : '◆'}
-                  </span>
-                )}
-              </div>
-            );
-          })}
+              return (
+                <div
+                  key={`box_${idx}`}
+                  className={`absolute transition-all duration-300 flex items-center justify-center border-2 border-dashed ${
+                    ownerUid
+                      ? isMyBox
+                        ? 'bg-red-50 border-[#C62828]'
+                        : 'bg-blue-50 border-[#1A237E]'
+                      : 'border-transparent'
+                  }`}
+                  style={{
+                    left: c * 60 + 8,
+                    top: r * 60 + 8,
+                    width: 44,
+                    height: 44,
+                  }}
+                >
+                  {ownerUid && (
+                    <span
+                      className={`text-lg font-black tracking-tight ${
+                        isMyBox ? 'text-[#C62828]' : 'text-[#1A237E]'
+                      }`}
+                    >
+                      {isMyBox ? '領' : '地'}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
 
-          {/* Horizontal Edges (5 rows x 4 cols = 20) */}
-          {Array.from({ length: 20 }).map((_, idx) => {
-            const r = Math.floor(idx / 4);
-            const c = idx % 4;
-            const isClaimed = gameState.horizontalEdges[idx];
+            {/* Horizontal Edges */}
+            {Array.from({ length: 20 }).map((_, idx) => {
+              const r = Math.floor(idx / 4);
+              const c = idx % 4;
+              const isClaimed = gameState.horizontalEdges[idx];
 
-            return (
-              <button
-                key={`h_edge_${idx}`}
-                disabled={isClaimed || !isMyTurn || !!room.winner}
-                onClick={() => handleEdgeClick('h', idx)}
-                className={`absolute transition-all rounded-full ${
-                  isClaimed
-                    ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]'
-                    : isMyTurn
-                    ? 'bg-slate-700/60 hover:bg-emerald-400/80 hover:shadow-[0_0_6px_rgba(52,211,153,0.8)] cursor-pointer'
-                    : 'bg-slate-800/40'
-                }`}
-                style={{
-                  left: c * 60 + 8,
-                  top: r * 60 - 3,
-                  width: 44,
-                  height: 6,
-                }}
-              />
-            );
-          })}
+              return (
+                <button
+                  key={`h_edge_${idx}`}
+                  disabled={isClaimed || !isMyTurn || !!room.winner}
+                  onClick={() => handleEdgeClick('h', idx)}
+                  className={`absolute transition-all rounded-xs ${
+                    isClaimed
+                      ? 'bg-[#5D4037] shadow-[2px_2px_0px_#2D1E18]'
+                      : isMyTurn
+                      ? 'bg-[#D7CCC8] hover:bg-[#A1887F] cursor-pointer'
+                      : 'bg-[#EFEBE4]'
+                  }`}
+                  style={{
+                    left: c * 60 + 8,
+                    top: r * 60 - 3,
+                    width: 44,
+                    height: 6,
+                  }}
+                />
+              );
+            })}
 
-          {/* Vertical Edges (4 rows x 5 cols = 20) */}
-          {Array.from({ length: 20 }).map((_, idx) => {
-            const r = Math.floor(idx / 5);
-            const c = idx % 5;
-            const isClaimed = gameState.verticalEdges[idx];
+            {/* Vertical Edges */}
+            {Array.from({ length: 20 }).map((_, idx) => {
+              const r = Math.floor(idx / 5);
+              const c = idx % 5;
+              const isClaimed = gameState.verticalEdges[idx];
 
-            return (
-              <button
-                key={`v_edge_${idx}`}
-                disabled={isClaimed || !isMyTurn || !!room.winner}
-                onClick={() => handleEdgeClick('v', idx)}
-                className={`absolute transition-all rounded-full ${
-                  isClaimed
-                    ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]'
-                    : isMyTurn
-                    ? 'bg-slate-700/60 hover:bg-emerald-400/80 hover:shadow-[0_0_6px_rgba(52,211,153,0.8)] cursor-pointer'
-                    : 'bg-slate-800/40'
-                }`}
-                style={{
-                  left: c * 60 - 3,
-                  top: r * 60 + 8,
-                  width: 6,
-                  height: 44,
-                }}
-              />
-            );
-          })}
+              return (
+                <button
+                  key={`v_edge_${idx}`}
+                  disabled={isClaimed || !isMyTurn || !!room.winner}
+                  onClick={() => handleEdgeClick('v', idx)}
+                  className={`absolute transition-all rounded-xs ${
+                    isClaimed
+                      ? 'bg-[#5D4037] shadow-[2px_2px_0px_#2D1E18]'
+                      : isMyTurn
+                      ? 'bg-[#D7CCC8] hover:bg-[#A1887F] cursor-pointer'
+                      : 'bg-[#EFEBE4]'
+                  }`}
+                  style={{
+                    left: c * 60 - 3,
+                    top: r * 60 + 8,
+                    width: 6,
+                    height: 44,
+                  }}
+                />
+              );
+            })}
 
-          {/* Dots (5x5 = 25 dots) */}
-          {Array.from({ length: 25 }).map((_, idx) => {
-            const r = Math.floor(idx / 5);
-            const c = idx % 5;
+            {/* Dots */}
+            {Array.from({ length: 25 }).map((_, idx) => {
+              const r = Math.floor(idx / 5);
+              const c = idx % 5;
 
-            return (
-              <div
-                key={`dot_${idx}`}
-                className="absolute w-3.5 h-3.5 rounded-full bg-slate-300 border-2 border-slate-900 pointer-events-none shadow-sm z-20"
-                style={{
-                  left: c * 60 - 4,
-                  top: r * 60 - 4,
-                }}
-              />
-            );
-          })}
+              return (
+                <div
+                  key={`dot_${idx}`}
+                  className="absolute w-3.5 h-3.5 rounded-full bg-[#5D4037] border-2 border-[#2D1E18] pointer-events-none shadow-sm z-20"
+                  style={{
+                    left: c * 60 - 4,
+                    top: r * 60 - 4,
+                  }}
+                />
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      {/* Rules Notice */}
-      <div className="text-[11px] text-slate-400 text-center mt-2">
-        <span>💡 規則：輪流連起兩點間的線條，完成封閉 1×1 方格即可佔領該格並<b>獲得連續行動獎勵</b>！</span>
+        {/* Rule note */}
+        <div className="mt-4 px-4 py-1.5 border-2 border-dashed border-[#5D4037] bg-[#FFFDF9] text-xs text-[#5D4037] text-center">
+          💡 測繪法規：輪流連接兩點間線條，完成封閉方格者即刻佔領該領地，並得連續行動一次。
+        </div>
       </div>
     </div>
   );

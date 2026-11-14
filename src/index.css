@@ -3,80 +3,105 @@
 @tailwind utilities;
 
 @layer base {
-  * {
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-    -webkit-font-smoothing: none;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
   html, body, #root {
-    height: 100%;
+    min-height: 100%;
     width: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden;
     user-select: none;
     -webkit-user-select: none;
     touch-action: manipulation;
+    font-family: 'Noto Serif TC', 'Songti TC', 'SimSun', serif;
+    background-color: #F7F3E9;
+    color: #2D1E18;
   }
 }
 
-/* Retro Pixel UI Helper Classes */
-.pixel-border {
-  border: 3px solid #181425;
-  box-shadow: 
-    inset -3px -3px 0px 0px rgba(0, 0, 0, 0.45),
-    inset 3px 3px 0px 0px rgba(255, 255, 255, 0.25),
-    3px 3px 0px 0px rgba(0, 0, 0, 0.7);
+/* ================= 昭和活版印刷與考卷風格輔助類別 (Showa Vintage Letterpress & Exam Style) ================= */
+
+/* 硬邊復古實色陰影 (Hard Shadows) */
+.shadow-hard-sm {
+  box-shadow: 3px 3px 0px #5D4037;
 }
 
-.pixel-border-gold {
-  border: 3px solid #663931;
-  box-shadow: 
-    inset -3px -3px 0px 0px rgba(143, 86, 59, 0.8),
-    inset 3px 3px 0px 0px rgba(255, 245, 180, 0.6),
-    3px 3px 0px 0px rgba(0, 0, 0, 0.7);
+.shadow-hard {
+  box-shadow: 5px 5px 0px #5D4037;
 }
 
-.pixel-card {
-  background-color: #262b44;
-  border: 3px solid #181425;
-  box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.6);
+.shadow-hard-lg {
+  box-shadow: 7px 7px 0px #5D4037;
 }
 
-.pixel-btn {
-  position: relative;
-  border: 2px solid #120e20;
-  box-shadow: 0 4px 0 #120e20, 0 6px 0 rgba(0, 0, 0, 0.25);
-  transition: transform 0.05s ease, box-shadow 0.05s ease;
+.shadow-hard-crimson {
+  box-shadow: 4px 4px 0px #B71C1C;
 }
 
-.pixel-btn:hover {
-  filter: brightness(1.08);
+.shadow-hard-indigo {
+  box-shadow: 4px 4px 0px #1A237E;
 }
 
-.pixel-btn:active {
-  transform: translateY(3px);
-  box-shadow: 0 1px 0 #120e20;
+/* 實體按鈕物理按壓 (Physical Press Feedback) */
+.btn-press {
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 
-/* Custom Pixel Scrollbars */
+.btn-press:active {
+  transform: translate(2px, 2px);
+  box-shadow: none !important;
+}
+
+/* 印章蓋印進場動態 (Stamp In Animation) */
+@keyframes stampIn {
+  0% {
+    transform: scale(2.2) rotate(16deg);
+    opacity: 0;
+  }
+  75% {
+    transform: scale(0.92) rotate(-4deg);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.animate-stamp {
+  animation: stampIn 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+}
+
+/* 傳統公文水印質感 */
+.paper-texture {
+  background-color: #FFFDF9;
+  background-image: radial-gradient(#5D4037 0.45px, transparent 0.45px);
+  background-size: 20px 20px;
+}
+
+/* 復古羊皮紙網格背景 */
+.paper-grid {
+  background-color: #F7F3E9;
+  background-image: 
+    linear-gradient(to right, rgba(93, 64, 55, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(93, 64, 55, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* 客製化昭和深褐色捲軸 (Vintage Scrollbar) */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #181425;
+  background: #EFE9DB;
+  border-left: 1px solid #D7CCC8;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3a4466;
-  border: 1px solid #120e20;
+  background: #8D6E63;
+  border: 1px solid #5D4037;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #5a6988;
+  background: #5D4037;
 }

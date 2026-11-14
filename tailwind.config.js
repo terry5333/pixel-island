@@ -7,7 +7,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        pixel: ['"DotGothic16"', '"Press Start 2P"', 'monospace', 'sans-serif'],
+        serif: ['"Noto Serif TC"', '"Songti TC"', 'SimSun', 'serif'],
+        sans: ['"Noto Serif TC"', 'sans-serif'],
         arcade: ['"Press Start 2P"', 'monospace', 'sans-serif'],
       },
       colors: {

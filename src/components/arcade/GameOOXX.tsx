@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
-import { ArcadeRoom, GameOOXXState, MoveRecord, UserProfile } from '../../types/game';
+import { ArcadeRoom, GameOOXXState, UserProfile } from '../../types/game';
 import { sound } from '../../services/audio';
-import { Trophy, RefreshCw, Sparkles } from 'lucide-react';
+import { Trophy, RefreshCw, Sparkles, Award } from 'lucide-react';
 
 interface GameOOXXProps {
   room: ArcadeRoom;
@@ -72,7 +72,7 @@ export const GameOOXX: React.FC<GameOOXXProps> = ({
     const currentUid = currentUser.uid;
     const playerHistory = currentUid === room.hostUid ? hostHistory : guestHistory;
 
-    // In infinite mode: if player already has 3 pieces on board, remove oldest!
+    // In infinite mode: if player already has 3 pieces on board, remove oldest
     if (mode === 'infinite' && playerHistory.length >= 3) {
       const oldestMove = playerHistory[0];
       nextBoard[oldestMove.index] = null;
@@ -102,9 +102,9 @@ export const GameOOXX: React.FC<GameOOXXProps> = ({
       return;
     }
 
-    // Check draw (in classic mode only, when all 9 cells filled)
-    if (mode === 'classic' && nextBoard.every((c) => c !== null)) {
-      sound.playLose();
+    // In classic mode, check draw
+    if (mode === 'classic' && nextBoard.every((cell) => cell !== null)) {
+      sound.playBump();
       await onUpdateRoom({
         status: 'finished',
         winner: 'draw',
@@ -117,35 +117,54 @@ export const GameOOXX: React.FC<GameOOXXProps> = ({
       return;
     }
 
-    // AI Turn or Switch player
+    // AI Opponent auto-reply
     if (isAiMode) {
-      // Find empty cells
-      const emptyIndices = nextBoard
+      const aiUid = 'ai_bot';
+      const availableIndices = nextBoard
         .map((val, idx) => (val === null ? idx : null))
         .filter((val): val is number => val !== null);
 
-      if (emptyIndices.length > 0) {
-        // AI chooses move (blocks player or takes win or random)
-        let aiTarget = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+      if (availableIndices.length > 0) {
+        let aiTarget = availableIndices[0];
 
-        // Try to win or block
-        for (const combo of WINNING_COMBOS) {
-          const pieces = combo.map((i) => nextBoard[i]);
-          const myCount = pieces.filter((p) => p === currentUser.uid).length;
-          const nullCount = pieces.filter((p) => p === null).length;
-          if (myCount === 2 && nullCount === 1) {
-            aiTarget = combo.find((i) => nextBoard[i] === null)!;
+        // 1. Check if AI can win
+        for (const idx of availableIndices) {
+          const testBoard = [...nextBoard];
+          let testHist = [...nextHistory];
+          const aiHist = testHist.filter((m) => m.uid === aiUid);
+          if (mode === 'infinite' && aiHist.length >= 3) {
+            testBoard[aiHist[0].index] = null;
+          }
+          testBoard[idx] = aiUid;
+          if (checkWinner(testBoard).winner === aiUid) {
+            aiTarget = idx;
             break;
           }
         }
 
-        const aiUid = 'ai_bot';
-        const aiHistory = nextHistory.filter((m) => m.uid === aiUid);
+        // 2. Block player win
+        if (aiTarget === availableIndices[0]) {
+          for (const idx of availableIndices) {
+            const testBoard = [...nextBoard];
+            let testHist = [...nextHistory];
+            const pHist = testHist.filter((m) => m.uid === currentUid);
+            if (mode === 'infinite' && pHist.length >= 3) {
+              testBoard[pHist[0].index] = null;
+            }
+            testBoard[idx] = currentUid;
+            if (checkWinner(testBoard).winner === currentUid) {
+              aiTarget = idx;
+              break;
+            }
+          }
+        }
 
+        // Apply AI move
+        const aiHistory = nextHistory.filter((m) => m.uid === aiUid);
         if (mode === 'infinite' && aiHistory.length >= 3) {
-          const oldestAiMove = aiHistory[0];
-          nextBoard[oldestAiMove.index] = null;
-          nextHistory = nextHistory.filter((m) => !(m.uid === aiUid && m.index === oldestAiMove.index));
+          const oldestMove = aiHistory[0];
+          nextBoard[oldestMove.index] = null;
+          nextHistory = nextHistory.filter((m) => !(m.uid === aiUid && m.index === oldestMove.index));
         }
 
         nextBoard[aiTarget] = aiUid;
@@ -218,149 +237,181 @@ export const GameOOXX: React.FC<GameOOXXProps> = ({
     sound.playClick();
   };
 
+  const isWinner = room.status === 'finished' && room.winner === currentUser.uid;
+  const isLoser = room.status === 'finished' && room.winner && room.winner !== currentUser.uid && room.winner !== 'draw';
+
   return (
-    <div className="flex flex-col h-full overflow-hidden text-xs">
-      {/* Top Status & Mode Toggle */}
-      <div className="p-2.5 bg-slate-900 border-b-2 border-slate-800 flex items-center justify-between">
+    <div className="flex flex-col h-full bg-[#F7F3E9] text-[#2D1E18] font-serif select-none">
+      {/* 1. Header Masthead with Double Border & Noto Serif Typography */}
+      <div className="p-3 sm:p-4 bg-[#FFFDF9] border-b-4 border-double border-[#5D4037] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[0_2px_4px_rgba(93,64,55,0.06)]">
+        <div>
+          <div className="text-[10px] sm:text-xs text-[#8D6E63] font-bold tracking-[0.25em] uppercase">
+            - INFINITE TIC-TAC-TOE TACTICAL EXAM -
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black tracking-[0.2em] text-[#2D1E18] flex items-center gap-2">
+            <span>無限 OOXX 棋藝試驗</span>
+            <span className="text-xs px-2 py-0.5 border border-[#5D4037] bg-[#F7F3E9] text-[#5D4037] font-semibold tracking-normal">
+              昭和試驗規約
+            </span>
+          </h2>
+        </div>
+
+        {/* Mode Selector */}
         <div className="flex items-center gap-2">
-          <span className="text-amber-400 font-bold">OOXX 井字棋對決</span>
-          {/* Mode Switcher */}
-          <div className="flex items-center bg-slate-950 p-0.5 rounded border border-slate-800">
+          <div className="flex items-center p-1 bg-[#F7F3E9] border-2 border-[#5D4037] rounded-sm shadow-[3px_3px_0px_#5D4037]">
             <button
               onClick={() => toggleMode('infinite')}
-              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+              className={`px-3 py-1 text-xs font-bold transition-all ${
                 mode === 'infinite'
-                  ? 'bg-purple-600 text-white'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[#5D4037] text-[#FFFDF9] shadow-[1px_1px_0px_#2D1E18]'
+                  : 'text-[#5D4037] hover:bg-[#EFEBE4]'
               }`}
             >
-              三子無限模式 🔥
+              三子無限動態棋 🔥
             </button>
             <button
               onClick={() => toggleMode('classic')}
-              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+              className={`px-3 py-1 text-xs font-bold transition-all ${
                 mode === 'classic'
-                  ? 'bg-purple-600 text-white'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[#5D4037] text-[#FFFDF9] shadow-[1px_1px_0px_#2D1E18]'
+                  : 'text-[#5D4037] hover:bg-[#EFEBE4]'
               }`}
             >
-              經典模式
+              經典三連試驗
             </button>
           </div>
         </div>
-
-        <div>
-          {room.status === 'finished' ? (
-            <span className="font-bold text-amber-300 flex items-center gap-1">
-              <Trophy className="w-3.5 h-3.5 text-amber-400" />
-              {room.winner === currentUser.uid
-                ? '🎉 你獲勝了！獲得 50 金幣'
-                : room.winner === 'draw'
-                ? '平手！'
-                : '對方連成一線獲勝！'}
-            </span>
-          ) : (
-            <span
-              className={`font-bold px-2 py-0.5 rounded ${
-                isMyTurn
-                  ? 'bg-emerald-950 text-emerald-400 border border-emerald-800 animate-pulse'
-                  : 'bg-slate-800 text-slate-400'
-              }`}
-            >
-              {isMyTurn ? '👉 輪到你下棋！' : '⏳ 等待對手下棋...'}
-            </span>
-          )}
-        </div>
       </div>
 
-      {/* Rules Notice for Infinite Mode */}
+      {/* Rules Notice with Dashed Border */}
       {mode === 'infinite' && (
-        <div className="px-3 py-1.5 bg-purple-950/40 border-b border-purple-900/60 text-purple-200 text-[10px] text-center flex items-center justify-center gap-1">
-          <Sparkles className="w-3 h-3 text-purple-400" />
+        <div className="px-4 py-2 bg-[#FFFDF9] border-b-2 border-dashed border-[#5D4037] text-xs text-[#5D4037] flex items-center justify-center gap-2">
+          <Sparkles className="w-3.5 h-3.5 text-[#C62828]" />
           <span>
-            【三子無限模式】：每位玩家最多同時保留 3 顆棋，下第 4 顆時最早的第 1 顆會半透明消失！
+            【無限動態律】：每位受驗生最多保留 3 顆棋子。落第 4 顆時，最早落下的棋子將銷毀消除！
           </span>
         </div>
       )}
 
-      {/* Game Board Container */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4 bg-[#111022]">
-        <div className="grid grid-cols-3 gap-2.5 p-3 bg-slate-950 border-4 border-slate-800 rounded-xl shadow-pixel-lg">
-          {board.map((cellUid, idx) => {
-            const isWinningCell = stateOoxx.winningLine?.includes(idx);
-            const isHostPiece = cellUid === room.hostUid;
-            const isGuestPiece = cellUid && cellUid !== room.hostUid;
+      {/* 2. Main Examination Board Area */}
+      <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-y-auto">
+        {/* Status Report Bar */}
+        <div className="mb-4 w-full max-w-md px-4 py-2 border-2 border-dashed border-[#5D4037] bg-[#FFFDF9] text-center shadow-[4px_4px_0px_#5D4037]">
+          {room.status === 'finished' ? (
+            <div className="flex items-center justify-center gap-2 text-sm font-black tracking-wide">
+              <Trophy className="w-4 h-4 text-[#C62828]" />
+              <span className="text-[#C62828]">
+                {room.winner === currentUser.uid
+                  ? '受驗合格！榮獲棋藝勝利（金幣 +50）'
+                  : room.winner === 'draw'
+                  ? '雙方平局！均具深厚棋藝'
+                  : '對手連成一線！未能合格，請再接再厲'}
+              </span>
+            </div>
+          ) : (
+            <div className="text-xs sm:text-sm font-bold tracking-widest text-[#2D1E18] flex items-center justify-center gap-2">
+              <span className={`w-2.5 h-2.5 rounded-full ${isMyTurn ? 'bg-[#C62828] animate-ping' : 'bg-slate-400'}`} />
+              <span>{isMyTurn ? '輪到我方落子，請審慎佈局！' : '等待對方落子應對中...'}</span>
+            </div>
+          )}
+        </div>
 
-            // In infinite mode, check if this cell is about to vanish
-            const isOldest =
-              mode === 'infinite' &&
-              ((isHostPiece && idx === hostOldestIndex) ||
-                (isGuestPiece && idx === guestOldestIndex));
-
-            return (
-              <button
-                key={idx}
-                onClick={() => handleCellClick(idx)}
-                disabled={cellUid !== null || !isMyTurn || room.status === 'finished'}
-                className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-lg flex flex-col items-center justify-center font-arcade text-3xl transition-all border-2 ${
-                  isWinningCell
-                    ? 'bg-amber-500/30 border-amber-400 scale-105'
-                    : cellUid === null
-                    ? 'bg-slate-900 border-slate-700 hover:border-slate-500 active:scale-95'
-                    : 'bg-slate-900/90 border-slate-800'
-                } ${isOldest ? 'opacity-40 animate-pulse' : ''}`}
+        {/* 3x3 Grid Board Card */}
+        <div className="relative p-4 sm:p-6 bg-[#FFFDF9] border-4 border-[#5D4037] shadow-[6px_6px_0px_#5D4037] rounded-sm">
+          {/* Vermilion Stamp on Finish */}
+          {room.status === 'finished' && (
+            <div className="absolute top-2 right-2 pointer-events-none z-20">
+              <div
+                className={`w-20 h-20 rounded-full border-4 border-double border-[#C62828] flex flex-col items-center justify-center text-[#C62828] font-black tracking-widest ${
+                  isWinner ? 'animate-stamp' : 'opacity-85'
+                }`}
+                style={{ transform: 'rotate(-12deg)' }}
               >
-                {cellUid ? (
-                  isHostPiece ? (
-                    <span className="text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]">
-                      O
-                    </span>
-                  ) : (
-                    <span className="text-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]">
-                      X
-                    </span>
-                  )
-                ) : null}
+                <span className="text-[10px] border-b border-[#C62828] pb-0.5">昭和試驗局</span>
+                <span className="text-base sm:text-lg">{isWinner ? '合 格' : isLoser ? '不合格' : '對 局'}</span>
+              </div>
+            </div>
+          )}
 
-                {/* Vanishing indicator */}
-                {isOldest && (
-                  <span className="absolute bottom-1 text-[8px] font-pixel text-amber-300 font-bold tracking-tighter">
-                    即將消失
-                  </span>
-                )}
-              </button>
-            );
-          })}
+          {/* 3x3 Grid */}
+          <div className="grid grid-cols-3 gap-3">
+            {board.map((cellUid, idx) => {
+              const isWinningCell = stateOoxx.winningLine?.includes(idx);
+              const isHostPiece = cellUid === room.hostUid;
+              const isGuestPiece = cellUid && cellUid !== room.hostUid;
+
+              // In infinite mode, check if this cell is about to vanish
+              const isOldest =
+                mode === 'infinite' &&
+                ((isHostPiece && idx === hostOldestIndex) ||
+                  (isGuestPiece && idx === guestOldestIndex));
+
+              return (
+                <button
+                  key={idx}
+                  onClick={() => handleCellClick(idx)}
+                  disabled={cellUid !== null || !isMyTurn || room.status === 'finished'}
+                  className={`relative w-20 h-20 sm:w-26 sm:h-26 border-2 border-[#5D4037] bg-[#F7F3E9] flex flex-col items-center justify-center transition-all ${
+                    isWinningCell
+                      ? 'bg-amber-100 border-[#C62828] scale-105 shadow-[4px_4px_0px_#C62828]'
+                      : cellUid === null
+                      ? 'hover:bg-[#EFEBE4] shadow-[4px_4px_0px_#5D4037] active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer'
+                      : 'shadow-[4px_4px_0px_#5D4037]'
+                  } ${isOldest ? 'opacity-40 animate-pulse' : ''}`}
+                >
+                  {cellUid ? (
+                    isHostPiece ? (
+                      <span className="text-[#C62828] text-4xl sm:text-5xl font-black tracking-tight drop-shadow-sm">
+                        O
+                      </span>
+                    ) : (
+                      <span className="text-[#1A237E] text-4xl sm:text-5xl font-black tracking-tight drop-shadow-sm">
+                        X
+                      </span>
+                    )
+                  ) : null}
+
+                  {/* Vanishing indicator */}
+                  {isOldest && (
+                    <span className="absolute bottom-1 text-[9px] font-bold text-[#C62828] tracking-tighter bg-white/90 px-1 border border-[#C62828]">
+                      即將銷毀
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Bottom Players Dossier with double border */}
+          <div className="mt-4 pt-3 border-t-2 border-double border-[#5D4037] flex items-center justify-between text-xs font-bold">
+            <div className="flex items-center gap-1.5">
+              <span className="w-5 h-5 border border-[#C62828] text-[#C62828] font-black flex items-center justify-center text-xs bg-[#FFFDF9]">
+                O
+              </span>
+              <span className="text-[#2D1E18]">
+                {room.hostName} {isHost ? '（本席）' : ''}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-5 h-5 border border-[#1A237E] text-[#1A237E] font-black flex items-center justify-center text-xs bg-[#FFFDF9]">
+                X
+              </span>
+              <span className="text-[#2D1E18]">
+                {room.guestName || (isAiMode ? '試驗官 AI' : '對弈考生')} {!isHost && !isAiMode ? '（本席）' : ''}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Players Indicator */}
-        <div className="flex items-center gap-8 mt-4 text-xs font-bold">
-          <div className="flex items-center gap-1.5">
-            <span className="w-5 h-5 rounded-full bg-cyan-950 border border-cyan-500 text-cyan-400 flex items-center justify-center text-xs font-arcade">
-              O
-            </span>
-            <span className="text-slate-200">
-              {room.hostName} {isHost ? '(你)' : ''}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-5 h-5 rounded-full bg-rose-950 border border-rose-500 text-rose-500 flex items-center justify-center text-xs font-arcade">
-              X
-            </span>
-            <span className="text-slate-200">
-              {room.guestName || (isAiMode ? '電腦 AI' : '對手')} {!isHost && !isAiMode ? '(你)' : ''}
-            </span>
-          </div>
-        </div>
-
-        {/* Play Again button */}
+        {/* Restart Button */}
         {room.status === 'finished' && (
-          <div className="mt-4">
+          <div className="mt-5">
             <button
               onClick={handleRestart}
-              className="pixel-btn px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded flex items-center gap-1.5"
+              className="px-6 py-2.5 bg-[#C62828] hover:bg-[#B71C1C] text-[#FFFDF9] font-black text-xs sm:text-sm tracking-widest border-2 border-[#5D4037] shadow-[4px_4px_0px_#5D4037] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center gap-2 cursor-pointer"
             >
-              <RefreshCw className="w-4 h-4" /> 再來一局
+              <RefreshCw className="w-4 h-4" />
+              <span>重新呈遞試卷・再對弈一局</span>
             </button>
           </div>
         )}

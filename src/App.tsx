@@ -4,63 +4,128 @@ import { sound } from './services/audio';
 import { 
   UserProfile, 
   Item, 
-  IslandPresence, 
-  EquippedItems, 
-  RoomFurniture 
+  ArcadeRoom, 
+  GameType 
 } from './types/game';
-import { 
-  isIslandWalkable, 
-  isHomeWalkable, 
-  checkBuildingOrHouseEntrance, 
-  getActiveHouses,
-  ActiveHouse,
-  HOME_HEIGHT 
-} from './config/mapData';
-import { IslandMap } from './components/IslandMap';
-import { HomeMap } from './components/HomeMap';
-import { Navbar } from './components/Navbar';
-import { VirtualControls } from './components/VirtualControls';
 import { BoutiqueModal } from './components/BoutiqueModal';
-import { ArcadeModal } from './components/ArcadeModal';
-import { CasinoModal } from './components/CasinoModal';
 import { AdminDashboardModal } from './components/AdminDashboardModal';
 import { AuthModal } from './components/AuthModal';
-import { PlayerActionModal } from './components/PlayerActionModal';
-import { FriendPanel } from './components/FriendPanel';
-import { HouseUpgradeModal } from './components/HouseUpgradeModal';
-import { TutorialModal } from './components/TutorialModal';
+import { Game1A2B } from './components/arcade/Game1A2B';
+import { GameOOXX } from './components/arcade/GameOOXX';
+import { GameBattleship } from './components/arcade/GameBattleship';
+import { GameDotsBoxes } from './components/arcade/GameDotsBoxes';
+import { GameSlotMachine } from './components/arcade/GameSlotMachine';
+import { 
+  Coins, 
+  Volume2, 
+  VolumeX, 
+  Shirt, 
+  LogOut, 
+  Shield, 
+  ArrowLeft, 
+  Users, 
+  Bot, 
+  Copy, 
+  Check, 
+  Play, 
+  RefreshCw,
+  Sparkles,
+  Trophy
+} from 'lucide-react';
 
 const ADMIN_EMAIL = 'ltairui79@gmail.com';
+
+interface GameMetadata {
+  id: GameType | 'slot';
+  numeral: string;
+  name: string;
+  englishSub: string;
+  icon: string;
+  grade: string;
+  desc: string;
+  supportsMultiplayer: boolean;
+}
+
+const GAME_DOSSIERS: GameMetadata[] = [
+  {
+    id: '1a2b',
+    numeral: '第壹號試驗',
+    name: '1A2B 數字密碼推理',
+    englishSub: '- INTELLECTUAL NUMERIC CIPHER TEST NO. 1A2B -',
+    icon: '🔢',
+    grade: '甲等公文',
+    desc: '4位不重複數字暗號推理。依據每次判定反饋之 A/B 提示，以最少次數破解密碼。',
+    supportsMultiplayer: true,
+  },
+  {
+    id: 'ooxx',
+    numeral: '第貳號試驗',
+    name: '無限 OOXX 棋藝對弈',
+    englishSub: '- INFINITE TIC-TAC-TOE TACTICAL EXAM -',
+    icon: '⭕❌',
+    grade: '乙等公文',
+    desc: '棋盤至多保留 3 顆棋子，落第 4 子時首子銷毀消除。考驗受驗生動態記憶與棋術。',
+    supportsMultiplayer: true,
+  },
+  {
+    id: 'battleship',
+    numeral: '第參號試驗',
+    name: '帝國海戰棋 (8×8)',
+    englishSub: '- NAVAL FLEET STRATEGIC BOARD TEST -',
+    icon: '🚢',
+    grade: '甲等公文',
+    desc: '8×8 海象公文圖。秘密部署4艘海軍戰艦，與敵軍輪番砲擊交叉偵查，先擊沉敵艦者勝。',
+    supportsMultiplayer: true,
+  },
+  {
+    id: 'dots_boxes',
+    numeral: '第肆號試驗',
+    name: '方格點線棋 (5×5)',
+    englishSub: '- TERRITORY GRID EXPANSION PROTOCOL -',
+    icon: '📦',
+    grade: '乙等公文',
+    desc: '5×5 點陣連線佔地。封閉四邊者即刻奪得領地並獲連續行動權，考驗大局規劃。',
+    supportsMultiplayer: true,
+  },
+  {
+    id: 'slot',
+    numeral: '第伍號遊技',
+    name: '777 昭和機械拉霸機',
+    englishSub: '- SHOWA RETRO MECHANICAL SLOT MACHINE -',
+    icon: '🎰',
+    grade: '昭和特賞',
+    desc: '純實體機械拉桿手感，777 特賞大獎金幣滾滾。為公文試驗之餘的放鬆遊樂所。',
+    supportsMultiplayer: false,
+  },
+];
 
 export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [items, setItems] = useState<Item[]>([]);
-  const [presences, setPresences] = useState<Record<string, IslandPresence>>({});
+  const [isMuted, setIsMuted] = useState(sound.isMuted);
 
-  // Navigation & Location
-  const [currentPlace, setCurrentPlace] = useState<'island' | 'home'>('island');
-  const [visitingUser, setVisitingUser] = useState<UserProfile | null>(null);
+  // Active game session
+  const [activeGameType, setActiveGameType] = useState<GameType | 'slot' | null>(null);
+  const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
+  const [activeRoom, setActiveRoom] = useState<ArcadeRoom | null>(null);
 
   // Modals state
   const [isBoutiqueOpen, setIsBoutiqueOpen] = useState(false);
-  const [boutiqueInitialTab, setBoutiqueInitialTab] = useState<'shop' | 'wardrobe'>('shop');
-  const [isArcadeOpen, setIsArcadeOpen] = useState(false);
-  const [isCasinoOpen, setIsCasinoOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [isFriendPanelOpen, setIsFriendPanelOpen] = useState(false);
-  const [isHouseUpgradeOpen, setIsHouseUpgradeOpen] = useState(false);
-  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
-  const [selectedPlayer, setSelectedPlayer] = useState<IslandPresence | null>(null);
-  const [challengedPlayer, setChallengedPlayer] = useState<IslandPresence | null>(null);
 
-  // Requirement 3: 3-Minute Idle Kick State
+  // Lobby state
+  const [joinCodeInput, setJoinCodeInput] = useState('');
+  const [publicRooms, setPublicRooms] = useState<ArcadeRoom[]>([]);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // 3-Minute Idle Kick State
   const [isAfkKicked, setIsAfkKicked] = useState(false);
   const [afkWarningRemaining, setAfkWarningRemaining] = useState<number | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
-  const lastStepSoundRef = useRef<number>(0);
 
-  // Items map for easy lookup
+  // Items map
   const itemsMap = useMemo(() => {
     const map: Record<string, Item> = {};
     items.forEach((it) => {
@@ -69,17 +134,13 @@ export const App: React.FC = () => {
     return map;
   }, [items]);
 
-  // Subscribe to Auth, Items, and Presences
+  // Auth, items subscription
   useEffect(() => {
     const unsubAuth = dbService.onAuthChange((user) => {
       setCurrentUser(user);
       // Admin redirect: if admin email logs in, open admin dashboard immediately
-      if (user && user.email?.toLowerCase() === 'ltairui79@gmail.com') {
+      if (user && user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
         setIsAdminOpen(true);
-        return;
-      }
-      if (user && user.hasCompletedTutorial === false) {
-        setIsTutorialOpen(true);
       }
     });
 
@@ -87,415 +148,87 @@ export const App: React.FC = () => {
       setItems(newItems);
     });
 
-    const unsubPresence = dbService.subscribePresence((allPresences) => {
-      setPresences(allPresences);
-    });
-
     return () => {
       unsubAuth();
       unsubItems();
-      unsubPresence();
     };
   }, []);
 
-  // Requirement 3: 3-Minute Idle Inactivity Kick Watchdog (3分鐘無動作踢出)
+  // Subscribe to active room changes
   useEffect(() => {
-    if (!currentUser) return;
-
-    // Reset activity timer on any user interaction
-    const handleUserActivity = () => {
-      lastActivityRef.current = Date.now();
-      if (afkWarningRemaining !== null) {
-        setAfkWarningRemaining(null);
+    if (!activeRoomId) {
+      setActiveRoom(null);
+      return;
+    }
+    const unsubscribe = dbService.subscribeArcadeRoom(activeRoomId, (updatedRoom) => {
+      setActiveRoom(updatedRoom);
+      if (updatedRoom && updatedRoom.gameType) {
+        setActiveGameType(updatedRoom.gameType);
       }
-    };
+    });
+    return () => unsubscribe();
+  }, [activeRoomId]);
 
-    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'pointerdown', 'click', 'wheel'];
-    events.forEach((ev) => window.addEventListener(ev, handleUserActivity, { passive: true }));
+  // Load public rooms
+  const refreshPublicRooms = useCallback(() => {
+    dbService.getPublicArcadeRooms().then(setPublicRooms);
+  }, []);
 
-    const interval = window.setInterval(() => {
-      if (!currentUser) return;
-      const idleMs = Date.now() - lastActivityRef.current;
-      const IDLE_LIMIT_MS = 180 * 1000; // 3 minutes = 180 seconds
-      const WARNING_THRESHOLD_MS = 150 * 1000; // 2.5 minutes (30 seconds before kick)
+  useEffect(() => {
+    if (!activeGameType) {
+      refreshPublicRooms();
+      const interval = setInterval(refreshPublicRooms, 6000);
+      return () => clearInterval(interval);
+    }
+  }, [activeGameType, refreshPublicRooms]);
 
-      if (idleMs >= IDLE_LIMIT_MS) {
-        sound.playAlert();
+  // Activity tracker for 3-minute idle kick
+  const resetActivityTimer = useCallback(() => {
+    lastActivityRef.current = Date.now();
+    setAfkWarningRemaining(null);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!currentUser || isAfkKicked) return;
+      const elapsed = Date.now() - lastActivityRef.current;
+      const totalKickLimit = 3 * 60 * 1000; // 3 minutes = 180s
+      const warningStart = 2.5 * 60 * 1000; // 2.5 minutes = 150s
+
+      if (elapsed >= totalKickLimit) {
         setIsAfkKicked(true);
         setAfkWarningRemaining(null);
-        dbService.signOutUser();
-      } else if (idleMs >= WARNING_THRESHOLD_MS) {
-        const remainingSeconds = Math.max(1, Math.ceil((IDLE_LIMIT_MS - idleMs) / 1000));
+        sound.playDoor();
+      } else if (elapsed >= warningStart) {
+        const remainingSeconds = Math.max(1, Math.ceil((totalKickLimit - elapsed) / 1000));
         setAfkWarningRemaining(remainingSeconds);
       } else {
         setAfkWarningRemaining(null);
       }
     }, 1000);
 
-    return () => {
-      events.forEach((ev) => window.removeEventListener(ev, handleUserActivity));
-      window.clearInterval(interval);
-    };
-  }, [currentUser, afkWarningRemaining]);
+    return () => clearInterval(interval);
+  }, [currentUser, isAfkKicked]);
 
-  // High-performance continuous local position state (sub-pixel float coordinates)
-  // Default spawn at the central Showa crossroads in front of the arcade and bridge
-  const [localPos, setLocalPos] = useState({
-    x: 31.0,
-    y: 14.5,
-    facing: 'right' as 'left' | 'right',
-    isMoving: false,
-  });
-  const localPosRef = useRef(localPos);
-  localPosRef.current = localPos;
-  const moveTimeoutRef = useRef<number | null>(null);
-
-  const selfPresence = currentUser ? presences[currentUser.uid] : null;
-
-  // Push presence updates helper (throttled during continuous walking to prevent RTDB broadcast thrash)
-  const lastSyncTimeRef = useRef<number>(0);
-  const syncSelfPresence = useCallback(
-    (updates: Partial<IslandPresence>, forceSync = false) => {
-      if (!currentUser) return;
-      const now = Date.now();
-      if (!forceSync && updates.isMoving && now - lastSyncTimeRef.current < 160) {
-        return; // Throttled to keep local 60fps buttery smooth
-      }
-      lastSyncTimeRef.current = now;
-
-      const current = localPosRef.current;
-      const base: IslandPresence = {
-        uid: currentUser.uid,
-        displayName: currentUser.displayName,
-        x: updates.x ?? current.x,
-        y: updates.y ?? current.y,
-        facing: updates.facing ?? current.facing,
-        equipped: currentUser.equipped,
-        currentPlace,
-        visitingHomeUid: visitingUser?.uid ?? undefined,
-        houseLevel: currentUser.houseLevel || 1,
-        emojiBubble: updates.emojiBubble !== undefined ? updates.emojiBubble : (selfPresence?.emojiBubble ?? null),
-        updatedAt: now,
-        ...updates,
-      };
-      dbService.updatePresence(base);
-    },
-    [currentUser, currentPlace, visitingUser, selfPresence]
-  );
-
-  // Initialize self presence on first load at the center boulevard
+  // Global activity listeners
   useEffect(() => {
-    if (currentUser && !presences[currentUser.uid]) {
-      syncSelfPresence({ x: 31, y: 14.5, facing: 'right' }, true);
-    }
-  }, [currentUser, presences, syncSelfPresence]);
+    const onActivity = () => resetActivityTimer();
+    window.addEventListener('mousemove', onActivity, { passive: true });
+    window.addEventListener('mousedown', onActivity, { passive: true });
+    window.addEventListener('keydown', onActivity, { passive: true });
+    window.addEventListener('touchstart', onActivity, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', onActivity);
+      window.removeEventListener('mousedown', onActivity);
+      window.removeEventListener('keydown', onActivity);
+      window.removeEventListener('touchstart', onActivity);
+    };
+  }, [resetActivityTimer]);
 
-  // Active houses mapped for all online players + persistent island residents
-  const activeHouses = useMemo(() => {
-    if (!currentUser) return [];
-    return getActiveHouses(
-      currentUser.uid,
-      currentUser.displayName,
-      currentUser.houseLevel || 1,
-      presences
-    );
-  }, [currentUser, presences]);
-
-  // Detect interaction at current position (Commercial buildings or any Player's House!)
-  const contextEntrance = useMemo(() => {
-    if (currentPlace !== 'island') return null;
-    return checkBuildingOrHouseEntrance(localPos.x, localPos.y, activeHouses);
-  }, [currentPlace, localPos.x, localPos.y, activeHouses]);
-
-  const isHomeExitMat = useMemo(() => {
-    if (currentPlace !== 'home') return false;
-    return localPos.y >= HOME_HEIGHT - 1.5 && (localPos.x >= 4.5 && localPos.x <= 6.5);
-  }, [currentPlace, localPos.x, localPos.y]);
-
-  // Determine floating contextual prompt text
-  const contextPrompt = useMemo(() => {
-    if (contextEntrance) {
-      if (contextEntrance.type === 'commercial') {
-        const b = contextEntrance.building;
-        if (b.type === 'boutique') return '進入「服」昭和和服精品店 👘';
-        if (b.type === 'arcade') return '進入「遊台」街機遊樂中心 🕹️';
-        if (b.type === 'casino') return '進入「CASINO」777 復古拉霸娛樂城 🎰';
-      } else if (contextEntrance.type === 'house') {
-        const h = contextEntrance.house;
-        return h.isSelf ? '進入自宅玄關 🏡' : `拜訪 ${h.ownerName} 之宅 🏡`;
-      }
-    }
-    if (isHomeExitMat) {
-      return '邁出門扉（返回櫻花島）🚪';
-    }
-    return null;
-  }, [contextEntrance, isHomeExitMat]);
-
-  // Enter house helper (for self or visiting another player's house)
-  const handleEnterHouse = useCallback((targetHouse: ActiveHouse) => {
-    sound.playDoor();
-    const isSelf = targetHouse.ownerUid === currentUser?.uid;
-    const targetUser = isSelf
-      ? currentUser
-      : {
-          uid: targetHouse.ownerUid,
-          displayName: targetHouse.ownerName,
-          coins: 100,
-          houseLevel: targetHouse.level || 1,
-          equipped: { hair: 'hair_01', top: 'top_01', bottom: 'bottom_01', accessory: null },
-          inventory: [],
-          roomLayout: [],
-          friends: [],
-          friendRequests: [],
-        };
-    setVisitingUser(targetUser as UserProfile);
-    setCurrentPlace('home');
-    setLocalPos({ x: 5, y: 7, facing: 'right', isMoving: false });
-    syncSelfPresence({
-      currentPlace: 'home',
-      x: 5,
-      y: 7,
-      visitingHomeUid: targetHouse.ownerUid,
-    }, true);
-  }, [currentUser, syncSelfPresence]);
-
-  // 60 FPS Sub-pixel continuous free walking movement engine
-  const handleMoveDelta = useCallback(
-    (vx: number, vy: number, dt: number) => {
-      if (!currentUser) return;
-
-      const current = localPosRef.current;
-      const speed = 6.0; // tiles per second
-      const stepX = vx * speed * dt;
-      const stepY = vy * speed * dt;
-
-      let newX = current.x;
-      let newY = current.y;
-      let newFacing = current.facing;
-      if (vx < 0) newFacing = 'left';
-      else if (vx > 0) newFacing = 'right';
-
-      // Smooth X-axis movement with collision sliding
-      const targetX = current.x + stepX;
-      const canWalkX =
-        currentPlace === 'island'
-          ? isIslandWalkable(targetX, current.y, activeHouses)
-          : isHomeWalkable(targetX, current.y);
-      if (canWalkX) newX = targetX;
-
-      // Smooth Y-axis movement with collision sliding
-      const targetY = current.y + stepY;
-      const canWalkY =
-        currentPlace === 'island'
-          ? isIslandWalkable(newX, targetY, activeHouses)
-          : isHomeWalkable(newX, targetY);
-      if (canWalkY) newY = targetY;
-
-      if (newX !== current.x || newY !== current.y) {
-        const nextState = {
-          x: newX,
-          y: newY,
-          facing: newFacing,
-          isMoving: true,
-        };
-        setLocalPos(nextState);
-        localPosRef.current = nextState;
-
-        // Contextual footstep sounds during continuous walking
-        const now = Date.now();
-        if (now - lastStepSoundRef.current > 280) {
-          lastStepSoundRef.current = now;
-          const isWood = (newX >= 3.5 && newX <= 14.5 && newY >= 23.0 && newY <= 27.5) ||
-                         (newX >= 22.0 && newX <= 25.5 && newY >= 15.5 && newY <= 18.0);
-          if (isWood) {
-            sound.playStepWood();
-          } else {
-            sound.playStepDirt();
-          }
-        }
-
-        syncSelfPresence(
-          {
-            x: Math.round(newX * 100) / 100,
-            y: Math.round(newY * 100) / 100,
-            facing: newFacing,
-            isMoving: true,
-          },
-          false
-        );
-
-        if (moveTimeoutRef.current) clearTimeout(moveTimeoutRef.current);
-        moveTimeoutRef.current = window.setTimeout(() => {
-          setLocalPos((prev) => ({ ...prev, isMoving: false }));
-          syncSelfPresence({ isMoving: false }, true);
-        }, 120);
-      }
-    },
-    [currentUser, currentPlace, activeHouses, syncSelfPresence]
-  );
-
-  // Discrete single-step movement helper (for click or single taps)
-  const handleMove = useCallback(
-    (dir: 'up' | 'down' | 'left' | 'right') => {
-      let vx = 0;
-      let vy = 0;
-      if (dir === 'up') vy = -1;
-      if (dir === 'down') vy = 1;
-      if (dir === 'left') vx = -1;
-      if (dir === 'right') vx = 1;
-      handleMoveDelta(vx, vy, 0.16);
-      const cur = localPosRef.current;
-      const isWood = (cur.x >= 3.5 && cur.x <= 14.5 && cur.y >= 23.0 && cur.y <= 27.5) ||
-                     (cur.x >= 22.0 && cur.x <= 25.5 && cur.y >= 15.5 && cur.y <= 18.0);
-      if (isWood) {
-        sound.playStepWood();
-      } else {
-        sound.playStepDirt();
-      }
-    },
-    [handleMoveDelta]
-  );
-
-  // Handle Interaction (Space / Enter / A Button / Click Prompt)
-  const handleInteract = useCallback(() => {
-    if (contextEntrance) {
-      if (contextEntrance.type === 'commercial') {
-        const b = contextEntrance.building;
-        if (b.type === 'boutique') {
-          sound.playWindChime();
-          setBoutiqueInitialTab('shop');
-          setIsBoutiqueOpen(true);
-        } else if (b.type === 'arcade') {
-          sound.playTaiko();
-          setIsArcadeOpen(true);
-        } else if (b.type === 'casino') {
-          sound.playTaiko();
-          setIsCasinoOpen(true);
-        }
-      } else if (contextEntrance.type === 'house') {
-        sound.playShojiDoor();
-        handleEnterHouse(contextEntrance.house);
-      }
-      return;
-    }
-
-    if (isHomeExitMat) {
-      sound.playDoor();
-      setCurrentPlace('island');
-      const targetHouse = activeHouses.find((h) => h.ownerUid === visitingUser?.uid) || activeHouses[0];
-      const exitX = targetHouse ? targetHouse.doorX : 29;
-      const exitY = targetHouse ? targetHouse.doorY + 1 : 12;
-      setLocalPos({ x: exitX, y: exitY, facing: 'right', isMoving: false });
-      setVisitingUser(null);
-      syncSelfPresence({
-        currentPlace: 'island',
-        x: exitX,
-        y: exitY,
-        visitingHomeUid: undefined,
-      }, true);
-    }
-  }, [contextEntrance, isHomeExitMat, activeHouses, visitingUser, handleEnterHouse, syncSelfPresence]);
-
-  // Handle Sending Emoji Bubble
-  const handleSendEmoji = useCallback(
-    (emoji: string) => {
-      if (!currentUser) return;
-      sound.playEmoji();
-      syncSelfPresence({
-        emojiBubble: {
-          emoji,
-          expiresAt: Date.now() + 3500, // Show for 3.5 seconds
-        },
-      }, true);
-    },
-    [currentUser, syncSelfPresence]
-  );
-
-  // Handle Tile Click-to-Move
-  const handleTileClick = useCallback(
-    (tx: number, ty: number) => {
-      if (!currentUser) return;
-      const current = localPosRef.current;
-      const dx = tx - current.x;
-      const dy = ty - current.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist > 0.1) {
-        handleMoveDelta(dx / dist, dy / dist, 0.25);
-      }
-    },
-    [currentUser, handleMoveDelta]
-  );
-
-  // Handle Equip Change
-  const handleEquipChange = async (newEquipped: EquippedItems) => {
-    if (!currentUser) return;
-    await dbService.updateEquipped(currentUser.uid, newEquipped);
-    syncSelfPresence({ equipped: newEquipped }, true);
-    sound.playCloth();
-  };
-
-  // Handle Buy Item
-  const handleBuyItem = async (item: Item) => {
-    if (!currentUser) return;
-    await dbService.buyItem(currentUser.uid, item);
-    sound.playBuy();
-  };
-
-  // Handle Room Layout Save
-  const handleSaveRoomLayout = async (newLayout: RoomFurniture[]) => {
-    if (!currentUser) return;
-    await dbService.updateRoomLayout(currentUser.uid, newLayout);
-    sound.playSuccess();
-  };
-
-  // Handle House Upgrade
-  const handleUpgradeHouse = async (newLevel: number, cost: number) => {
-    if (!currentUser) return;
-    await dbService.upgradeHouse(currentUser.uid, newLevel, cost);
-    setCurrentUser((prev) => prev ? { ...prev, coins: prev.coins - cost, houseLevel: newLevel } : null);
-    syncSelfPresence({ houseLevel: newLevel }, true);
-  };
-
-  // Handle Complete Tutorial
-  const handleCompleteTutorial = async () => {
-    if (!currentUser) return;
-    await dbService.completeTutorial(currentUser.uid, 1000);
-    setCurrentUser((prev) => prev ? { ...prev, coins: prev.coins + 1000, hasCompletedTutorial: true } : null);
-    setIsTutorialOpen(false);
-  };
-
-  const handleVisitPlayerHome = (targetPresence: IslandPresence) => {
-    const targetHouse = activeHouses.find((h) => h.ownerUid === targetPresence.uid);
-    if (targetHouse) {
-      handleEnterHouse(targetHouse);
-    } else {
-      setVisitingUser({
-        uid: targetPresence.uid,
-        displayName: targetPresence.displayName,
-        coins: 100,
-        role: 'user',
-        houseLevel: targetPresence.houseLevel || 1,
-        equipped: targetPresence.equipped,
-        inventory: [],
-        roomLayout: [],
-        friends: [],
-        friendRequests: [],
-      } as UserProfile);
-      setCurrentPlace('home');
-      setLocalPos({ x: 5, y: 7, facing: 'right', isMoving: false });
-      syncSelfPresence({
-        currentPlace: 'home',
-        x: 5,
-        y: 7,
-        visitingHomeUid: targetPresence.uid,
-      }, true);
-      sound.playDoor();
-    }
-  };
-
-  const handleChallengePlayer = (targetPlayer: IslandPresence) => {
-    setChallengedPlayer(targetPlayer);
-    setIsArcadeOpen(true);
+  const toggleSound = () => {
+    const muted = sound.toggleMute();
+    setIsMuted(muted);
+    if (!muted) sound.playClick();
   };
 
   const handleSignOut = async () => {
@@ -503,111 +236,523 @@ export const App: React.FC = () => {
     await dbService.signOutUser();
     setCurrentUser(null);
     setIsAdminOpen(false);
+    setActiveGameType(null);
+    setActiveRoomId(null);
   };
 
-  const onlineCount = Object.keys(presences).length;
+  // Launch AI Solo Game
+  const handleStartAiGame = async (gameType: GameType) => {
+    if (!currentUser) {
+      setIsAuthOpen(true);
+      return;
+    }
+    sound.playClick();
+    setErrorMessage(null);
 
-  // Admin shortcut: if admin is logged in, show admin dashboard directly
-  const isAdminUser = currentUser?.email?.toLowerCase() === 'ltairui79@gmail.com';
+    const room = await dbService.createArcadeRoom({
+      gameType,
+      mode: 'ai',
+      status: 'playing',
+      hostUid: currentUser.uid,
+      hostName: currentUser.displayName,
+      guestUid: 'npc_bot',
+      guestName: '試驗局 AI 試驗官',
+      currentTurn: currentUser.uid,
+      isPublic: false,
+    });
+
+    setActiveRoomId(room.roomId);
+    setActiveGameType(gameType);
+  };
+
+  // Create Public/Private Multiplayer Room
+  const handleCreateMultiplayerRoom = async (gameType: GameType, isPublic: boolean = true) => {
+    if (!currentUser) {
+      setIsAuthOpen(true);
+      return;
+    }
+    sound.playClick();
+    setErrorMessage(null);
+
+    const room = await dbService.createArcadeRoom({
+      gameType,
+      mode: 'pvp',
+      status: 'waiting',
+      hostUid: currentUser.uid,
+      hostName: currentUser.displayName,
+      currentTurn: currentUser.uid,
+      isPublic,
+    });
+
+    setActiveRoomId(room.roomId);
+    setActiveGameType(gameType);
+  };
+
+  // Join Room by 4-digit Code
+  const handleJoinByCode = async () => {
+    if (!currentUser) {
+      setIsAuthOpen(true);
+      return;
+    }
+    const cleanCode = joinCodeInput.trim().toUpperCase();
+    if (cleanCode.length !== 4) {
+      sound.playBump();
+      setErrorMessage('請輸入標準 4 位大寫英文/數字代碼！');
+      return;
+    }
+
+    sound.playClick();
+    setErrorMessage(null);
+
+    const joined = await dbService.joinArcadeRoomByCode(cleanCode, currentUser.uid, currentUser.displayName);
+    if (!joined) {
+      sound.playBump();
+      setErrorMessage('未查得此考局代碼，或考局已滿員/已結束！');
+      return;
+    }
+
+    setActiveRoomId(joined.roomId);
+    setActiveGameType(joined.gameType);
+    setJoinCodeInput('');
+  };
+
+  // Join Existing Public Room
+  const handleJoinPublicRoom = async (room: ArcadeRoom) => {
+    if (!currentUser) {
+      setIsAuthOpen(true);
+      return;
+    }
+    sound.playClick();
+    setErrorMessage(null);
+
+    const joined = await dbService.joinArcadeRoom(room.roomId, currentUser.uid, currentUser.displayName);
+    if (!joined) {
+      sound.playBump();
+      setErrorMessage('無法進入該考局，可能已滿員或已終結！');
+      return;
+    }
+
+    setActiveRoomId(joined.roomId);
+    setActiveGameType(joined.gameType);
+  };
+
+  // Exit Current Game & Return to Lobby
+  const handleReturnToLobby = () => {
+    sound.playClick();
+    setActiveGameType(null);
+    setActiveRoomId(null);
+    setActiveRoom(null);
+    setErrorMessage(null);
+  };
+
+  const safeCoins = Math.max(0, currentUser?.coins || 0);
+  const isAdminUser = currentUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#1a0a05] select-none" style={{ fontFamily: "'Noto Serif TC', 'Hiragino Mincho ProN', serif" }}>
-
-      {/* Admin Full-Screen Dashboard (bypasses game entirely) */}
+    <div 
+      className="min-h-screen w-full bg-[#F7F3E9] text-[#2D1E18] font-serif select-none flex flex-col paper-grid relative"
+      style={{ fontFamily: "'Noto Serif TC', 'Songti TC', SimSun, serif" }}
+    >
+      {/* Admin Full-Screen Dashboard (bypasses game entirely if admin is logged in) */}
       {isAdminUser && isAdminOpen && (
         <AdminDashboardModal
           isOpen={true}
           onClose={() => { setIsAdminOpen(false); handleSignOut(); }}
           items={items}
-          presences={presences}
+          presences={{}}
         />
       )}
 
-      {/* Show regular game only if not in admin mode */}
-      {(!isAdminUser || !isAdminOpen) && (
-        <>
-      {/* Top Navigation Bar — Showa Japanese style */}
-      <Navbar
-        user={currentUser}
-        onlineCount={onlineCount}
-        currentUid={currentUser?.uid || ''}
-        onOpenAdmin={() => setIsAdminOpen(true)}
-        onOpenWardrobe={() => {
-          setBoutiqueInitialTab('wardrobe');
-          setIsBoutiqueOpen(true);
-        }}
-        onOpenAuthModal={() => setIsAuthOpen(true)}
-        onOpenHouseUpgrade={() => setIsHouseUpgradeOpen(true)}
-        onOpenTutorial={() => setIsTutorialOpen(true)}
-        onSignOut={handleSignOut}
-        onToggleFriends={() => setIsFriendPanelOpen((prev) => !prev)}
-      />
+      {/* ================= 1. SHOWA MASTHEAD HEADER ================= */}
+      <header className="sticky top-0 z-40 bg-[#FFFDF9] border-b-4 border-double border-[#5D4037] px-4 py-3 sm:px-8 sm:py-4 shadow-[0_4px_6px_rgba(93,64,55,0.06)] flex items-center justify-between">
+        {/* Left Bureau Seal & Title */}
+        <div className="flex items-center gap-3 sm:gap-4">
+          {/* Vermilion Stamp Watermark */}
+          <div 
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-sm border-2 border-double border-[#C62828] text-[#C62828] flex flex-col items-center justify-center font-black leading-tight shadow-[2px_2px_0px_#C62828] shrink-0"
+            style={{ transform: 'rotate(-4deg)' }}
+          >
+            <span className="text-[8px] border-b border-[#C62828] pb-0.5">官 印</span>
+            <span className="text-[11px] sm:text-xs">試驗局</span>
+          </div>
 
-      {/* Main World View (Island or Home Interior) */}
-      <main className="w-full h-full">
-        {currentPlace === 'island' ? (
-          <IslandMap
-            currentUid={currentUser?.uid || ''}
-            localPos={localPos}
-            currentUser={currentUser}
-            presences={presences}
-            itemsMap={itemsMap}
-            activeHouses={activeHouses}
-            mapBgUrl={'/island_map_showa.jpg'}
-            onTileClick={handleTileClick}
-            onPlayerClick={(player) => setSelectedPlayer(player)}
-            onEnterHouse={handleEnterHouse}
-            onOpenUpgrade={() => setIsHouseUpgradeOpen(true)}
-            onBuildingClick={(type) => {
-              if (type === 'boutique') {
-                sound.playWindChime();
-                setBoutiqueInitialTab('shop');
-                setIsBoutiqueOpen(true);
-              } else if (type === 'arcade') {
-                sound.playTaiko();
-                setIsArcadeOpen(true);
-              } else if (type === 'casino') {
-                sound.playTaiko();
-                setIsCasinoOpen(true);
-              }
-            }}
-          />
+          <div>
+            <div className="text-[9px] sm:text-[11px] text-[#8D6E63] font-bold tracking-[0.25em] uppercase">
+              - SHOWA AMUSEMENT & EXAMINATION PLATFORM -
+            </div>
+            <h1 className="text-xl sm:text-3xl font-black tracking-[0.2em] text-[#2D1E18] flex items-center gap-2">
+              <span>昭和遊技試驗局</span>
+              <span className="hidden md:inline-block text-[10px] sm:text-xs px-2 py-0.5 border border-[#5D4037] bg-[#F7F3E9] text-[#5D4037] font-semibold tracking-normal">
+                公文試驗・動態棋弈・遊樂殿堂
+              </span>
+            </h1>
+          </div>
+        </div>
+
+        {/* Right Player Credentials & Controls */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {currentUser ? (
+            <>
+              {/* Coin Balance Dossier */}
+              <div 
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FFFDF9] border-2 border-[#5D4037] shadow-[3px_3px_0px_#5D4037] text-xs font-black text-[#2D1E18]"
+                title="受驗生持有金幣總額"
+              >
+                <Coins className="w-4 h-4 text-[#C62828]" />
+                <span className="font-mono text-sm tracking-wider">{safeCoins.toLocaleString()}</span>
+              </div>
+
+              {/* Player Name Pill */}
+              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#F7F3E9] border-2 border-[#5D4037] shadow-[3px_3px_0px_#5D4037] text-xs font-bold text-[#5D4037]">
+                <span className="w-2 h-2 rounded-full bg-[#2E7D32]" />
+                <span className="truncate max-w-[100px]">{currentUser.displayName}</span>
+              </div>
+
+              {/* Wardrobe Button */}
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setIsBoutiqueOpen(true);
+                }}
+                className="px-2.5 sm:px-3 py-1.5 bg-[#FFFDF9] hover:bg-[#EFEBE4] text-[#5D4037] text-xs font-bold border-2 border-[#5D4037] shadow-[3px_3px_0px_#5D4037] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center gap-1 cursor-pointer"
+                title="檢視衣櫃與昭和服飾"
+              >
+                <Shirt className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">服飾閣</span>
+              </button>
+
+              {/* Admin Button */}
+              {currentUser.role === 'admin' && (
+                <button
+                  onClick={() => setIsAdminOpen(true)}
+                  className="px-2.5 sm:px-3 py-1.5 bg-[#5D4037] hover:bg-[#4E342E] text-[#FFFDF9] text-xs font-bold border-2 border-[#2D1E18] shadow-[3px_3px_0px_#2D1E18] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center gap-1 cursor-pointer"
+                  title="管理員後台"
+                >
+                  <Shield className="w-3.5 h-3.5" />
+                  <span className="hidden md:inline">後台</span>
+                </button>
+              )}
+
+              {/* Sound Toggle */}
+              <button
+                onClick={toggleSound}
+                className="p-1.5 bg-[#FFFDF9] hover:bg-[#EFEBE4] text-[#5D4037] border-2 border-[#5D4037] shadow-[3px_3px_0px_#5D4037] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all cursor-pointer"
+                title={isMuted ? '開啟音效' : '靜音'}
+              >
+                {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+              </button>
+
+              {/* Sign Out */}
+              <button
+                onClick={handleSignOut}
+                className="p-1.5 bg-[#FFFDF9] hover:bg-red-50 text-[#C62828] border-2 border-[#C62828] shadow-[3px_3px_0px_#C62828] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all cursor-pointer"
+                title="登出帳號"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setIsAuthOpen(true)}
+              className="px-4 py-1.5 bg-[#C62828] hover:bg-[#B71C1C] text-[#FFFDF9] text-xs sm:text-sm font-black tracking-widest border-2 border-[#5D4037] shadow-[4px_4px_0px_#5D4037] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all cursor-pointer"
+            >
+              受驗生登入 / 註冊
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* ================= 2. MAIN CONTAINER ================= */}
+      <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col">
+        {/* VIEW A: ACTIVE GAME WORKBENCH */}
+        {activeGameType !== null ? (
+          <div className="flex-1 flex flex-col bg-[#FFFDF9] border-4 border-[#5D4037] shadow-[6px_6px_0px_#5D4037] rounded-sm overflow-hidden min-h-[640px]">
+            {/* Active Game Top Bar */}
+            <div className="p-3 sm:p-4 bg-[#F7F3E9] border-b-4 border-double border-[#5D4037] flex items-center justify-between">
+              <button
+                onClick={handleReturnToLobby}
+                className="px-4 py-1.5 bg-[#FFFDF9] hover:bg-[#EFEBE4] text-[#5D4037] font-black text-xs sm:text-sm tracking-widest border-2 border-[#5D4037] shadow-[3px_3px_0px_#5D4037] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>返回試驗局大廳</span>
+              </button>
+
+              {/* Room Code Badge (if multiplayer room) */}
+              {activeRoom && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] sm:text-xs text-[#8D6E63] font-bold">考局案號：</span>
+                  <div
+                    onClick={() => {
+                      if (activeRoom.roomCode) {
+                        navigator.clipboard.writeText(activeRoom.roomCode);
+                        setCopiedCode(true);
+                        setTimeout(() => setCopiedCode(false), 2000);
+                        sound.playClick();
+                      }
+                    }}
+                    className="px-3 py-1 bg-[#FFFDF9] border-2 border-[#5D4037] shadow-[2px_2px_0px_#5D4037] font-mono font-black text-sm text-[#C62828] tracking-widest flex items-center gap-1.5 cursor-pointer hover:bg-amber-50"
+                    title="點擊複製 4 碼考局代碼"
+                  >
+                    <span>{activeRoom.roomCode || activeRoom.roomId.slice(0, 4).toUpperCase()}</span>
+                    {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Render Target Game */}
+            <div className="flex-1 overflow-auto">
+              {activeGameType === '1a2b' && activeRoom && currentUser && (
+                <Game1A2B
+                  room={activeRoom}
+                  currentUser={currentUser}
+                  onUpdateRoom={(updates) => dbService.updateArcadeRoom(activeRoom.roomId, updates)}
+                  onRewardCoins={(amt) => dbService.rewardCoins(currentUser.uid, amt)}
+                  onBackToLobby={handleReturnToLobby}
+                />
+              )}
+
+              {activeGameType === 'ooxx' && activeRoom && currentUser && (
+                <GameOOXX
+                  room={activeRoom}
+                  currentUser={currentUser}
+                  onUpdateRoom={(updates) => dbService.updateArcadeRoom(activeRoom.roomId, updates)}
+                  onRewardCoins={(amt) => dbService.rewardCoins(currentUser.uid, amt)}
+                />
+              )}
+
+              {activeGameType === 'battleship' && activeRoom && currentUser && (
+                <GameBattleship
+                  room={activeRoom}
+                  currentUser={currentUser}
+                />
+              )}
+
+              {activeGameType === 'dots_boxes' && activeRoom && currentUser && (
+                <GameDotsBoxes
+                  room={activeRoom}
+                  currentUser={currentUser}
+                />
+              )}
+
+              {activeGameType === 'slot' && currentUser && (
+                <GameSlotMachine
+                  currentUid={currentUser.uid}
+                  userCoins={currentUser.coins}
+                  onRewardCoins={(amt) => dbService.rewardCoins(currentUser.uid, amt)}
+                  onDeductCoins={(amt) => dbService.rewardCoins(currentUser.uid, -amt)}
+                />
+              )}
+            </div>
+          </div>
         ) : (
-          <HomeMap
-            hostUser={visitingUser || currentUser!}
-            currentUid={currentUser?.uid || ''}
-            presences={presences}
-            itemsMap={itemsMap}
-            onSaveLayout={handleSaveRoomLayout}
-            onExitHome={() => {
-              setCurrentPlace('island');
-              const targetHouse = activeHouses.find((h) => h.ownerUid === visitingUser?.uid) || activeHouses[0];
-              const exitX = targetHouse ? targetHouse.doorX : 29;
-              const exitY = targetHouse ? targetHouse.doorY + 1 : 12;
-              setLocalPos({ x: exitX, y: exitY, facing: 'right', isMoving: false });
-              setVisitingUser(null);
-              syncSelfPresence({
-                currentPlace: 'island',
-                x: exitX,
-                y: exitY,
-                visitingHomeUid: undefined,
-              }, true);
-              sound.playDoor();
-            }}
-            onTileClick={handleTileClick}
-          />
+          /* VIEW B: SHOWA EXAMINATION & AMUSEMENT LOBBY */
+          <div className="flex flex-col gap-6">
+            {/* 1. Official Dispatch & Examination Papers Banner */}
+            <div className="bg-[#FFFDF9] border-4 border-[#5D4037] shadow-[6px_6px_0px_#5D4037] p-5 sm:p-6 rounded-sm relative">
+              <div className="text-[10px] sm:text-xs text-[#8D6E63] font-bold tracking-[0.25em] uppercase">
+                - OFFICIAL DISPATCH & EXAMINATION PAPERS -
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black tracking-[0.2em] text-[#2D1E18] border-b-4 border-double border-[#5D4037] pb-2 mt-1">
+                昭和拾年・第十二號 公文試驗公示
+              </h2>
+              <p className="mt-3 text-xs sm:text-sm text-[#5D4037] leading-relaxed">
+                奉 <b>昭和遊技試驗局</b> 命：凡蒞臨本局之考生，得自由挑選以下五項合格試驗科目進行智力測驗、單人詰棋、或聯網公開考局。合格者將依公文規約頒發官方金幣並登載成績。
+              </p>
+
+              {/* Error Alert if any */}
+              {errorMessage && (
+                <div className="mt-3 px-4 py-2 border-2 border-dashed border-[#C62828] bg-red-50 text-[#C62828] text-xs font-bold flex items-center justify-between">
+                  <span>⚠️ {errorMessage}</span>
+                  <button onClick={() => setErrorMessage(null)} className="underline cursor-pointer">關閉</button>
+                </div>
+              )}
+            </div>
+
+            {/* 2. Five Grand Game Dossier Cards (五大試驗項目卡片) */}
+            <div>
+              <div className="flex items-center justify-between mb-3 border-b-2 border-dashed border-[#5D4037] pb-1">
+                <span className="text-xs font-bold tracking-[0.2em] text-[#8D6E63] uppercase">
+                  - EXAMINATION SUBJECT DOSSIERS -
+                </span>
+                <span className="text-xs text-[#5D4037] font-bold">共五項試驗科目</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {GAME_DOSSIERS.map((g) => (
+                  <div
+                    key={g.id}
+                    className="bg-[#FFFDF9] border-4 border-[#5D4037] shadow-[6px_6px_0px_#5D4037] p-4 sm:p-5 flex flex-col justify-between rounded-sm relative group hover:border-[#2D1E18] transition-all"
+                  >
+                    {/* Top Grade Tag */}
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold text-[#8D6E63] tracking-widest">{g.numeral}</span>
+                      <span className="text-[10px] px-2 py-0.5 border border-[#5D4037] bg-[#F7F3E9] text-[#5D4037] font-bold">
+                        {g.grade}
+                      </span>
+                    </div>
+
+                    {/* Subtitle & Title */}
+                    <div>
+                      <div className="text-[9px] text-[#8D6E63] font-bold tracking-wider truncate">
+                        {g.englishSub}
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-black tracking-[0.15em] text-[#2D1E18] flex items-center gap-2 mt-0.5">
+                        <span className="text-2xl">{g.icon}</span>
+                        <span>{g.name}</span>
+                      </h3>
+                      <p className="mt-2 text-xs text-[#5D4037] leading-relaxed border-t-2 border-dashed border-[#5D4037] pt-2">
+                        {g.desc}
+                      </p>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="mt-4 pt-3 border-t-2 border-double border-[#5D4037] flex flex-col gap-2">
+                      {g.supportsMultiplayer ? (
+                        <>
+                          <button
+                            onClick={() => handleStartAiGame(g.id as GameType)}
+                            className="w-full py-2 bg-[#F7F3E9] hover:bg-[#EFEBE4] text-[#2D1E18] text-xs font-black tracking-widest border-2 border-[#5D4037] shadow-[3px_3px_0px_#5D4037] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <Bot className="w-4 h-4 text-[#C62828]" />
+                            <span>單人詰棋試驗 (對戰AI)</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleCreateMultiplayerRoom(g.id as GameType, true)}
+                            className="w-full py-2 bg-[#5D4037] hover:bg-[#4E342E] text-[#FFFDF9] text-xs font-black tracking-widest border-2 border-[#2D1E18] shadow-[3px_3px_0px_#2D1E18] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <Users className="w-4 h-4 text-amber-300" />
+                            <span>建立聯網考局 (開房)</span>
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            if (!currentUser) {
+                              setIsAuthOpen(true);
+                              return;
+                            }
+                            sound.playTaiko();
+                            setActiveGameType('slot');
+                          }}
+                          className="w-full py-2.5 bg-[#C62828] hover:bg-[#B71C1C] text-[#FFFDF9] text-xs font-black tracking-widest border-2 border-[#5D4037] shadow-[4px_4px_0px_#5D4037] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <Play className="w-4 h-4" />
+                          <span>進入遊技所 (立即拉桿)</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 3. Room Joining & Public Rooms Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
+              {/* Left Column: Join by 4-digit Code */}
+              <div className="bg-[#FFFDF9] border-4 border-[#5D4037] shadow-[6px_6px_0px_#5D4037] p-5 rounded-sm flex flex-col justify-between">
+                <div>
+                  <div className="text-[10px] text-[#8D6E63] font-bold tracking-[0.2em] uppercase">
+                    - DIRECT JOIN PROTOCOL -
+                  </div>
+                  <h3 className="text-base sm:text-lg font-black tracking-[0.2em] text-[#2D1E18] border-b-2 border-double border-[#5D4037] pb-1 mt-0.5">
+                    輸入 4 碼代碼加入考局
+                  </h3>
+                  <p className="text-xs text-[#5D4037] mt-2 leading-relaxed">
+                    請向考局創立者索取 4 位英文或數字考局代碼，直接呈遞進入對局。
+                  </p>
+
+                  <div className="mt-4">
+                    <input
+                      type="text"
+                      maxLength={4}
+                      value={joinCodeInput}
+                      onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
+                      placeholder="例：ABCD"
+                      className="w-full p-2.5 bg-[#F7F3E9] border-2 border-[#5D4037] text-center font-mono font-black text-2xl tracking-[0.3em] text-[#2D1E18] uppercase focus:outline-none shadow-[3px_3px_0px_#5D4037]"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleJoinByCode}
+                  disabled={joinCodeInput.length !== 4}
+                  className={`w-full mt-4 py-2.5 font-black text-xs sm:text-sm tracking-widest border-2 border-[#5D4037] shadow-[4px_4px_0px_#5D4037] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all cursor-pointer ${
+                    joinCodeInput.length === 4
+                      ? 'bg-[#C62828] hover:bg-[#B71C1C] text-[#FFFDF9]'
+                      : 'bg-[#EFEBE4] text-[#A1887F] cursor-not-allowed'
+                  }`}
+                >
+                  呈遞加入對戰
+                </button>
+              </div>
+
+              {/* Right Column: Public Active Rooms List */}
+              <div className="lg:col-span-2 bg-[#FFFDF9] border-4 border-[#5D4037] shadow-[6px_6px_0px_#5D4037] p-5 rounded-sm flex flex-col">
+                <div className="flex items-center justify-between border-b-2 border-double border-[#5D4037] pb-1">
+                  <div>
+                    <div className="text-[10px] text-[#8D6E63] font-bold tracking-[0.2em] uppercase">
+                      - REAL-TIME PUBLIC EXAMINATIONS -
+                    </div>
+                    <h3 className="text-base sm:text-lg font-black tracking-[0.2em] text-[#2D1E18]">
+                      即時公開考局清單
+                    </h3>
+                  </div>
+                  <button
+                    onClick={refreshPublicRooms}
+                    className="p-1.5 bg-[#F7F3E9] hover:bg-[#EFEBE4] text-[#5D4037] border-2 border-[#5D4037] shadow-[2px_2px_0px_#5D4037] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                    title="重新整理清單"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Rooms List */}
+                <div className="mt-3 flex-1 overflow-y-auto max-h-[220px] flex flex-col gap-2">
+                  {publicRooms.length === 0 ? (
+                    <div className="p-8 text-center border-2 border-dashed border-[#5D4037] text-xs text-[#8D6E63]">
+                      目前尚無公開等待中之考局。點擊上方科目「建立聯網考局」即可率先發起！
+                    </div>
+                  ) : (
+                    publicRooms.map((r) => {
+                      const matchedMeta = GAME_DOSSIERS.find((g) => g.id === r.gameType);
+                      return (
+                        <div
+                          key={r.roomId}
+                          className="p-3 bg-[#F7F3E9] border-2 border-[#5D4037] shadow-[3px_3px_0px_#5D4037] flex items-center justify-between gap-3"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-xl">{matchedMeta?.icon || '🎮'}</span>
+                            <div>
+                              <div className="text-xs font-black text-[#2D1E18]">
+                                {matchedMeta?.name || r.gameType}
+                              </div>
+                              <div className="text-[10px] text-[#8D6E63] flex items-center gap-2">
+                                <span>局主：<b>{r.hostName}</b></span>
+                                <span>案號：<b className="font-mono text-[#C62828]">{r.roomCode || r.roomId.slice(0, 4).toUpperCase()}</b></span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => handleJoinPublicRoom(r)}
+                            className="px-4 py-1.5 bg-[#5D4037] hover:bg-[#4E342E] text-[#FFFDF9] text-xs font-black tracking-wider border-2 border-[#2D1E18] shadow-[2px_2px_0px_#2D1E18] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                          >
+                            進入對戰
+                          </button>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </main>
 
-      {/* Cross-Platform Controller HUD */}
-      <VirtualControls
-        onMove={handleMove}
-        onMoveDelta={handleMoveDelta}
-        onInteract={handleInteract}
-        onSendEmoji={handleSendEmoji}
-        contextPrompt={contextPrompt}
-        onContextAction={handleInteract}
-      />
+      {/* ================= 3. MODALS & NOTIFICATIONS ================= */}
 
       {/* Boutique & Wardrobe Modal */}
       {currentUser && (
@@ -617,44 +762,20 @@ export const App: React.FC = () => {
           user={currentUser}
           items={items}
           itemsMap={itemsMap}
-          initialTab={boutiqueInitialTab}
-          onEquipChange={handleEquipChange}
-          onBuyItem={handleBuyItem}
-        />
-      )}
-
-      {/* Arcade Center Modal */}
-      {currentUser && (
-        <ArcadeModal
-          isOpen={isArcadeOpen}
-          onClose={() => {
-            setIsArcadeOpen(false);
-            setChallengedPlayer(null);
+          initialTab="wardrobe"
+          onEquipChange={async (eq) => {
+            await dbService.updateEquipped(currentUser.uid, eq);
+            sound.playBuy();
           }}
-          currentUser={currentUser}
-          challengedPlayer={challengedPlayer}
-          onClearChallenge={() => setChallengedPlayer(null)}
-        />
-      )}
-
-      {/* Casino Center Modal (777 Retro Slot Machine) */}
-      {currentUser && (
-        <CasinoModal
-          isOpen={isCasinoOpen}
-          onClose={() => setIsCasinoOpen(false)}
-          currentUser={currentUser}
-          onRewardCoins={(amt) => dbService.rewardCoins(currentUser.uid, amt)}
-          onDeductCoins={(amt) => dbService.rewardCoins(currentUser.uid, -amt)}
-        />
-      )}
-
-      {/* Admin Dashboard (non-admin quick access) */}
-      {currentUser?.role === 'admin' && !isAdminUser && (
-        <AdminDashboardModal
-          isOpen={isAdminOpen}
-          onClose={() => setIsAdminOpen(false)}
-          items={items}
-          presences={presences}
+          onBuyItem={async (item) => {
+            if (currentUser.coins < item.price) {
+              sound.playBump();
+              return;
+            }
+            await dbService.rewardCoins(currentUser.uid, -item.price);
+            await dbService.updateInventory(currentUser.uid, item.id);
+            sound.playBuy();
+          }}
         />
       )}
 
@@ -666,86 +787,39 @@ export const App: React.FC = () => {
         isMandatory={!currentUser}
       />
 
-      {/* First-Time Player Interactive Tutorial */}
-      {currentUser && (
-        <TutorialModal
-          isOpen={isTutorialOpen}
-          onComplete={handleCompleteTutorial}
-          playerName={currentUser.displayName}
-        />
-      )}
-
-      {/* House Upgrade Modal */}
-      {currentUser && (
-        <HouseUpgradeModal
-          isOpen={isHouseUpgradeOpen}
-          onClose={() => setIsHouseUpgradeOpen(false)}
-          currentUser={currentUser}
-          onUpgradeSuccess={handleUpgradeHouse}
-        />
-      )}
-
-      {/* Player Interaction Action Modal */}
-      <PlayerActionModal
-        player={selectedPlayer}
-        currentUid={currentUser?.uid || ''}
-        currentName={currentUser?.displayName || '冒險家'}
-        itemsMap={itemsMap}
-        onClose={() => setSelectedPlayer(null)}
-        onChallenge={handleChallengePlayer}
-        onVisitHome={handleVisitPlayerHome}
-        onSendWave={() => handleSendEmoji('👋')}
-      />
-
-      {/* Friend System Side Panel */}
-      {isFriendPanelOpen && (
-        <FriendPanel
-          currentUid={currentUser?.uid || ''}
-          currentName={currentUser?.displayName || '冒險家'}
-          presences={presences}
-          onClose={() => setIsFriendPanelOpen(false)}
-          onVisitHome={(targetPresence) => {
-            setIsFriendPanelOpen(false);
-            handleVisitPlayerHome(targetPresence);
-          }}
-        />
-      )}
-
       {/* AFK Idle Kick Warning Countdown Banner (30 seconds before 3-minute kick) */}
       {afkWarningRemaining !== null && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 bg-[#991b1b]/95 border-2 border-[#fef08a] rounded-full text-white text-xs font-serif shadow-2xl flex items-center gap-2 animate-bounce">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 bg-[#C62828] border-2 border-[#5D4037] shadow-[4px_4px_0px_#5D4037] text-white text-xs font-serif flex items-center gap-2 animate-bounce">
           <span className="text-base">⚠️</span>
           <span>閒置提醒：您已長時間無動作，將於</span>
           <span className="font-mono font-black text-amber-300 text-sm px-1.5 py-0.5 bg-black/40 rounded">{afkWarningRemaining}</span>
-          <span>秒後自動離線！(請移動或點擊任意處)</span>
+          <span>秒後自動離線！(請點擊任意處)</span>
         </div>
       )}
 
-      {/* 3-Minute Idle Kick Showa Japanese Alert Modal */}
+      {/* 3-Minute Idle Kick Showa Alert Modal */}
       {isAfkKicked && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md bg-[#201109] border-4 border-[#8b4513] rounded-2xl p-6 text-center shadow-[0_0_30px_rgba(0,0,0,0.9)] text-[#fef08a] font-serif">
-            <div className="text-4xl mb-3">⛩️ 🏮</div>
-            <h3 className="text-lg font-bold text-[#fef08a] mb-2 tracking-wider">
-              閒置離線通知（3 分鐘無動作）
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs select-none">
+          <div className="w-full max-w-md bg-[#FFFDF9] border-4 border-[#5D4037] p-6 text-center shadow-[8px_8px_0px_#5D4037] text-[#2D1E18] font-serif">
+            <div className="text-4xl mb-3">🏮 📜</div>
+            <h3 className="text-lg font-black text-[#2D1E18] mb-2 tracking-[0.2em] border-b-2 border-double border-[#5D4037] pb-1">
+              閒置離線公文（3 分鐘無動作）
             </h3>
-            <p className="text-sm text-[#fed7aa] mb-5 leading-relaxed">
-              因您已超過 3 分鐘未進行任何操作，為了維護櫻花島嶼平穩運行，系統已將您暫時請回休養。隨時歡迎您再次光臨！
+            <p className="text-xs sm:text-sm text-[#5D4037] my-4 leading-relaxed">
+              因受驗生超過 3 分鐘未進行任何試驗操作，為維護昭和遊技試驗局各考局之平穩秩序，系統已將您暫時請回休息。隨時歡迎您再次呈遞公文蒞臨！
             </p>
             <button
               onClick={() => {
                 setIsAfkKicked(false);
                 setIsAuthOpen(true);
-                sound.playShojiDoor();
+                sound.playDoor();
               }}
-              className="w-full py-3 bg-[#991b1b] hover:bg-[#b91c1c] text-[#fef08a] font-bold text-sm rounded-xl border-2 border-[#f59e0b] shadow-lg cursor-pointer tracking-widest active:scale-95 transition-all"
+              className="w-full py-3 bg-[#C62828] hover:bg-[#B71C1C] text-[#FFFDF9] font-black text-xs sm:text-sm tracking-widest border-2 border-[#5D4037] shadow-[4px_4px_0px_#5D4037] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all cursor-pointer"
             >
-              重新踏入島嶼 🌸
+              重新踏入昭和試驗局 🌸
             </button>
           </div>
         </div>
-      )}
-      </>
       )}
     </div>
   );
