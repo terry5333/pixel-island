@@ -122,7 +122,7 @@ export const App: React.FC = () => {
         sound.playAlert();
         setIsAfkKicked(true);
         setAfkWarningRemaining(null);
-        dbService.signOut();
+        dbService.signOutUser();
       } else if (idleMs >= WARNING_THRESHOLD_MS) {
         const remainingSeconds = Math.max(1, Math.ceil((IDLE_LIMIT_MS - idleMs) / 1000));
         setAfkWarningRemaining(remainingSeconds);

@@ -173,6 +173,10 @@ export class DatabaseService {
     this.notifyAuth(null);
   }
 
+  public async signOut(): Promise<void> {
+    return this.signOutUser();
+  }
+
   public onAuthChange(cb: (user: UserProfile | null) => void) {
     this.authSubscribers.add(cb);
     cb(this.activeUser);
