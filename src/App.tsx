@@ -133,7 +133,7 @@ export const App: React.FC = () => {
 
     return () => {
       events.forEach((ev) => window.removeEventListener(ev, handleUserActivity));
-      clearInterval(interval);
+      window.clearInterval(interval);
     };
   }, [currentUser, afkWarningRemaining]);
 
@@ -375,14 +375,6 @@ export const App: React.FC = () => {
         }
       } else if (contextEntrance.type === 'house') {
         sound.playShojiDoor();
-        handleEnterHouse(contextEntrance.house);
-      }
-      return;
-    }
-          setArcadeInitialSoloSlots(true);
-          setIsArcadeOpen(true);
-        }
-      } else if (contextEntrance.type === 'house') {
         handleEnterHouse(contextEntrance.house);
       }
       return;
