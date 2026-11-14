@@ -10,7 +10,7 @@ import {
 import { IslandPresence, Item, UserProfile } from '../types/game';
 import { CharacterSprite } from './CharacterSprite';
 import { CozyCottageBuilding } from './scenery/CozyCottageBuilding';
-import { Sparkles, Gamepad2, ShoppingBag, Dices } from 'lucide-react';
+import { Gamepad2, ShoppingBag, Dices } from 'lucide-react';
 
 interface IslandMapProps {
   currentUid: string;
@@ -24,7 +24,7 @@ interface IslandMapProps {
   onPlayerClick?: (player: IslandPresence) => void;
   onEnterHouse?: (house: ActiveHouse) => void;
   onOpenUpgrade?: () => void;
-  onBuildingClick?: (type: 'arcade' | 'casino' | 'boutique' | 'pixellab') => void;
+  onBuildingClick?: (type: 'arcade' | 'casino' | 'boutique') => void;
 }
 
 export const IslandMap: React.FC<IslandMapProps> = ({
@@ -129,15 +129,12 @@ export const IslandMap: React.FC<IslandMapProps> = ({
                   ? 'bg-amber-400/40 hover:bg-amber-400/60 border-amber-300 shadow-amber-500/50'
                   : b.type === 'arcade'
                   ? 'bg-cyan-400/40 hover:bg-cyan-400/60 border-cyan-300 shadow-cyan-500/50'
-                  : b.type === 'boutique'
-                  ? 'bg-pink-400/40 hover:bg-pink-400/60 border-pink-300 shadow-pink-500/50'
-                  : 'bg-purple-400/50 hover:bg-purple-400/70 border-purple-300 shadow-purple-500/50'
+                  : 'bg-pink-400/40 hover:bg-pink-400/60 border-pink-300 shadow-pink-500/50'
               } shadow-lg`}
             >
               {b.type === 'casino' && <Dices className="w-5 h-5 text-amber-200" />}
               {b.type === 'arcade' && <Gamepad2 className="w-5 h-5 text-cyan-200" />}
               {b.type === 'boutique' && <ShoppingBag className="w-5 h-5 text-pink-200" />}
-              {b.type === 'pixellab' && <Sparkles className="w-5 h-5 text-purple-200 animate-spin-slow" />}
             </div>
 
             {/* Hover Tooltip Capsule */}

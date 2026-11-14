@@ -28,7 +28,8 @@ import { PlayerActionModal } from './components/PlayerActionModal';
 import { FriendPanel } from './components/FriendPanel';
 import { HouseUpgradeModal } from './components/HouseUpgradeModal';
 import { TutorialModal } from './components/TutorialModal';
-import { PixelLabStudioModal } from './components/PixelLabStudioModal';
+
+const ADMIN_EMAIL = 'ltairui79@gmail.com';
 
 export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
@@ -38,14 +39,12 @@ export const App: React.FC = () => {
   // Navigation & Location
   const [currentPlace, setCurrentPlace] = useState<'island' | 'home'>('island');
   const [visitingUser, setVisitingUser] = useState<UserProfile | null>(null);
-  const [currentMapBg, setCurrentMapBg] = useState<string>('/island_map_bg.jpg');
 
   // Modals state
   const [isBoutiqueOpen, setIsBoutiqueOpen] = useState(false);
   const [boutiqueInitialTab, setBoutiqueInitialTab] = useState<'shop' | 'wardrobe'>('shop');
   const [isArcadeOpen, setIsArcadeOpen] = useState(false);
   const [arcadeInitialSoloSlots, setArcadeInitialSoloSlots] = useState(false);
-  const [isPixelLabOpen, setIsPixelLabOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isFriendPanelOpen, setIsFriendPanelOpen] = useState(false);
@@ -67,6 +66,11 @@ export const App: React.FC = () => {
   useEffect(() => {
     const unsubAuth = dbService.onAuthChange((user) => {
       setCurrentUser(user);
+      // Admin redirect: if admin email logs in, open admin dashboard immediately
+      if (user && user.email?.toLowerCase() === 'ltairui79@gmail.com') {
+        setIsAdminOpen(true);
+        return;
+      }
       if (user && user.hasCompletedTutorial === false) {
         setIsTutorialOpen(true);
       }
@@ -168,7 +172,6 @@ export const App: React.FC = () => {
         if (b.type === 'boutique') return '進入「FASHION」精品服飾店 👗';
         if (b.type === 'arcade') return '進入「ARCADE」街機遊樂中心 🕹️';
         if (b.type === 'casino') return '進入「CASINO」777 復古拉霸娛樂城 🎰';
-        if (b.type === 'pixellab') return '進入「PixelLab AI」創作者工坊 ✨';
       } else if (contextEntrance.type === 'house') {
         const h = contextEntrance.house;
         return h.isSelf ? '進入個人溫馨小屋 🏡' : `拜訪 ${h.ownerName} 的家 🏡`;
@@ -300,8 +303,6 @@ export const App: React.FC = () => {
         } else if (b.type === 'casino') {
           setArcadeInitialSoloSlots(true);
           setIsArcadeOpen(true);
-        } else if (b.type === 'pixellab') {
-          setIsPixelLabOpen(true);
         }
       } else if (contextEntrance.type === 'house') {
         handleEnterHouse(contextEntrance.house);
@@ -432,13 +433,31 @@ export const App: React.FC = () => {
     sound.playBump();
     await dbService.signOutUser();
     setCurrentUser(null);
+    setIsAdminOpen(false);
   };
 
   const onlineCount = Object.keys(presences).length;
 
+  // Admin shortcut: if admin is logged in, show admin dashboard directly
+  const isAdminUser = currentUser?.email?.toLowerCase() === 'ltairui79@gmail.com';
+
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#071329] select-none">
-      {/* Top Navigation Bar */}
+    <div className="relative w-screen h-screen overflow-hidden bg-[#1a0a05] select-none" style={{ fontFamily: "'Noto Serif TC', 'Hiragino Mincho ProN', serif" }}>
+
+      {/* Admin Full-Screen Dashboard (bypasses game entirely) */}
+      {isAdminUser && isAdminOpen && (
+        <AdminDashboardModal
+          isOpen={true}
+          onClose={() => { setIsAdminOpen(false); handleSignOut(); }}
+          items={items}
+          presences={presences}
+        />
+      )}
+
+      {/* Show regular game only if not in admin mode */}
+      {(!isAdminUser || !isAdminOpen) && (
+        <>
+      {/* Top Navigation Bar — Showa Japanese style */}
       <Navbar
         user={currentUser}
         onlineCount={onlineCount}
@@ -451,7 +470,6 @@ export const App: React.FC = () => {
         onOpenAuthModal={() => setIsAuthOpen(true)}
         onOpenHouseUpgrade={() => setIsHouseUpgradeOpen(true)}
         onOpenTutorial={() => setIsTutorialOpen(true)}
-        onOpenPixelLab={() => setIsPixelLabOpen(true)}
         onSignOut={handleSignOut}
         onToggleFriends={() => setIsFriendPanelOpen((prev) => !prev)}
       />
@@ -466,7 +484,7 @@ export const App: React.FC = () => {
             presences={presences}
             itemsMap={itemsMap}
             activeHouses={activeHouses}
-            mapBgUrl={currentMapBg}
+            mapBgUrl={'/island_map_new.jpg'}
             onTileClick={handleTileClick}
             onPlayerClick={(player) => setSelectedPlayer(player)}
             onEnterHouse={handleEnterHouse}
@@ -481,8 +499,6 @@ export const App: React.FC = () => {
               } else if (type === 'casino') {
                 setArcadeInitialSoloSlots(true);
                 setIsArcadeOpen(true);
-              } else if (type === 'pixellab') {
-                setIsPixelLabOpen(true);
               }
             }}
           />
@@ -513,7 +529,7 @@ export const App: React.FC = () => {
         )}
       </main>
 
-      {/* Cross-Platform Controller HUD (Desktop hotkeys + Mobile Virtual D-Pad / A button) */}
+      {/* Cross-Platform Controller HUD */}
       <VirtualControls
         onMove={handleMove}
         onMoveDelta={handleMoveDelta}
@@ -551,41 +567,17 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* PixelLab AI Studio Modal */}
-      <PixelLabStudioModal
-        isOpen={isPixelLabOpen}
-        onClose={() => setIsPixelLabOpen(false)}
-        onApplyMapBackground={(imageUrl) => {
-          setCurrentMapBg(imageUrl);
-        }}
-        onEquipCustomClothing={(cat, dataUrl) => {
-          const customId = `custom_${cat}_${Date.now()}`;
-          const customItem: Item = {
-            id: customId,
-            name: 'PixelLab AI 專屬服飾',
-            category: cat,
-            price: 0,
-            pixelData: dataUrl,
-            description: '由 PixelLab AI 即時生成的專屬像素服飾',
-          };
-          setItems((prev) => [customItem, ...prev.filter((i) => i.id !== customId)]);
-          handleEquipChange({
-            ...(currentUser?.equipped || {}),
-            [cat]: customId,
-          });
-        }}
-      />
-
-      {/* Admin Dashboard Modal */}
-      {currentUser?.role === 'admin' && (
+      {/* Admin Dashboard (non-admin quick access) */}
+      {currentUser?.role === 'admin' && !isAdminUser && (
         <AdminDashboardModal
           isOpen={isAdminOpen}
           onClose={() => setIsAdminOpen(false)}
           items={items}
+          presences={presences}
         />
       )}
 
-      {/* Compulsory Mandatory Login Gate (when not logged in) or voluntary Switcher Modal */}
+      {/* Compulsory Mandatory Login Gate */}
       <AuthModal
         isOpen={!currentUser || isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
@@ -636,6 +628,8 @@ export const App: React.FC = () => {
             handleVisitPlayerHome(targetPresence);
           }}
         />
+      )}
+      </>
       )}
     </div>
   );

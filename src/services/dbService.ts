@@ -25,10 +25,13 @@ import { auth, db, rtdb, googleProvider, isFirebaseConfigured } from '../config/
 import { mockNetwork, getStoredItems, saveStoredItems, getStoredRooms, saveStoredRoom, deleteStoredRoom } from './mockDb';
 import { Item, UserProfile, IslandPresence, ArcadeRoom, FriendEntry, FriendRequest, EquippedItems, RoomFurniture } from '../types/game';
 
-const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || '')
-  .split(',')
-  .map((e: string) => e.trim().toLowerCase())
-  .filter(Boolean);
+const ADMIN_EMAILS = [
+  'ltairui79@gmail.com',
+  ...(import.meta.env.VITE_ADMIN_EMAILS || '')
+    .split(',')
+    .map((e: string) => e.trim().toLowerCase())
+    .filter(Boolean),
+];
 
 const DEFAULT_PROFILE: Omit<UserProfile, 'uid' | 'displayName' | 'email'> = {
   coins: 1000,
@@ -628,6 +631,47 @@ export class DatabaseService {
     } else {
       callback(this._mockFriendRequests[uid] ?? []);
       return () => {};
+    }
+  }
+
+  // --- ADMIN METHODS ---
+
+  public async adminGetAllUsers(): Promise<UserProfile[]> {
+    if (isFirebaseConfigured && db) {
+      const { getDocs, query, orderBy, limit } = await import('firebase/firestore');
+      const q = query(collection(db, 'users'), orderBy('displayName'), limit(200));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => d.data() as UserProfile);
+    }
+    // mock: return current user
+    return this.activeUser ? [this.activeUser] : [];
+  }
+
+  public async adminUpdateUserCoins(uid: string, coins: number): Promise<void> {
+    await this.updateUserProfile(uid, { coins });
+  }
+
+  public async adminDeleteUser(uid: string): Promise<void> {
+    if (isFirebaseConfigured && db) {
+      await deleteDoc(doc(db, 'users', uid));
+    }
+  }
+
+  public async adminGetAllArcadeRooms(): Promise<ArcadeRoom[]> {
+    if (isFirebaseConfigured && db) {
+      const { getDocs, query, orderBy, limit } = await import('firebase/firestore');
+      const q = query(collection(db, 'arcade_rooms'), orderBy('createdAt', 'desc'), limit(100));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => d.data() as ArcadeRoom);
+    }
+    return Object.values(getStoredRooms());
+  }
+
+  public async adminDeleteArcadeRoom(roomId: string): Promise<void> {
+    if (isFirebaseConfigured && db) {
+      await deleteDoc(doc(db, 'arcade_rooms', roomId));
+    } else {
+      deleteStoredRoom(roomId);
     }
   }
 }

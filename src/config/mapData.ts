@@ -22,7 +22,7 @@ export type TileType =
 export interface InteractiveBuilding {
   id: string;
   name: string;
-  type: 'boutique' | 'arcade' | 'casino' | 'pixellab' | 'home';
+  type: 'boutique' | 'arcade' | 'casino' | 'home';
   x: number;
   y: number;
   width: number;
@@ -68,18 +68,6 @@ export const BUILDINGS: InteractiveBuilding[] = [
     doorX: 9.2,
     doorY: 28,
     prompt: '進入「FASHION」精品服飾店 👗 (按 Space / 點我)',
-  },
-  {
-    id: 'pixellab_studio',
-    name: 'PixelLab AI 創作者工坊 (生成地圖/UI/服飾)',
-    type: 'pixellab',
-    x: 48,
-    y: 20,
-    width: 6,
-    height: 5,
-    doorX: 49.5,
-    doorY: 25.5,
-    prompt: '開啟「PixelLab AI」創作者工坊 ✨ (按 Space / 點我)',
   },
 ];
 
